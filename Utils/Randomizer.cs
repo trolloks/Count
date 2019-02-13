@@ -7,12 +7,12 @@ namespace Count.Utils
 {
     public static class Randomizer
     {
-        public static int Roll(int iterations, int range)
+        public static int Roll(int iterations, int range, Random random)
         {
             int roll = 0;
             for(int i = 0; i < iterations; i++)
             {
-                roll += (new Random().Next(range) + 1);
+                roll += (random.Next(range) + 1);
             }
             return roll;
         }

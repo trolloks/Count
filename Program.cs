@@ -21,6 +21,7 @@ namespace Count
             Console.WriteLine("");
             Console.WriteLine("");
             Console.WriteLine("(Any other command will exit the game)");
+            Console.WriteLine("");
             Console.Write(": ");
 
             var menuResult = Console.ReadLine();

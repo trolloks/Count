@@ -41,10 +41,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Game.cs" />
+    <Compile Include="Models\Location.cs" />
     <Compile Include="Models\VampireLord.cs" />
+    <Compile Include="Models\World.cs" />
     <Compile Include="Models\Village.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\ListUtil.cs" />
     <Compile Include="Utils\Randomizer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

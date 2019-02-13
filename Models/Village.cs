@@ -9,5 +9,7 @@ namespace Count.Models
     {
         public int Villagers { get; set; }
         public float Suspicion { get; set; }
+        public List<Location> LocationsSearched { get; set; } = new List<Location>();
+        public bool LocationFound { get; set; }
     }
 }
