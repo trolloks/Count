@@ -21,8 +21,10 @@ namespace Count.Controllers
             // Create Vampire Lord
             VampireLord = new VampireLord();
             VampireLord.Hitpoints = 10;
-            VampireLord.LastFed = 1;
-            VampireLord.Location = new Location(Randomizer.Roll(1, worldSize, _random), Randomizer.Roll(1, worldSize, _random));
+
+            // Init
+            Feed(null, 1, true);
+            MoveLocation();
         }
 
         /// <summary>
@@ -30,19 +32,30 @@ namespace Count.Controllers
         /// </summary>
         public bool Feed(Village village, long day)
         {
-            var feedRoll = Randomizer.Roll(1, BASE_CHECK_ROLL, _random);
-            if (Game.IS_DEV)
-            {
-                Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
-                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round(((float)BASE_FEED_DC) * village.Suspicion))}");
-            }
+            return Feed(village, day, false);
+        }
 
-            var feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round(((float)BASE_FEED_DC) * village.Suspicion));
+        private bool Feed(Village village, long day, bool forceSuccess)
+        {
+            var feedCheck = true;
+            if (!forceSuccess)
+            {
+                var feedRoll = Randomizer.Roll(1, BASE_CHECK_ROLL, _random);
+                if (Game.IS_DEV)
+                {
+                    Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
+                    Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round(((float)BASE_FEED_DC) * village.Suspicion))}");
+                }
+
+                feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round(((float)BASE_FEED_DC) * village.Suspicion));
+            }
+            
             if (feedCheck)
             {
                 // Effects on you
                 VampireLord.LastFed = day;
-                VampireLord.Followers++;
+                if (!forceSuccess)
+                    VampireLord.Followers++;
             }
 
             return feedCheck;
