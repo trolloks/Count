@@ -20,7 +20,7 @@ namespace Count
         private const int WORLD_SIZE = 3;
         private const int BASE_FEED_DC = 10;
         private const int BASE_CHECK_ROLL = 20;
-        private const bool IS_DEV = true;
+        private const bool IS_DEV = false;
 
         public void Start()
         {
@@ -62,8 +62,8 @@ namespace Count
                 _day++;
 
                 // Phases
-                Night();
-                Day();
+                while(Night());
+                while(Day());
 
                 if (DeathCheck())
                 {
@@ -79,7 +79,8 @@ namespace Count
             }
         }
 
-        private void Day()
+        #region "Day"
+        private bool Day()
         {
             if (!DeathCheck())
             {
@@ -106,10 +107,6 @@ namespace Count
                 switch (option)
                 {
                    
-                    case "q":
-                        // TODO: Remove kill game hack
-                        _isGameOver = true;
-                        break;
                 }
 
                 // Villagers try to find vampire
@@ -157,9 +154,11 @@ namespace Count
                 Console.WriteLine("Press ENTER to continue");
                 Console.ReadLine();
             }
+            return false;
         }
-
-        private void Night()
+        #endregion
+        #region "Night"
+        private bool Night()
         {
             if (!DeathCheck())
             {
@@ -172,7 +171,7 @@ namespace Count
                 Console.WriteLine($"~~~ Day {_day} (Night) ~~~");
                 Console.WriteLine("");
 
-                var infoText = "Night falls. You can yet again roam this land.";
+                var infoText = "Night falls. You can yet again roam the land.";
                 if (_day == 1)
                 {
                     infoText += "\nYou rise on your first night as a vampire. You feel a hunger you haven't felt before.\nYou feel compelled to feed on human blood.";
@@ -185,7 +184,7 @@ namespace Count
                     infoText += "\nYou start taking damage, because you are not feeding!";
                     _you.Hitpoints--;
                     if (DeathCheck())
-                        return;
+                        return false;
                 }
 
                 Console.WriteLine(infoText);
@@ -200,7 +199,7 @@ namespace Count
                 Console.WriteLine("");
 
                 // Actions
-                Console.WriteLine("1. Hide (Default)");
+                Console.WriteLine("1. Hide");
                 Console.WriteLine("2. Feed on villager");
                 Console.WriteLine("3. Move Lair");
 
@@ -231,7 +230,7 @@ namespace Count
                         if (feedCheck)
                         {
                             Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
-                            // Feeds
+                            
                             // Effects on you
                             _you.LastFed = _day;
                             _you.Followers++;
@@ -246,14 +245,12 @@ namespace Count
                         _village.Suspicion = Math.Min(1, _village.Suspicion + ((float)Randomizer.Roll(3, 10, _random) / 100f)); // Can't get more suspicious than 1
                         break;
                     case "1":
-                    default:
                         Console.WriteLine("You hide for the night. The village grows less suspicious.");
                         _village.Suspicion = Math.Max(0, _village.Suspicion - ((float)Randomizer.Roll(20, 5, _random) / 100f)); // Can't get less suspicious than 0 
-                        break; 
-                    case "q":
-                        // TODO: Remove kill game hack
-                        _isGameOver = true;
                         break;
+                    default:
+                        return true;
+                       
                 }
 
                 // You win!
@@ -266,8 +263,9 @@ namespace Count
                 Console.WriteLine("Press ENTER to continue");
                 Console.ReadLine();
             }
-           
+            return false;
         }
+        #endregion
 
         /// <summary>
         /// Checks if you are dead
