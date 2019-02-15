@@ -1,26 +1,47 @@
 ﻿using Count.Models;
 using Count.Utils;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Count
 {
+    /// <summary>
+    /// TODO: 
+    /// 1. WIP: Add multiple villages.
+    /// 2. Add ability to find additional villages.
+    /// 3. Generate village names
+    /// 4. Create suspicion decay if village was not visited.
+    /// 5. Create multiple follower types.
+    /// 6. Concept of mana and spells
+    /// 
+    /// </summary>
     public class Game
     {
         long _day = 0;
         bool _isNight = true;
         bool _isGameOver = false;
 
+        /// <summary>
+        /// You, the vampire lord
+        /// </summary>
         VampireLord _you;
-        Village _village;
+        /// <summary>
+        /// List of villages discovered by the Count
+        /// </summary>
+        List<Village> _villages;
         World _world;
 
         Random _random;
 
         private const int WORLD_SIZE = 3;
-        private const int BASE_FEED_DC = 10;
-        private const int BASE_CHECK_ROLL = 20;
-        private const bool IS_DEV = false;
+        public static bool IS_DEV = false;
+
+        /// <summary>
+        /// Hunger logic
+        /// </summary>
+        private const int HUNGER_WARNING_THRESHOLD = 5;
+        private const int HUNGER_STARVING_THRESHOLD = 10;
 
         public void Start()
         {
@@ -45,10 +66,14 @@ namespace Count
             _you.Hitpoints = 10;
             _you.LastFed = 1;
             _you.Location = new Location(Randomizer.Roll(1, WORLD_SIZE, _random), Randomizer.Roll(1, WORLD_SIZE, _random));
+            _villages = new List<Village>();
 
-            _village = new Village();
-            _village.Villagers = Randomizer.Roll(40, 2, _random);
-            _village.Suspicion = 0;
+            // Add first village;
+            _villages.Add(new Village()
+            {
+                Villagers = Randomizer.Roll(40, 2, _random),
+                Suspicion = 0
+            });
 
             _world = new World();
             _world.Size = WORLD_SIZE; //WORLD_SIZExWORLD_SIZE
@@ -97,7 +122,7 @@ namespace Count
                 // Stat Report
                 Console.WriteLine($"HEALTH: {_you.Hitpoints}");
                 Console.WriteLine($"FOLLOWERS: {_you.Followers}");
-                Console.WriteLine($"LIVING VILLAGERS: {_village.Villagers}");
+                Console.WriteLine($"LIVING VILLAGERS: {_villages[0].Villagers}");
                 Console.WriteLine("");
 
                 Console.WriteLine("");
@@ -105,13 +130,11 @@ namespace Count
                 var option = Console.ReadLine();
                 Console.Clear();
                 switch (option)
-                {
-                   
-                }
+                {} // No actions during the day yet. Could be permanent?
 
                 // Villagers try to find vampire
                 var location = new Location(Randomizer.Roll(1, WORLD_SIZE, _random), Randomizer.Roll(1, WORLD_SIZE, _random));
-                while (_village.LocationsSearched.Any(i => i.X == location.X && i.Y == location.Y))
+                while (_villages[0].LocationsSearched.Any(i => i.X == location.X && i.Y == location.Y))
                 {
                     location = new Location(Randomizer.Roll(1, WORLD_SIZE, _random), Randomizer.Roll(1, WORLD_SIZE, _random));
                 }
@@ -119,18 +142,18 @@ namespace Count
                 if (IS_DEV)
                 {
                     Console.WriteLine($"(DEV) HIDING AT: {_you.Location.X}:{_you.Location.Y}");
-                    if (_village.LocationFound)
+                    if (_villages[0].LocationFound)
                         Console.WriteLine($"(DEV) VILLAGERS FOUND:  {location.X}:{location.Y}");
                     else
                     {
-                        Console.WriteLine($"(DEV) VILLAGERS PREVIOUSLY SEARCHED:  {ListUtil.ToStringFromLocations(_village.LocationsSearched)}");
+                        Console.WriteLine($"(DEV) VILLAGERS PREVIOUSLY SEARCHED:  {ListUtil.ToStringFromLocations(_villages[0].LocationsSearched)}");
                         Console.WriteLine($"(DEV) VILLAGERS SEARCHED:  {location.X}:{location.Y}");
                     }
                 }
 
-                if (location.X == _you.Location.X && location.Y == _you.Location.Y || _village.LocationFound)
+                if (location.X == _you.Location.X && location.Y == _you.Location.Y || _villages[0].LocationFound)
                 {
-                    _village.LocationFound = true;
+                    _villages[0].LocationFound = true;
                     Console.WriteLine("The villagers have found your hiding place!");
                     if (_you.Followers > 0)
                     {
@@ -147,7 +170,7 @@ namespace Count
                 {
                     Console.WriteLine("The villagers failed to find your hiding place.");
                     // Search better each round
-                    _village.LocationsSearched.Add(location);
+                    _villages[0].LocationsSearched.Add(location);
                 }
 
                 Console.WriteLine("");
@@ -173,15 +196,12 @@ namespace Count
 
                 var infoText = "Night falls. You can yet again roam the land.";
                 if (_day == 1)
-                {
                     infoText += "\nYou rise on your first night as a vampire. You feel a hunger you haven't felt before.\nYou feel compelled to feed on human blood.";
-                }
-
-                if (hungerLevel >= 5)
-                    infoText += "\nYou are STARVING. You NEED to feed!";
-                if (hungerLevel >= 10)
+                if (hungerLevel >= HUNGER_WARNING_THRESHOLD)
+                    infoText += $"\nWarning! You NEED to feed once every {HUNGER_STARVING_THRESHOLD} days!";
+                if (hungerLevel >= HUNGER_STARVING_THRESHOLD)
                 {
-                    infoText += "\nYou start taking damage, because you are not feeding!";
+                    infoText += "\nYou are STARVING. You start taking damage, because you are not feeding!";
                     _you.Hitpoints--;
                     if (DeathCheck())
                         return false;
@@ -193,9 +213,9 @@ namespace Count
                 // Stat Report
                 Console.WriteLine($"HEALTH: {_you.Hitpoints}");
                 Console.WriteLine($"HUNGER LEVEL: {hungerLevel}");
-                Console.WriteLine($"LIVING VILLAGERS: {_village.Villagers}");
+                Console.WriteLine($"LIVING VILLAGERS: {_villages[0].Villagers}");
                 if (IS_DEV)
-                    Console.WriteLine($"(DEV) VILLAGE SUSPICION: {_village.Suspicion}");
+                    Console.WriteLine($"(DEV) VILLAGE SUSPICION: {_villages[0].Suspicion}");
                 Console.WriteLine("");
 
                 // Actions
@@ -213,21 +233,13 @@ namespace Count
                     case "3":
                         Console.WriteLine("You spend the night moving to a new location.\nThe village grows more suspicious.");
                         _you.Location = new Location(Randomizer.Roll(1, WORLD_SIZE, _random), Randomizer.Roll(1, WORLD_SIZE, _random));
-                        _village.LocationFound = false;
-                        _village.LocationsSearched.Clear();
-                        _village.Suspicion = Math.Min(1, _village.Suspicion + ((float)Randomizer.Roll(3, 10, _random) / 100f)); // Can't get more suspicious than 1
+                        _villages[0].LocationFound = false;
+                        _villages[0].LocationsSearched.Clear();
+                        _villages[0].Suspicion = Math.Min(1, _villages[0].Suspicion + ((float)Randomizer.Roll(3, 10, _random) / 100f)); // Can't get more suspicious than 1
                         break;
                     case "2":
-                        var feedRoll = Randomizer.Roll(1, BASE_CHECK_ROLL, _random);
-                        var feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round(((float)BASE_FEED_DC) * _village.Suspicion));
-                        if (IS_DEV)
-                        {
-                            Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
-                            Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round(((float)BASE_FEED_DC) * _village.Suspicion))}");
-                        }
-                        
                         // try to feed
-                        if (feedCheck)
+                        if (_you.Feed(_villages[0]))
                         {
                             Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
                             
@@ -236,28 +248,29 @@ namespace Count
                             _you.Followers++;
 
                             // Effects on village
-                            _village.Villagers--;
+                            _villages[0].Villagers--;
                         }
                         else
                         {
                             Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
                         }
-                        _village.Suspicion = Math.Min(1, _village.Suspicion + ((float)Randomizer.Roll(3, 10, _random) / 100f)); // Can't get more suspicious than 1
+                        _villages[0].Suspicion = Math.Min(1, _villages[0].Suspicion + ((float)Randomizer.Roll(3, 10, _random) / 100f)); // Can't get more suspicious than 1
                         break;
                     case "1":
                         Console.WriteLine("You hide for the night. The village grows less suspicious.");
-                        _village.Suspicion = Math.Max(0, _village.Suspicion - ((float)Randomizer.Roll(20, 5, _random) / 100f)); // Can't get less suspicious than 0 
+                        _villages[0].Suspicion = Math.Max(0, _villages[0].Suspicion - ((float)Randomizer.Roll(20, 5, _random) / 100f)); // Can't get less suspicious than 0 
                         break;
                     default:
                         return true;
                        
                 }
 
-                // You win!
-                if (_village.Villagers <= 0)
-                {
+                // TODO: 
+                // Decay villages' suspicion here. EXCEPT the one that was visited (if any)
+
+                // Basic Win Condition - Will change
+                if (_villages[0].Villagers <= 0)
                     _isGameOver = true;
-                }
 
                 Console.WriteLine("");
                 Console.WriteLine("Press ENTER to continue");

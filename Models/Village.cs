@@ -7,6 +7,7 @@ namespace Count.Models
 {
     public class Village
     {
+        public string Name { get; set; }
         public int Villagers { get; set; }
         public float Suspicion { get; set; }
         public List<Location> LocationsSearched { get; set; } = new List<Location>();
