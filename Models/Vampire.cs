@@ -5,7 +5,11 @@
         /// <summary>
         /// Amount of actions able to take in one night
         /// </summary>
-        public int ActionPoints { get; set; }
+        public int ActionPointsMax { get; set; }
+        /// <summary>
+        /// Amount of actions able to take currently
+        /// </summary>
+        public int ActionPoints{ get; set; }
         /// <summary>
         /// Vampire's total hitpoints
         /// </summary>

@@ -16,11 +16,14 @@ namespace Count
     /// 5. Create multiple follower types.
     /// 6. Concept of mana and spells
     /// 
+    /// 7** Create stats for villagers. Each stat corresponds to the type of follower that could be created by feeding. 
+    /// ie. Strong villager could become strong follower. Smart villager, smart follower.etc.
+    /// 
     /// </summary>
     public class Game
     {
-        long _day = 0;
-        bool _isNight = true;
+        //long _day = 0;
+
         bool _isGameOver = false;
 
         /// <summary>
@@ -59,9 +62,6 @@ namespace Count
         {
             while (true)
             {
-                // Start of new day
-                _day++;
-
                 // Phases
                 while(Night());
                 while(Day());
@@ -77,6 +77,9 @@ namespace Count
                     Win();
                     break;
                 }
+
+                // End the day
+                _world.FinishDay();
             }
         }
 
@@ -85,10 +88,8 @@ namespace Count
         {
             if (!_vampire.IsDead)
             {
-                _isNight = false;
-
                 Console.Clear();
-                Console.WriteLine($"~~~ Day {_day} (Day) ~~~");
+                Console.WriteLine($"~~~ Day {_world.Day} (Day) ~~~");
                 Console.WriteLine("");
 
                 var infoText = "The sun rises again and you have to rest. Humanity uses this time to hunt you down";
@@ -96,9 +97,7 @@ namespace Count
                 Console.WriteLine("");
 
                 // Stat Report
-                Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
-                Console.WriteLine($"FOLLOWERS: {_vampire.Followers}");
-                Console.WriteLine($"LIVING VILLAGERS: {_world.GetCurrentVillage().Size}");
+                PrintStats();
                 Console.WriteLine("");
 
                 Console.WriteLine("");
@@ -107,10 +106,9 @@ namespace Count
                 Console.Clear();
                 switch (option)
                 {} // No actions during the day yet. Could be permanent?
-            
                
                 // Villagers try to find vampire
-                if (_world.GetCurrentVillage().Search(_vampire.Location))
+                if (_world.Search(_vampire.Location))
                 {
                     Console.WriteLine("The villagers have found your hiding place!");
                     if (_vampire.TryKill()) // True if it succeeds
@@ -122,6 +120,9 @@ namespace Count
                 {
                     Console.WriteLine("The villagers failed to find your hiding place.");
                 }
+
+                // You sleep during the day
+                _vampire.Sleep();
 
                 Console.WriteLine("");
                 Console.WriteLine("Press ENTER to continue");
@@ -135,41 +136,96 @@ namespace Count
         {
             if (!_vampire.IsDead)
             {
-                _isNight = true;
-
-                Console.Clear();
-                Console.WriteLine($"~~~ Day {_day} (Night) ~~~");
-                Console.WriteLine("");
-
                 var infoText = "Night falls. You can yet again roam the land.";
-                if (_day == 1)
-                    infoText += "\nYou rise on your first night as a vampire. You feel a hunger you haven't felt before.\nYou feel compelled to feed on human blood.";
-                if (_vampire.DetermineHungerLevel(_day) >= VampireLordController.HUNGER_WARNING_THRESHOLD)
+               
+                if (_vampire.DetermineHungerLevel() >= VampireLordController.HUNGER_WARNING_THRESHOLD)
                     infoText += $"\nWarning! You NEED to feed once every {VampireLordController.HUNGER_STARVING_THRESHOLD} days!";
-                if (_vampire.DetermineHungerLevel(_day) >= VampireLordController.HUNGER_STARVING_THRESHOLD)
+                if (_vampire.DetermineHungerLevel() >= VampireLordController.HUNGER_STARVING_THRESHOLD)
                 {
                     infoText += "\nYou are STARVING. You start taking damage, because you are not feeding!";
                     _vampire.Damage(1);
                     if (_vampire.IsDead)
                         return false;
                 }
+                
+                while (_vampire.ActionPoints > 0)
+                {
+                    Console.Clear();
+                    Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
+                    Console.WriteLine("");
+                    Console.WriteLine(infoText);
+                    Console.WriteLine("");
+                    Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
+                    Console.WriteLine("");
 
-                Console.WriteLine(infoText);
-                Console.WriteLine("");
+                    // Stat Report
+                    PrintStats();
 
-                // Stat Report
-                Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
-                Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel(_day)}");
-                Console.WriteLine($"LIVING VILLAGERS: {_world.GetCurrentVillage().Size}");
+                    Console.WriteLine("");
+
+                    // Actions
+                    Console.WriteLine("1. Venture into the world");
+                    Console.WriteLine("2. Move Lair");
+
+                    Console.WriteLine("");
+                    Console.Write(": ");
+
+                    var option = Console.ReadLine();
+                    Console.Clear();
+                    switch (option)
+                    {
+                        case "1":
+                            EnterVillage();
+                            break;
+                        case "2":
+                            Console.WriteLine("You spend the night moving to a new location.");
+                            _vampire.MoveLocation();
+                            _world.InvalidateSearch();
+                            // Exert after an action
+                            _vampire.Exert(1);
+                            break;
+                    }
+
+                    Console.WriteLine("");
+                    Console.WriteLine("Press ENTER to continue");
+                    Console.ReadLine();
+                }
+
+                // Decay villages' suspicion here. EXCEPT the one that was visited (if any)
+                foreach(var village in _world.Villages)
+                {
+                    if (!village.Equals(_world.GetCurrentVillage()))
+                        village.DecreaseSuspicion();
+                }
+               
+
+                // Basic Win Condition - Will change **DEPRECATED
+                /*if (_villages[0].Villagers <= 0)
+                    _isGameOver = true;*/
+            }
+            return false;
+        }
+
+        private void EnterVillage()
+        {
+            var finishedEnterVillage = false;
+            while (!finishedEnterVillage && _vampire.ActionPoints > 0)
+            {
+                Console.Clear();
+                Console.WriteLine($"Welcome to {_world.GetCurrentVillage().Name}");
+                Console.WriteLine($"Population: {_world.GetCurrentVillage().Size}");
                 if (IS_DEV)
                     Console.WriteLine($"(DEV) VILLAGE SUSPICION: {_world.GetCurrentVillage().Suspicion}");
+                if (_world.GetCurrentVillage().Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD)
+                {
+                    Console.WriteLine("**WARNING** The village has been alerted to you presence. It might be better to seek a different village");
+                }
                 Console.WriteLine("");
-
-                // Actions
-                Console.WriteLine("1. Hide");
-                Console.WriteLine("2. Feed on villager");
-                Console.WriteLine("3. Move Lair");
-
+                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
+                Console.WriteLine("");
+                Console.WriteLine("1. Feed!");
+                Console.WriteLine("2. Choose another village");
+                Console.WriteLine("q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
 
@@ -177,15 +233,9 @@ namespace Count
                 Console.Clear();
                 switch (option)
                 {
-                    case "3":
-                        Console.WriteLine("You spend the night moving to a new location.\nThe village grows more suspicious.");
-                        _vampire.MoveLocation();
-                        _world.GetCurrentVillage().InvalidateSearch();
-                        _world.GetCurrentVillage().IncreaseSuspicion();
-                        break;
-                    case "2":
+                    case "1":
                         // try to feed
-                        if (_vampire.Feed(_day))
+                        if (_vampire.Feed())
                         {
                             Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
                             // Effects on village
@@ -194,30 +244,89 @@ namespace Count
                         else
                             Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
                         _world.GetCurrentVillage().IncreaseSuspicion();
+                        // Exert after an action
+                        _vampire.Exert(1);
+                        finishedEnterVillage = true;
                         break;
-                    case "1":
-                        Console.WriteLine("You hide for the night. The village grows less suspicious.");
-                        _world.GetCurrentVillage().DecreaseSuspicion();
+                    case "2":
+                        ChooseVillage();
                         break;
-                    default:
-                        return true;
-                       
+                    case "q":
+                        finishedEnterVillage = true;
+                        break;
+
+                }
+            }
+        }
+
+        private void ChooseVillage()
+        {
+            var finishedChooseVillage = false;
+            while (!finishedChooseVillage && _vampire.ActionPoints > 0)
+            {
+                Console.Clear();
+                Console.WriteLine("Currently you know about the following villages in the area:");
+                var index = 0;
+                foreach (var village in _world.Villages)
+                {
+                    Console.WriteLine($"{++index}. {village.Name}{(village.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? " (Alerted)":"")}");
                 }
 
-                // TODO: 
-                // Decay villages' suspicion here. EXCEPT the one that was visited (if any)
-
-                // Basic Win Condition - Will change **DEPRECATED
-                /*if (_villages[0].Villagers <= 0)
-                    _isGameOver = true;*/
-
+                Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("");
-                Console.WriteLine("Press ENTER to continue");
-                Console.ReadLine();
+                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
+                Console.WriteLine("");
+                Console.WriteLine("Options:");
+                Console.WriteLine("");
+                Console.WriteLine("1-x. Enter Village");
+                // Only show another village option if all previous villages suspicion is above 80%
+                if (!_world.Villages.Any(i => i.Suspicion < VillageController.SUSPICION_WARNING_THRESHOLD))
+                    Console.WriteLine("s. Search for another village");
+                Console.WriteLine("q. Go back to previous menu");
+                Console.WriteLine("");
+                Console.Write(": ");
+
+                var option = Console.ReadLine();
+                Console.Clear();
+                int intOption = -1;
+                var couldParse = int.TryParse(option, out intOption);
+                if (couldParse && intOption > 0 && (intOption - 1) < _world.Villages.Count)
+                {
+                    _world.SetCurrentVillage(_world.Villages[intOption - 1]); // minus one for index;
+                    finishedChooseVillage = true;
+
+                    Console.WriteLine($"...Now entering {_world.GetCurrentVillage().Name}...");
+                    Console.WriteLine("");
+                    Console.WriteLine("Press ENTER to continue");
+                    Console.ReadLine();
+                    finishedChooseVillage = true;
+                }
+                else if (option == "s" && (!_world.Villages.Any(i => i.Suspicion < VillageController.SUSPICION_WARNING_THRESHOLD)))
+                {
+                    var newVillage =_world.AddVillage();
+                    Console.WriteLine($"By searching you find another village -> {newVillage.Name}");
+                    _world.SetCurrentVillage(newVillage);
+
+                    // Exert after an action
+                    _vampire.Exert(1);
+                    finishedChooseVillage = true;
+                }
+                else if (option == "q")
+                {
+                    finishedChooseVillage = true;
+                }
             }
-            return false;
+
         }
         #endregion
+
+        private void PrintStats()
+        {
+            Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
+            Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
+            Console.WriteLine($"FOLLOWERS: {_vampire.Followers}");
+           // Console.WriteLine($"LIVING VILLAGERS: {_world.GetCurrentVillage().Size}");
+        }
 
         private void Win()
         {
@@ -227,8 +336,6 @@ namespace Count
             Console.WriteLine("----------------------------------------------------------------------------");
             Console.WriteLine("Congratulations! You have been successful with your schemes.");
             Console.WriteLine("");
-            Console.WriteLine("Press ENTER to continue");
-            Console.ReadLine();
         }
 
         private void Lose()
@@ -239,8 +346,6 @@ namespace Count
             Console.WriteLine("----------------------------------------------------------------------------");
             Console.WriteLine("You have died! Please try again.");
             Console.WriteLine("");
-            Console.WriteLine("Press ENTER to continue");
-            Console.ReadLine();
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Count.Utils
         {
             get
             {
-                if (_randomizer != null)
+                if (_randomizer == null)
                     _randomizer = new Randomizer();
 
                 return _randomizer;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Count.Models;
 using Count.Utils;
 
@@ -12,55 +13,73 @@ namespace Count.Controllers
         private WorldController _worldController;
         private VampireLord VampireLord { get; set; }
 
+        /// <summary>
+        /// Hunger logic
+        /// </summary>
+        public static int HUNGER_WARNING_THRESHOLD = 5;
+        public static int HUNGER_STARVING_THRESHOLD = 10;
+
         public VampireLordController(WorldController worldController)
         {
             _worldController = worldController;
 
             // Create Vampire Lord
             VampireLord = new VampireLord();
-            VampireLord.Hitpoints = 10;
-            VampireLord.ActionPoints = 5;
+            VampireLord.Hitpoints = 50;
+            VampireLord.ActionPointsMax = 1;
+            VampireLord.LastFed = _worldController.Day;
 
             // Init
-            Feed(1, true);
             MoveLocation();
+            Sleep();
         }
 
+        #region "Night Actions"
         /// <summary>
         ///  Checks if you succeed on feeding on a unsuspecting villager
         /// </summary>
-        public bool Feed(long day)
-        {
-            return Feed(day, false);
-        }
-
-        private bool Feed(long day, bool forceSuccess)
+        public bool Feed()
         {
             var feedCheck = true;
-            if (!forceSuccess)
+            var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
+            if (Game.IS_DEV)
             {
-                var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-                if (Game.IS_DEV)
-                {
-                    Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
-                    Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion))}");
-                }
-
-                feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion));
+                Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
+                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion))}");
             }
-            
+
+            feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion));
+
             if (feedCheck)
             {
                 // Effects on you
-                VampireLord.LastFed = day;
-                if (!forceSuccess)
-                    VampireLord.Followers++;
+                VampireLord.LastFed = _worldController.Day;
+                VampireLord.Followers++;
             }
 
             return feedCheck;
         }
 
+        /// <summary>
+        /// Move your hiding location
+        /// </summary>
+        public void MoveLocation()
+        {
+            VampireLord.Location = _worldController.GenerateWorldLocation();
+        }
+        #endregion
 
+        #region "Day Actions"
+        /// <summary>
+        /// Rest and regain actionpoints and ---possibly hitpoints?
+        /// </summary>
+        public void Sleep()
+        {
+            VampireLord.ActionPoints = VampireLord.ActionPointsMax;
+        }
+        #endregion
+
+        #region "Properties"
         /// <summary>
         ///  Checks if you are dead
         /// </summary>
@@ -76,7 +95,6 @@ namespace Count.Controllers
         {
             get { return VampireLord.Hitpoints; }
         }
-
         /// <summary>
         /// Your current location
         /// </summary>
@@ -91,17 +109,19 @@ namespace Count.Controllers
         }
 
         /// <summary>
-        /// Hunger logic
+        /// Your current actionpoints
         /// </summary>
-        public static int HUNGER_WARNING_THRESHOLD = 5;
-        public static int HUNGER_STARVING_THRESHOLD = 10;
-
+        public int ActionPoints
+        {
+            get { return VampireLord.ActionPoints; }
+        }
+        #endregion
         /// <summary>
         /// The level of your hunger
         /// </summary>
-        public long DetermineHungerLevel(long day)
+        public long DetermineHungerLevel()
         {
-            return day - VampireLord.LastFed;
+            return _worldController.Day - VampireLord.LastFed;
         }
 
         /// <summary>
@@ -128,33 +148,19 @@ namespace Count.Controllers
         /// <summary>
         /// Damages you
         /// </summary>
+        /// <param name="i">amount of damage</param>
         public void Damage(int i)
         {
             VampireLord.Hitpoints -= i;
         }
 
         /// <summary>
-        /// Move your hiding location
+        /// Exerts your actionpoints
         /// </summary>
-        public void MoveLocation()
+        /// <param name="i">amount of exertion</param>
+        public void Exert(int i)
         {
-            VampireLord.Location = _worldController.GenerateWorldLocation();
-        }
-
-
-        /// <summary>
-        /// Checks to see if you are hiding at current location
-        /// </summary>
-        /// <param name="location"></param>
-        /// <returns></returns>
-        public bool IsHidingAt(Location location)
-        {
-            return location.X == VampireLord.Location.X && location.Y == VampireLord.Location.Y;
-        }
-
-        public int ActionPoints
-        {
-            get { return VampireLord.ActionPoints; }
+            VampireLord.ActionPoints -= i;
         }
     }
 }

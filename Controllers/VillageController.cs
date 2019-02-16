@@ -11,10 +11,11 @@ namespace Count.Controllers
         private WorldController _worldController;
 
         public Village Village { get; set; }
-        
 
         // temp
-        int villagerCounter = 0;
+        int villagerCounter = 1;
+
+        public static float SUSPICION_WARNING_THRESHOLD = 0.5f;
 
         public VillageController(WorldController worldController)
         {
@@ -23,6 +24,8 @@ namespace Count.Controllers
             // Create village
             Village = new Village()
             {
+                Id = Guid.NewGuid(),
+                Name = $"Village-{_worldController.Villages.Count + 1}",
                 Villagers = new List<Villager>(),
                 Suspicion = 0
             };
@@ -57,59 +60,19 @@ namespace Count.Controllers
             get { return Village.Suspicion; }
         }
 
-        public bool IsLocationFound
+        public string Name
         {
-            get { return Village.IsLocationFound; }
-        }
-
-        /// <summary>
-        /// Try to find the vampire 
-        /// </summary>
-        /// <param name="vampireLocation">The "unknown" location of the vampired being searched</param>
-        /// <returns>True, if vampire location is found</returns>
-        public bool Search(Location vampireLocation) 
-        {
-            var searchLocation = _worldController.GenerateWorldLocation();
-            while (Village.LocationsSearched.Any(i => i.X == vampireLocation.X && i.Y == vampireLocation.Y))
-                searchLocation = _worldController.GenerateWorldLocation();
-
-            if (Game.IS_DEV)
-            {
-                Console.WriteLine($"(DEV) HIDING AT: {vampireLocation.X}:{vampireLocation.Y}");
-                if (Village.IsLocationFound)
-                    Console.WriteLine($"(DEV) VILLAGERS FOUND:  {searchLocation.X}:{searchLocation.Y}");
-                else
-                {
-                    Console.WriteLine($"(DEV) VILLAGERS PREVIOUSLY SEARCHED:  {LocationUtil.ToStringFromLocations(Village.LocationsSearched)}");
-                    Console.WriteLine($"(DEV) VILLAGERS SEARCHED:  {searchLocation.X}:{searchLocation.Y}");
-                }
-            }
-
-            if ((vampireLocation.X == searchLocation.X && vampireLocation.Y == searchLocation.Y) || Village.IsLocationFound)
-            {
-                Village.IsLocationFound = true;
-                return true;
-            }
-
-            // Search better each round
-            Village.LocationsSearched.Add(searchLocation);
-            return false;
-        }
-
-        public void InvalidateSearch()
-        {
-            Village.IsLocationFound = false;
-            Village.LocationsSearched.Clear();
+            get { return Village.Name; }
         }
 
         public void IncreaseSuspicion()
         {
-            Village.Suspicion = Math.Min(1, Village.Suspicion + (Randomizer.Instance.Roll(3, 10) / 100f)); // Can't get more suspicious than 1
+            Village.Suspicion = Math.Min(1, Village.Suspicion + (Randomizer.Instance.Roll(20, 5) / 100f)); // Can't get more suspicious than 1
         }
 
         public void DecreaseSuspicion()
         {
-            Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(20, 5) / 100f)); // Can't get less suspicious than 0 
+            Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(3, 10) / 100f)); // Can't get less suspicious than 0 
         }
     }
 }
