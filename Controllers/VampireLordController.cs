@@ -8,46 +8,45 @@ namespace Count.Controllers
     {
         private const int BASE_FEED_DC = 10;
         private const int BASE_CHECK_ROLL = 20;
-        private Random _random;
-        private int _worldSize;
-        
+
+        private WorldController _worldController;
         private VampireLord VampireLord { get; set; }
 
-        public VampireLordController(int worldSize)
+        public VampireLordController(WorldController worldController)
         {
-            _random = new Random();
-            _worldSize = worldSize;
+            _worldController = worldController;
 
             // Create Vampire Lord
             VampireLord = new VampireLord();
             VampireLord.Hitpoints = 10;
+            VampireLord.ActionPoints = 5;
 
             // Init
-            Feed(null, 1, true);
+            Feed(1, true);
             MoveLocation();
         }
 
         /// <summary>
         ///  Checks if you succeed on feeding on a unsuspecting villager
         /// </summary>
-        public bool Feed(Village village, long day)
+        public bool Feed(long day)
         {
-            return Feed(village, day, false);
+            return Feed(day, false);
         }
 
-        private bool Feed(Village village, long day, bool forceSuccess)
+        private bool Feed(long day, bool forceSuccess)
         {
             var feedCheck = true;
             if (!forceSuccess)
             {
-                var feedRoll = Randomizer.Roll(1, BASE_CHECK_ROLL, _random);
+                var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
                 if (Game.IS_DEV)
                 {
                     Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
-                    Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round(((float)BASE_FEED_DC) * village.Suspicion))}");
+                    Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion))}");
                 }
 
-                feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round(((float)BASE_FEED_DC) * village.Suspicion));
+                feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion));
             }
             
             if (feedCheck)
@@ -139,12 +138,23 @@ namespace Count.Controllers
         /// </summary>
         public void MoveLocation()
         {
-            VampireLord.Location = new Location(Randomizer.Roll(1, _worldSize, _random), Randomizer.Roll(1, _worldSize, _random));
+            VampireLord.Location = _worldController.GenerateWorldLocation();
         }
 
+
+        /// <summary>
+        /// Checks to see if you are hiding at current location
+        /// </summary>
+        /// <param name="location"></param>
+        /// <returns></returns>
         public bool IsHidingAt(Location location)
         {
             return location.X == VampireLord.Location.X && location.Y == VampireLord.Location.Y;
+        }
+
+        public int ActionPoints
+        {
+            get { return VampireLord.ActionPoints; }
         }
     }
 }

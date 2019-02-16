@@ -6,7 +6,7 @@ using Count.Models;
 
 namespace Count.Utils
 {
-    public static class ListUtil
+    public static class LocationUtil
     {
         public static string ToStringFromLocations(List<Location> locations)
         {
@@ -22,7 +22,6 @@ namespace Count.Utils
 
             output += " }";
             return output;
-
         }
     }
 

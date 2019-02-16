@@ -1,17 +1,7 @@
 ﻿namespace Count.Models
 {
-    public class VampireLord
+    public class VampireLord : Vampire
     {
-        public int Hitpoints { get; set; }
-        /// <summary>
-        /// Last day the vampire was fed
-        /// </summary>
-        public long LastFed { get; set; }
-
-        /// <summary>
-        /// Villagers converted into followers
-        /// </summary>
-        public int Followers { get; set; }
         /// <summary>
         /// Vampire's hiding spot
         /// </summary>

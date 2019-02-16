@@ -5,14 +5,38 @@ using System.Text;
 
 namespace Count.Utils
 {
-    public static class Randomizer
+    public class Randomizer
     {
-        public static int Roll(int iterations, int range, Random random)
+        private Random _random;
+        private static Randomizer _randomizer;
+
+        private Randomizer()
+        {
+            _random = new Random();
+        }
+
+        public static Randomizer Instance
+        {
+            get
+            {
+                if (_randomizer != null)
+                    _randomizer = new Randomizer();
+
+                return _randomizer;
+            }
+        }
+
+        public Random Random
+        {
+            get { return _random; }
+        }
+
+        public int Roll(int iterations, int range)
         {
             int roll = 0;
             for(int i = 0; i < iterations; i++)
             {
-                roll += (random.Next(range) + 1);
+                roll += (_random.Next(range) + 1);
             }
             return roll;
         }
