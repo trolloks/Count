@@ -1,5 +1,6 @@
 ﻿using Count.Controllers;
 using Count.Models;
+using Count.Models.Followers;
 using Count.Utils;
 using System;
 using System.Collections.Generic;
@@ -9,14 +10,12 @@ namespace Count
 {
     /// <summary>
     /// TODO: 
-    /// 1. WIP: Add multiple villages.
-    /// 2. Add ability to find additional villages.
-    /// 3. Generate village names
-    /// 4. Create suspicion decay if village was not visited.
-    /// 5. Create multiple follower types.
-    /// 6. Concept of mana and spells
+    /// 1. Generate village names
+    /// 2. Create multiple follower types.
+    /// 3. Concept of mana and spells
+    /// 4. Progression -> Castle upgrades etc?
     /// 
-    /// 7** Create stats for villagers. Each stat corresponds to the type of follower that could be created by feeding. 
+    /// 4** Create stats for villagers. Each stat corresponds to the type of follower that could be created by feeding. 
     /// ie. Strong villager could become strong follower. Smart villager, smart follower.etc.
     /// 
     /// </summary>
@@ -224,7 +223,8 @@ namespace Count
                 Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
                 Console.WriteLine("");
                 Console.WriteLine("1. Feed!");
-                Console.WriteLine("2. Choose another village");
+                Console.WriteLine("2. Convert Villager into follower");
+                Console.WriteLine("3. Choose another village");
                 Console.WriteLine("q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -239,7 +239,7 @@ namespace Count
                         {
                             Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
                             // Effects on village
-                            _world.GetCurrentVillage().KillVillager();
+                            _world.GetCurrentVillage().KillVillager(_world.GetCurrentVillage().RandomVillager());
                         }
                         else
                             Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
@@ -249,6 +249,26 @@ namespace Count
                         finishedEnterVillage = true;
                         break;
                     case "2":
+                        // try to convert
+                        var villager = _world.GetCurrentVillage().RandomVillager();
+                        var follower = _vampire.ConvertFollower(villager);
+                        if (follower != null)
+                        {
+                            if (follower.GetType() == typeof(Zombie))
+                                Console.WriteLine("You have converted a villager into a zombie. This follower would give his life for you.");
+                            if (follower.GetType() == typeof(Vampire))
+                                Console.WriteLine("You have converted a villager into a lesser vampire. This follower will spread your evil.");
+                            // Effects on village
+                            _world.GetCurrentVillage().KillVillager(villager); // technically not killing but removing
+                        }
+                        else
+                            Console.WriteLine("You fail your attempt to convert a villager. The village grows more suspicious.");
+                        _world.GetCurrentVillage().IncreaseSuspicion();
+                        // Exert after an action
+                        _vampire.Exert(1);
+                        finishedEnterVillage = true;
+                        break;
+                    case "3":
                         ChooseVillage();
                         break;
                     case "q":
@@ -324,8 +344,10 @@ namespace Count
         {
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
-            Console.WriteLine($"FOLLOWERS: {_vampire.Followers}");
-           // Console.WriteLine($"LIVING VILLAGERS: {_world.GetCurrentVillage().Size}");
+            Console.WriteLine($"FOLLOWERS: {_vampire.Followers.Count}");
+            Console.WriteLine($"- VAMPIRES: {_vampire.Followers.Where(i => i.GetType() == typeof(Vampire)).ToList().Count}");
+            Console.WriteLine($"- ZOMBIES: {_vampire.Followers.Where(i => i.GetType() == typeof(Zombie)).ToList().Count}");
+            // Console.WriteLine($"LIVING VILLAGERS: {_world.GetCurrentVillage().Size}");
         }
 
         private void Win()

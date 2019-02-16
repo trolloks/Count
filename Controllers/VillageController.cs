@@ -39,15 +39,24 @@ namespace Count.Controllers
 
         public void SpawnVillager()
         {
-            Village.Villagers.Add(new Villager { Name = $"Villager-{villagerCounter}" });
+            Village.Villagers.Add(new Villager
+            {
+                Name = $"Villager-{villagerCounter}",
+                Strength = (Randomizer.Instance.Roll(6, 20) / 6), // Avg
+                Intelligence = (Randomizer.Instance.Roll(6, 20) / 6) // Avg
+            });
             villagerCounter++;
         }
 
-        public void KillVillager()
+        public void KillVillager(Villager villager)
         {
-            // Random villager
+            Village.Villagers.Remove(villager);
+        }
+
+        public Villager RandomVillager()
+        {
             var unluckyPerson = Randomizer.Instance.Random.Next(Size);
-            Village.Villagers.RemoveAt(unluckyPerson);
+            return Village.Villagers[unluckyPerson];
         }
 
         public int Size

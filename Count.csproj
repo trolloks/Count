@@ -44,8 +44,10 @@
     <Compile Include="Controllers\VillageController.cs" />
     <Compile Include="Controllers\WorldController.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="Models\Followers\Zombie.cs" />
     <Compile Include="Models\Location.cs" />
-    <Compile Include="Models\Vampire.cs" />
+    <Compile Include="Models\Follower.cs" />
+    <Compile Include="Models\Followers\Vampire.cs" />
     <Compile Include="Models\VampireLord.cs" />
     <Compile Include="Models\Villager.cs" />
     <Compile Include="Models\World.cs" />

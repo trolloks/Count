@@ -1,13 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Count.Models;
+using Count.Models.Followers;
 using Count.Utils;
 
 namespace Count.Controllers
 {
     public class VampireLordController
     {
-        private const int BASE_FEED_DC = 10;
+        private const int BASE_FEED_DC = 8;
+        private const int BASE_CONVERT_DC = 5;
         private const int BASE_CHECK_ROLL = 20;
 
         private WorldController _worldController;
@@ -45,19 +48,60 @@ namespace Count.Controllers
             if (Game.IS_DEV)
             {
                 Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
-                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion))}");
+                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion))}");
             }
 
-            feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion));
+            feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion));
 
             if (feedCheck)
             {
                 // Effects on you
                 VampireLord.LastFed = _worldController.Day;
-                VampireLord.Followers++;
             }
 
             return feedCheck;
+        }
+
+        /// <summary>
+        ///  Checks if you succeed on converting a villager
+        /// </summary>
+        public Follower ConvertFollower(Villager villager)
+        {
+            var convertCheck = true;
+            var convertRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
+            if (Game.IS_DEV)
+            {
+                Console.WriteLine($"(DEV) CONVERT CHECK: {convertRoll}");
+                Console.WriteLine($"(DEV) CONVERT DC CHECK: {(BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * _worldController.GetCurrentVillage().Suspicion))}");
+
+                Console.WriteLine($"(DEV) VILLAGER STR: {villager.Strength}");
+                Console.WriteLine($"(DEV) VILLAGER INT: {villager.Intelligence}");
+                Console.WriteLine("");
+                Console.WriteLine($"(DEV) ZOMBIE CHANCE: {(float)villager.Strength / (float)(villager.Intelligence + villager.Strength) * 100}");
+                Console.WriteLine($"(DEV) VAMPIRE CHANCE: {(float)villager.Intelligence / (float)(villager.Intelligence + villager.Strength) * 100}");
+            }
+
+            convertCheck = convertRoll >= (BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * _worldController.GetCurrentVillage().Suspicion));
+
+            if (convertCheck)
+            {
+                Follower follower = null;
+                var rollChance = Randomizer.Instance.Roll(1, villager.Intelligence + villager.Strength);
+                if (rollChance <= villager.Intelligence)
+                {
+                    follower = new Vampire { PreviousLife = villager };
+                    VampireLord.Followers.Add(follower);
+                }
+                else
+                {
+                    follower = new Zombie { PreviousLife = villager };
+                    VampireLord.Followers.Add(follower);
+                }
+
+                return follower;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -103,9 +147,9 @@ namespace Count.Controllers
             get { return VampireLord.Location; }
         }
 
-        public int Followers
+        public ReadOnlyCollection<Follower> Followers
         {
-            get { return VampireLord.Followers; }
+            get { return VampireLord.Followers.AsReadOnly(); }
         }
 
         /// <summary>
@@ -129,9 +173,9 @@ namespace Count.Controllers
         /// </summary>
         public bool TryKill()
         {
-            bool couldKill = Followers <= 0;
+            bool couldKill = !Followers.Any(i => i.GetType() == typeof(Zombie)); // Only zombies can block death
             if (!couldKill)
-                VampireLord.Followers--;
+                KillFollower(typeof(Zombie));
             else
                 ForceKill();
             return couldKill;
@@ -161,6 +205,19 @@ namespace Count.Controllers
         public void Exert(int i)
         {
             VampireLord.ActionPoints -= i;
+        }
+
+        public void KillFollower(Type followerType)
+        {
+            var collection = VampireLord.Followers;
+            if (followerType != null)
+            {
+                collection = collection.Where(i => i.GetType() == followerType).ToList();
+            }
+            var unluckyFollowerIndex = Randomizer.Instance.Random.Next(Followers.Count);
+            var unluckyFollower = collection[unluckyFollowerIndex];
+            // remove
+            VampireLord.Followers.Remove(unluckyFollower);
         }
     }
 }
