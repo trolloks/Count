@@ -48,12 +48,17 @@ namespace Count.Controllers
             villagerCounter++;
         }
 
-        public void KillVillager(Villager villager)
+        public void KillVillager()
+        {
+            KillVillager(RandomVillager());
+        }
+
+        private void KillVillager(Villager villager)
         {
             Village.Villagers.Remove(villager);
         }
 
-        public Villager RandomVillager()
+        private Villager RandomVillager()
         {
             var unluckyPerson = Randomizer.Instance.Random.Next(Size);
             return Village.Villagers[unluckyPerson];
@@ -82,6 +87,16 @@ namespace Count.Controllers
         public void DecreaseSuspicion()
         {
             Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(3, 10) / 100f)); // Can't get less suspicious than 0 
+        }
+
+        public Type ConvertVillagerToFollower(FollowersController followersController)
+        {
+            Villager villager = RandomVillager();
+            
+            // Effects on village
+            KillVillager(villager); // technically not killing but removing
+
+            return followersController.CreateFollower(villager);
         }
     }
 }

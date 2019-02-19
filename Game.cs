@@ -164,7 +164,7 @@ namespace Count
 
                     // Actions
                     Console.WriteLine("1. Venture into the world");
-                    Console.WriteLine("2. Move Lair");
+                    Console.WriteLine("2. Move Lair (1 Action)");
 
                     Console.WriteLine("");
                     Console.Write(": ");
@@ -213,6 +213,7 @@ namespace Count
                 Console.Clear();
                 Console.WriteLine($"Welcome to {_world.GetCurrentVillage().Name}");
                 Console.WriteLine($"Population: {_world.GetCurrentVillage().Size}");
+                PrintStats();
                 if (IS_DEV)
                     Console.WriteLine($"(DEV) VILLAGE SUSPICION: {_world.GetCurrentVillage().Suspicion}");
                 if (_world.GetCurrentVillage().Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD)
@@ -222,8 +223,8 @@ namespace Count
                 Console.WriteLine("");
                 Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
                 Console.WriteLine("");
-                Console.WriteLine("1. Feed!");
-                Console.WriteLine("2. Convert Villager into follower");
+                Console.WriteLine("1. Feed! (1 Action)");
+                Console.WriteLine("2. Convert Villager into follower (1 Action)");
                 Console.WriteLine("3. Choose another village");
                 Console.WriteLine("q. Go back to previous menu");
                 Console.WriteLine("");
@@ -239,7 +240,7 @@ namespace Count
                         {
                             Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
                             // Effects on village
-                            _world.GetCurrentVillage().KillVillager(_world.GetCurrentVillage().RandomVillager());
+                            _world.GetCurrentVillage().KillVillager();
                         }
                         else
                             Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
@@ -250,16 +251,13 @@ namespace Count
                         break;
                     case "2":
                         // try to convert
-                        var villager = _world.GetCurrentVillage().RandomVillager();
-                        var follower = _vampire.ConvertFollower(villager);
-                        if (follower != null)
+                        var followerConvertedType = _vampire.TryConvertFollower();
+                        if (followerConvertedType != null)
                         {
-                            if (follower.GetType() == typeof(Zombie))
+                            if (followerConvertedType == typeof(Zombie))
                                 Console.WriteLine("You have converted a villager into a zombie. This follower would give his life for you.");
-                            if (follower.GetType() == typeof(Vampire))
+                            if (followerConvertedType == typeof(Vampire))
                                 Console.WriteLine("You have converted a villager into a lesser vampire. This follower will spread your evil.");
-                            // Effects on village
-                            _world.GetCurrentVillage().KillVillager(villager); // technically not killing but removing
                         }
                         else
                             Console.WriteLine("You fail your attempt to convert a villager. The village grows more suspicious.");
@@ -301,7 +299,7 @@ namespace Count
                 Console.WriteLine("1-x. Enter Village");
                 // Only show another village option if all previous villages suspicion is above 80%
                 if (!_world.Villages.Any(i => i.Suspicion < VillageController.SUSPICION_WARNING_THRESHOLD))
-                    Console.WriteLine("s. Search for another village");
+                    Console.WriteLine("s. Search for another village (1 Action)");
                 Console.WriteLine("q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -344,9 +342,9 @@ namespace Count
         {
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
-            Console.WriteLine($"FOLLOWERS: {_vampire.Followers.Count}");
-            Console.WriteLine($"- VAMPIRES: {_vampire.Followers.Where(i => i.GetType() == typeof(Vampire)).ToList().Count}");
-            Console.WriteLine($"- ZOMBIES: {_vampire.Followers.Where(i => i.GetType() == typeof(Zombie)).ToList().Count}");
+            Console.WriteLine($"FOLLOWERS: {_vampire.GetFollowers().Total}");
+            Console.WriteLine($"- VAMPIRES: {_vampire.GetFollowers().GetTotalOfType(typeof(Vampire))}");
+            Console.WriteLine($"- ZOMBIES: {_vampire.GetFollowers().GetTotalOfType(typeof(Zombie))}");
             // Console.WriteLine($"LIVING VILLAGERS: {_world.GetCurrentVillage().Size}");
         }
 

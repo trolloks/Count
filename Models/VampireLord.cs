@@ -20,11 +20,6 @@ namespace Count.Models
         /// Last day the vampire was fed
         /// </summary>
         public long LastFed { get; set; }
-
-        /// <summary>
-        /// Villagers converted into followers
-        /// </summary>
-        public List<Follower> Followers { get; set; } = new List<Follower>();
         /// <summary>
         /// Vampire's hiding spot
         /// </summary>

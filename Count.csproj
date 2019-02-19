@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\VampireLordController.cs" />
+    <Compile Include="Controllers\FollowersController.cs" />
     <Compile Include="Controllers\VillageController.cs" />
     <Compile Include="Controllers\WorldController.cs" />
     <Compile Include="Game.cs" />
