@@ -9,15 +9,10 @@ namespace Count.Controllers
 {
     public class FollowersController
     {
-        private WorldController _worldController;
-        private VampireLordController _vampireLordController;
         private List<Follower> _followers { get; set; }
 
-        public FollowersController(WorldController worldController, VampireLordController vampireLordController)
+        public FollowersController()
         {
-            _worldController = worldController;
-            _vampireLordController = vampireLordController;
-
             _followers = new List<Follower>();
         }
 

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using Count.Models;
 using Count.Models.Followers;
 using Count.Utils;
@@ -27,7 +24,7 @@ namespace Count.Controllers
         public VampireLordController(WorldController worldController)
         {
             _worldController = worldController;
-            _followersController = new FollowersController(_worldController, this);
+            _followersController = new FollowersController();
 
             // Create Vampire Lord
             VampireLord = new VampireLord();

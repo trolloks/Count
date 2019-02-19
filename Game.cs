@@ -21,8 +21,6 @@ namespace Count
     /// </summary>
     public class Game
     {
-        //long _day = 0;
-
         bool _isGameOver = false;
 
         /// <summary>
@@ -34,7 +32,7 @@ namespace Count
         /// </summary>
         WorldController _world;
 
-        public static bool IS_DEV = true;
+        public static bool IS_DEV = false;
 
         public void Start()
         {
@@ -213,6 +211,7 @@ namespace Count
                 Console.Clear();
                 Console.WriteLine($"Welcome to {_world.GetCurrentVillage().Name}");
                 Console.WriteLine($"Population: {_world.GetCurrentVillage().Size}");
+                Console.WriteLine("----------------------------------------------------------------------------");
                 PrintStats();
                 if (IS_DEV)
                     Console.WriteLine($"(DEV) VILLAGE SUSPICION: {_world.GetCurrentVillage().Suspicion}");
@@ -224,7 +223,9 @@ namespace Count
                 Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
                 Console.WriteLine("");
                 Console.WriteLine("1. Feed! (1 Action)");
+                Console.WriteLine($"\t- Feed to sate your hunger. If you don't feed once every {VampireLordController.HUNGER_STARVING_THRESHOLD} days you will start taking damage.");
                 Console.WriteLine("2. Convert Villager into follower (1 Action)");
+                Console.WriteLine("\t- Followers help you further your schemes. They would even give their lives to protect you against the villagers.");
                 Console.WriteLine("3. Choose another village");
                 Console.WriteLine("q. Go back to previous menu");
                 Console.WriteLine("");
@@ -345,7 +346,6 @@ namespace Count
             Console.WriteLine($"FOLLOWERS: {_vampire.GetFollowers().Total}");
             Console.WriteLine($"- VAMPIRES: {_vampire.GetFollowers().GetTotalOfType(typeof(Vampire))}");
             Console.WriteLine($"- ZOMBIES: {_vampire.GetFollowers().GetTotalOfType(typeof(Zombie))}");
-            // Console.WriteLine($"LIVING VILLAGERS: {_world.GetCurrentVillage().Size}");
         }
 
         private void Win()
