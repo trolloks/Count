@@ -60,10 +60,15 @@ namespace Count.Controllers
                 var unluckyFollower = collection[unluckyFollowerIndex];
 
                 // remove
-                _followers.Remove(unluckyFollower);
+                KillFollower(unluckyFollower);
                 return true;
             }
             return false;
+        }
+
+        private void KillFollower(Follower follower)
+        {
+            _followers.Remove(follower);
         }
     }
 }

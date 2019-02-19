@@ -10,9 +10,9 @@ namespace Count.Controllers
     {
         private WorldController _worldController;
 
-        public Village Village { get; set; }
+        private Village Village { get; set; }
 
-        // temp
+        // temp (For names)
         int villagerCounter = 1;
 
         public static float SUSPICION_WARNING_THRESHOLD = 0.5f;
