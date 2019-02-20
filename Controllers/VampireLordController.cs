@@ -48,10 +48,10 @@ namespace Count.Controllers
             if (Game.IS_DEV)
             {
                 Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
-                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion))}");
+                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * _worldController.GetCurrentRegion().GetCurrentVillage().Suspicion))}");
             }
 
-            feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * _worldController.GetCurrentVillage().Suspicion));
+            feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * _worldController.GetCurrentRegion().GetCurrentVillage().Suspicion));
 
             if (feedCheck)
             {
@@ -72,20 +72,14 @@ namespace Count.Controllers
             if (Game.IS_DEV)
             {
                 Console.WriteLine($"(DEV) CONVERT CHECK: {convertRoll}");
-                Console.WriteLine($"(DEV) CONVERT DC CHECK: {(BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * _worldController.GetCurrentVillage().Suspicion))}");
-
-                /*Console.WriteLine($"(DEV) VILLAGER STR: {villager.Strength}");
-                Console.WriteLine($"(DEV) VILLAGER INT: {villager.Intelligence}");
-                Console.WriteLine("");
-                Console.WriteLine($"(DEV) ZOMBIE CHANCE: {(float)villager.Strength / (float)(villager.Intelligence + villager.Strength) * 100}");
-                Console.WriteLine($"(DEV) VAMPIRE CHANCE: {(float)villager.Intelligence / (float)(villager.Intelligence + villager.Strength) * 100}");*/
+                Console.WriteLine($"(DEV) CONVERT DC CHECK: {(BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * _worldController.GetCurrentRegion().GetCurrentVillage().Suspicion))}");
             }
 
-            convertCheck = convertRoll >= (BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * _worldController.GetCurrentVillage().Suspicion));
+            convertCheck = convertRoll >= (BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * _worldController.GetCurrentRegion().GetCurrentVillage().Suspicion));
 
             if (convertCheck)
             {
-                return _worldController.GetCurrentVillage().ConvertVillagerToFollower(_followersController);
+                return _worldController.GetCurrentRegion().GetCurrentVillage().ConvertVillagerToFollower(_followersController);
             }
 
             return null;

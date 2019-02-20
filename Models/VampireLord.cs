@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-
-namespace Count.Models
+﻿namespace Count.Models
 {
     public class VampireLord
-    { 
+    {
         /// <summary>
         /// Amount of actions able to take in one night
         /// </summary>

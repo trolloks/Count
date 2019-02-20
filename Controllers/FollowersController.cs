@@ -1,9 +1,9 @@
-﻿using Count.Models;
-using Count.Models.Followers;
-using Count.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Count.Models;
+using Count.Models.Followers;
+using Count.Utils;
 
 namespace Count.Controllers
 {

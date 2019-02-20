@@ -1,14 +1,13 @@
-﻿using Count.Models;
-using Count.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using Count.Models;
+using Count.Utils;
 
 namespace Count.Controllers
 {
     public class VillageController
     {
-        private WorldController _worldController;
+        private RegionController _regionController;
 
         private Village Village { get; set; }
 
@@ -17,15 +16,15 @@ namespace Count.Controllers
 
         public static float SUSPICION_WARNING_THRESHOLD = 0.5f;
 
-        public VillageController(WorldController worldController)
+        public VillageController(RegionController regionController)
         {
-            _worldController = worldController;
+            _regionController = regionController;
 
             // Create village
             Village = new Village()
             {
                 Id = Guid.NewGuid(),
-                Name = $"Village-{_worldController.Villages.Count + 1}",
+                Name = $"Village-{_regionController.Villages.Count + 1}",
                 Villagers = new List<Villager>(),
                 Suspicion = 0
             };
@@ -92,7 +91,7 @@ namespace Count.Controllers
         public Type ConvertVillagerToFollower(FollowersController followersController)
         {
             Villager villager = RandomVillager();
-            
+
             // Effects on village
             KillVillager(villager); // technically not killing but removing
 

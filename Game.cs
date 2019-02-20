@@ -10,10 +10,13 @@ namespace Count
 {
     /// <summary>
     /// TODO: 
-    /// 1. Generate village names
-    /// 2. Create multiple follower types.
-    /// 3. Concept of mana and spells
-    /// 4. Progression -> Castle upgrades etc?
+    /// 
+    /// 1. Break up world into segments
+    /// 2. Add concept of distance.
+    /// 3. X Amount of villages into section(region?), with possible special locations
+    /// 4. Concept of mana and spells
+    /// 5. Progression -> Castle upgrades etc?
+    /// 6. Generate village/villager/region names
     /// 
     /// 4** Create stats for villagers. Each stat corresponds to the type of follower that could be created by feeding. 
     /// ie. Strong villager could become strong follower. Smart villager, smart follower.etc.
@@ -189,11 +192,15 @@ namespace Count
                 }
 
                 // Decay villages' suspicion here. EXCEPT the one that was visited (if any)
-                foreach(var village in _world.Villages)
+                foreach (var region in _world.Regions)
                 {
-                    if (!village.Equals(_world.GetCurrentVillage()))
-                        village.DecreaseSuspicion();
+                    foreach (var village in region.Villages)
+                    {
+                        if (!village.Equals(region.GetCurrentVillage()))
+                            village.DecreaseSuspicion();
+                    }
                 }
+                
                
 
                 // Basic Win Condition - Will change **DEPRECATED
@@ -209,13 +216,13 @@ namespace Count
             while (!finishedEnterVillage && _vampire.ActionPoints > 0)
             {
                 Console.Clear();
-                Console.WriteLine($"Welcome to {_world.GetCurrentVillage().Name}");
-                Console.WriteLine($"Population: {_world.GetCurrentVillage().Size}");
+                Console.WriteLine($"Welcome to {_world.GetCurrentRegion().GetCurrentVillage().Name}");
+                Console.WriteLine($"Population: {_world.GetCurrentRegion().GetCurrentVillage().Size}");
                 Console.WriteLine("----------------------------------------------------------------------------");
                 PrintStats();
                 if (IS_DEV)
-                    Console.WriteLine($"(DEV) VILLAGE SUSPICION: {_world.GetCurrentVillage().Suspicion}");
-                if (_world.GetCurrentVillage().Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD)
+                    Console.WriteLine($"(DEV) VILLAGE SUSPICION: {_world.GetCurrentRegion().GetCurrentVillage().Suspicion}");
+                if (_world.GetCurrentRegion().GetCurrentVillage().Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD)
                 {
                     Console.WriteLine("**WARNING** The village has been alerted to you presence. It might be better to seek a different village");
                 }
@@ -241,11 +248,11 @@ namespace Count
                         {
                             Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
                             // Effects on village
-                            _world.GetCurrentVillage().KillVillager();
+                            _world.GetCurrentRegion().GetCurrentVillage().KillVillager();
                         }
                         else
                             Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
-                        _world.GetCurrentVillage().IncreaseSuspicion();
+                        _world.GetCurrentRegion().GetCurrentVillage().IncreaseSuspicion();
                         // Exert after an action
                         _vampire.Exert(1);
                         finishedEnterVillage = true;
@@ -262,7 +269,7 @@ namespace Count
                         }
                         else
                             Console.WriteLine("You fail your attempt to convert a villager. The village grows more suspicious.");
-                        _world.GetCurrentVillage().IncreaseSuspicion();
+                        _world.GetCurrentRegion().GetCurrentVillage().IncreaseSuspicion();
                         // Exert after an action
                         _vampire.Exert(1);
                         finishedEnterVillage = true;
@@ -286,7 +293,7 @@ namespace Count
                 Console.Clear();
                 Console.WriteLine("Currently you know about the following villages in the area:");
                 var index = 0;
-                foreach (var village in _world.Villages)
+                foreach (var village in _world.GetCurrentRegion().Villages)
                 {
                     Console.WriteLine($"{++index}. {village.Name}{(village.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? " (Alerted)":"")}");
                 }
@@ -299,7 +306,7 @@ namespace Count
                 Console.WriteLine("");
                 Console.WriteLine("1-x. Enter Village");
                 // Only show another village option if all previous villages suspicion is above 80%
-                if (!_world.Villages.Any(i => i.Suspicion < VillageController.SUSPICION_WARNING_THRESHOLD))
+                if (!_world.GetCurrentRegion().Villages.Any(i => i.Suspicion < VillageController.SUSPICION_WARNING_THRESHOLD))
                     Console.WriteLine("s. Search for another village (1 Action)");
                 Console.WriteLine("q. Go back to previous menu");
                 Console.WriteLine("");
@@ -309,22 +316,22 @@ namespace Count
                 Console.Clear();
                 int intOption = -1;
                 var couldParse = int.TryParse(option, out intOption);
-                if (couldParse && intOption > 0 && (intOption - 1) < _world.Villages.Count)
+                if (couldParse && intOption > 0 && (intOption - 1) < _world.GetCurrentRegion().Villages.Count)
                 {
-                    _world.SetCurrentVillage(_world.Villages[intOption - 1]); // minus one for index;
+                    _world.GetCurrentRegion().SetCurrentVillage(_world.GetCurrentRegion().Villages[intOption - 1]); // minus one for index;
                     finishedChooseVillage = true;
 
-                    Console.WriteLine($"...Now entering {_world.GetCurrentVillage().Name}...");
+                    Console.WriteLine($"...Now entering {_world.GetCurrentRegion().GetCurrentVillage().Name}...");
                     Console.WriteLine("");
                     Console.WriteLine("Press ENTER to continue");
                     Console.ReadLine();
                     finishedChooseVillage = true;
                 }
-                else if (option == "s" && (!_world.Villages.Any(i => i.Suspicion < VillageController.SUSPICION_WARNING_THRESHOLD)))
+                else if (option == "s" && (!_world.GetCurrentRegion().Villages.Any(i => i.Suspicion < VillageController.SUSPICION_WARNING_THRESHOLD)))
                 {
-                    var newVillage =_world.AddVillage();
+                    var newVillage =_world.GetCurrentRegion().AddVillage();
                     Console.WriteLine($"By searching you find another village -> {newVillage.Name}");
-                    _world.SetCurrentVillage(newVillage);
+                    _world.GetCurrentRegion().SetCurrentVillage(newVillage);
 
                     // Exert after an action
                     _vampire.Exert(1);
@@ -344,8 +351,10 @@ namespace Count
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
             Console.WriteLine($"FOLLOWERS: {_vampire.GetFollowers().Total}");
-            Console.WriteLine($"- VAMPIRES: {_vampire.GetFollowers().GetTotalOfType(typeof(Vampire))}");
-            Console.WriteLine($"- ZOMBIES: {_vampire.GetFollowers().GetTotalOfType(typeof(Zombie))}");
+            if (_vampire.GetFollowers().GetTotalOfType(typeof(Vampire)) > 0)
+                Console.WriteLine($"- VAMPIRES: {_vampire.GetFollowers().GetTotalOfType(typeof(Vampire))}");
+            if (_vampire.GetFollowers().GetTotalOfType(typeof(Zombie)) > 0)
+                Console.WriteLine($"- ZOMBIES: {_vampire.GetFollowers().GetTotalOfType(typeof(Zombie))}");
         }
 
         private void Win()

@@ -1,10 +1,9 @@
-﻿using Count.Models;
-using Count.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
+using Count.Models;
+using Count.Utils;
 
 namespace Count.Controllers
 {
@@ -12,13 +11,13 @@ namespace Count.Controllers
     {
         private const int WORLD_SIZE = 10;
 
-        private List<VillageController> _villages { get; }
+        private List<RegionController> _regions { get; }
         private World World { get; set; }
 
         /// <summary>
         /// Index pointing to current village
         /// </summary>
-        private VillageController _currentVillage;
+        private RegionController _currentRegion;
 
         public WorldController()
         {
@@ -26,23 +25,23 @@ namespace Count.Controllers
             World.Size = WORLD_SIZE; //WORLD_SIZExWORLD_SIZE
             World.Day = 1;
 
-            _villages = new List<VillageController>();
+            _regions = new List<RegionController>();
 
-            // Create first village
-            _villages.Add(new VillageController(this));
-            _currentVillage = _villages[0];
+            // Create first region
+            _regions.Add(new RegionController(this));
+            _currentRegion = _regions[0];
         }
 
-        public ReadOnlyCollection<VillageController> Villages
+        public ReadOnlyCollection<RegionController> Regions
         {
-            get { return _villages.AsReadOnly(); }
+            get { return _regions.AsReadOnly(); }
         }
 
-        public VillageController AddVillage()
+        public RegionController AddRegion()
         {
-            var village = new VillageController(this);
-            _villages.Add(village);
-            return village;
+            var region = new RegionController(this);
+            _regions.Add(region);
+            return region;
         }
 
         public int Size
@@ -50,14 +49,14 @@ namespace Count.Controllers
             get { return World.Size; }
         }
 
-        public VillageController GetCurrentVillage()
+        public RegionController GetCurrentRegion()
         {
-            return Villages.FirstOrDefault(i => i.Equals(_currentVillage));
+            return Regions.FirstOrDefault(i => i.Equals(_currentRegion));
         }
 
-        public void SetCurrentVillage(VillageController village)
+        public void SetCurrentRegion(RegionController region)
         {
-            _currentVillage = village;
+            _currentRegion = region;
         }
 
         public Location GenerateWorldLocation()
