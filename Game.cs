@@ -20,6 +20,13 @@ namespace Count
     /// 4** Create stats for villagers. Each stat corresponds to the type of follower that could be created by feeding. 
     /// ie. Strong villager could become strong follower. Smart villager, smart follower.etc.
     /// 
+    /// NEW PLAN: 
+    /// Feed to get blood points. Spend blood points on buildings. that generate followers. villages revolt can destroy buildings
+    /// Vampire followers should do anything you do automatically
+    /// POI should not all be revealed
+    /// 
+    /// Zombies could be created either by building a graveyard or researching a raise zombie spell?
+    /// 
     /// </summary>
     public class Game
     {
@@ -105,7 +112,7 @@ namespace Count
         {
             if (!_vampire.IsDead)
             {
-                Console.Clear();
+                /*Console.Clear();
                 Console.WriteLine($"~~~ Day {_world.Day} (Day) ~~~");
                 Console.WriteLine("");
 
@@ -141,9 +148,9 @@ namespace Count
                 // You sleep during the day
                 _vampire.Sleep();
 
-                Console.WriteLine("");
+                /*Console.WriteLine("");
                 Console.WriteLine("Press ENTER to continue");
-                Console.ReadLine();
+                Console.ReadLine();*/
             }
             return false;
         }
@@ -188,6 +195,7 @@ namespace Count
 
                     // Actions
                     Console.WriteLine("1. See the map");
+                    Console.WriteLine("2. Expand Influence");
                     /*Console.WriteLine("2. Move Lair (1 Action)");
                     Console.WriteLine("\t- Moving your lair, forces the villagers to restart their search for your location.");*/
 
@@ -310,8 +318,8 @@ namespace Count
                 // Actions
                 Console.WriteLine($"{1}-{pointsOfInterest.Count}. Go to point of interest");
                 Console.WriteLine($"E. Enter current location");
-                if (currentLocationObject.GetType() == typeof(VillageController))
-                    Console.WriteLine($"C. Send Cultist to \"convince\" village (1 Action)");
+                //if (currentLocationObject.GetType() == typeof(VillageController))
+                    //Console.WriteLine($"C. Send Cultist to \"convince\" village (1 Action)");
 
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -345,13 +353,13 @@ namespace Count
                     if (currentLocationObject.GetType() == typeof(CastleController))
                         finishedEnterRegion = true;
                 }
-                else if (option == "C")
+                /*else if (option == "C")
                 {
                     if (currentLocationObject.GetType() == typeof(VillageController))
                     {
                         var village = currentLocationObject as VillageController;
-                        var succeeded = _vampire.Followers.Any(i => i.Follower.GetType() == typeof(Cultist));
-                        if (succeeded)
+                        var hasCultist = _vampire.Followers.Any(i => i.Follower.GetType() == typeof(Cultist));
+                        if (hasCultist)
                         {
                             village.DecreaseSuspicion();
                             _vampire.Exert(1);
@@ -365,7 +373,7 @@ namespace Count
                             Console.ReadLine();
                         }
                     }
-                }
+                }*/
                 else if (option == "Q")
                 {
                     finishedEnterRegion = true;
@@ -399,8 +407,9 @@ namespace Count
 
                 Console.WriteLine("1. Feed! (1 Action)");
                 Console.WriteLine($"\t- Feed to sate your hunger. If you don't feed once every {VampireLordController.HUNGER_STARVING_THRESHOLD} days you will start taking damage.");
-                Console.WriteLine("2. Convert Villager into follower (1 Action)");
-                Console.WriteLine("\t- Followers help you further your schemes. They would even give their lives to protect you against the villagers.");
+                Console.WriteLine("");
+                /*Console.WriteLine("2. Convert Villager into follower (1 Action)");
+                Console.WriteLine("\t- Followers help you further your schemes. They would even give their lives to protect you against the villagers.");*/
                 Console.WriteLine("Q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -411,20 +420,27 @@ namespace Count
                 {
                     case "1":
                         // try to feed
-                        if (_vampire.Feed())
+                        var feedStatus = _vampire.Feed();
+                        switch (feedStatus)
                         {
-                            Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
-                            // Effects on village
-                            village.KillVillager();
+                            case VampireLordController.FeedStatus.FED:
+                                Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
+                                break;
+                            case VampireLordController.FeedStatus.CONVERTED:
+                                Console.WriteLine("You feed a villager successfully. You hunger recedes. ...BUT you have created another like yourself. For now he will serve you.\nThe village grows more suspicious.");
+                                break;
+                            case VampireLordController.FeedStatus.FAILED:
+                                Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
+                                break;
                         }
-                        else
-                            Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
+                        
+                            
                         village.IncreaseSuspicion();
                         // Exert after an action
                         _vampire.Exert(1);
                         finishedEnterVillage = true;
                         break;
-                    case "2":
+                    /*case "2":
                         // try to convert
                         var followerConvertedType = _vampire.TryConvertFollower();
                         if (followerConvertedType != null)
@@ -443,7 +459,7 @@ namespace Count
                         // Exert after an action
                         _vampire.Exert(1);
                         finishedEnterVillage = true;
-                        break;
+                        break;*/
                     case "Q":
                         finishedEnterVillage = true;
                         break;
@@ -528,11 +544,11 @@ namespace Count
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
             Console.WriteLine($"FOLLOWERS: {_vampire.Followers.Count}");
             if (_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire))) > 0)
-                Console.WriteLine($"- VAMPIRES: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire)))}");
+                Console.WriteLine($"- VAMPIRES: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire)) && i.Follower.Available)}/{_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire)))}");
             if (_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie))) > 0)
-                Console.WriteLine($"- ZOMBIES: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie)))}");
+                Console.WriteLine($"- ZOMBIES: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie)) && i.Follower.Available)}/{_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie)))}");
             if (_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Cultist))) > 0)
-                Console.WriteLine($"- CULTISTS: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Cultist)))}");
+                Console.WriteLine($"- CULTISTS: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Cultist)) && i.Follower.Available)}/{_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Cultist)))}");
         }
 
         private void Win()

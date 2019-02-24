@@ -7,14 +7,52 @@ namespace Count.Controllers
 {
     public class FollowerController
     {
-        public Follower Follower { get; set; }
-        private FollowerController(Follower follower) {
-            Follower = follower;
+        private const int BASE_CONVERT_DC = 5;
+        private const int BASE_CHECK_ROLL = 20;
+
+        private Follower _follower { get; set; }
+
+        private FollowerController(Type followerType) {
+            if (followerType == typeof(Zombie))
+                _follower = new Zombie { Available = true };
+            if (followerType == typeof(Vampire))
+                _follower = new Vampire { Available = true };
+            if (followerType == typeof(Cultist))
+                _follower = new Cultist { Available = true };
+
         }
 
-        public static FollowerController CreateFollower(Villager villager)
+        /// <summary>
+        ///  Checks if you succeed on creating a follower
+        /// </summary>
+        public static FollowerController TryCreateFollower(Type followerType)
         {
+            var convertCheck = true;
+            var convertRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
             if (Game.IS_DEV)
+            {
+                Console.WriteLine($"(DEV) CONVERT CHECK: {convertRoll}");
+                Console.WriteLine($"(DEV) CONVERT DC CHECK: {BASE_CONVERT_DC}");
+            }
+
+            convertCheck = convertRoll >= (BASE_CONVERT_DC);
+
+            if (convertCheck)
+            {
+                return new FollowerController(followerType);
+            }
+
+            return null;
+        }
+
+        public Follower Follower { get { return _follower; } }
+
+        //public static FollowerController CreateFollower(Villager villager)
+        //{
+
+            //return new FollowerController();
+
+            /*if (Game.IS_DEV)
             {
                 Console.WriteLine($"(DEV) VILLAGER STR: {villager.Strength}");
                 Console.WriteLine($"(DEV) VILLAGER INT: {villager.Intelligence}");
@@ -36,7 +74,7 @@ namespace Count.Controllers
             else
             {
                 return new FollowerController(new Zombie { PreviousLife = villager, Available = true });
-            }
-        }
+            }*/
+        //}
     }
 }

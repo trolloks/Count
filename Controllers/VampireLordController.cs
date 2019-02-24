@@ -11,7 +11,6 @@ namespace Count.Controllers
     public class VampireLordController
     {
         private const int BASE_FEED_DC = 8;
-        private const int BASE_CONVERT_DC = 5;
         private const int BASE_CHECK_ROLL = 20;
 
         private WorldController _worldController;
@@ -46,11 +45,12 @@ namespace Count.Controllers
         /// <summary>
         ///  Checks if you succeed on feeding on a unsuspecting villager
         /// </summary>
-        public bool Feed()
+        public FeedStatus? Feed()
         {
+            var status = FeedStatus.FAILED;
             var locationObject = _worldController.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
             if (locationObject == null || locationObject.GetType() != typeof(VillageController))
-                return false;
+                return null;
 
             var village = locationObject as VillageController;
 
@@ -66,46 +66,29 @@ namespace Count.Controllers
 
             if (feedCheck)
             {
+                status = FeedStatus.FED;
                 // Effects on you
                 VampireLord.LastFed = _worldController.Day;
-            }
-
-            return feedCheck;
-        }
-
-        /// <summary>
-        ///  Checks if you succeed on converting a villager
-        /// </summary>
-        public Type TryConvertFollower()
-        {
-            var locationObject = _worldController.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
-            if (locationObject == null || locationObject.GetType() != typeof(VillageController))
-                return null;
-
-            var village = locationObject as VillageController;
-
-            var convertCheck = true;
-            var convertRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-            if (Game.IS_DEV)
-            {
-                Console.WriteLine($"(DEV) CONVERT CHECK: {convertRoll}");
-                Console.WriteLine($"(DEV) CONVERT DC CHECK: {(BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * village.Suspicion))}");
-            }
-
-            convertCheck = convertRoll >= (BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * village.Suspicion));
-
-            if (convertCheck)
-            {
-                var followerController = village.ConvertVillagerToFollower();
-                if (followerController != null)
+                // Could convert into a vampire
+                var follower = FollowerController.TryCreateFollower(typeof(Vampire));
+                if (follower != null)
                 {
-                    _followers.Add(followerController);
-                    return followerController.Follower.GetType();
+                    status = FeedStatus.CONVERTED;
+                    _followers.Add(follower);
                 }
+                   
+                // Kill Villager
+                village.KillVillager();
             }
 
-            return null;
+            return status;
         }
+
+        public enum FeedStatus
+        {
+            FAILED, FED, CONVERTED
+        }
+
         #endregion
 
         #region "Day Actions"

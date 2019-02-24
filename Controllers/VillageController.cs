@@ -85,15 +85,5 @@ namespace Count.Controllers
         {
             Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(3, 10) / 100f)); // Can't get less suspicious than 0 
         }
-
-        public FollowerController ConvertVillagerToFollower()
-        {
-            Villager villager = RandomVillager();
-
-            // Effects on village
-            KillVillager(villager); // technically not killing but removing
-
-            return FollowerController.CreateFollower(villager);
-        }
     }
 }

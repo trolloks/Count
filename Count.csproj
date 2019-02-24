@@ -42,7 +42,7 @@
   <ItemGroup>
     <Compile Include="Controllers\Base\LocationObjectController.cs" />
     <Compile Include="Controllers\VampireLordController.cs" />
-    <Compile Include="Controllers\FollowerController.cs" />
+    <Compile Include="Controllers\Base\FollowerController.cs" />
     <Compile Include="Controllers\CastleController.cs" />
     <Compile Include="Controllers\VillageController.cs" />
     <Compile Include="Controllers\RegionController.cs" />
