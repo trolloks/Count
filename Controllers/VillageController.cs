@@ -5,27 +5,24 @@ using Count.Utils;
 
 namespace Count.Controllers
 {
-    public class VillageController
+    public class VillageController : LocationObjectController
     {
-        private RegionController _regionController;
-
         private Village Village { get; set; }
 
         // temp (For names)
         int villagerCounter = 1;
 
-        public static float SUSPICION_WARNING_THRESHOLD = 0.5f;
+        public static float SUSPICION_WARNING_THRESHOLD = 1f;
 
-        public VillageController(RegionController regionController)
+        public VillageController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
-            _regionController = regionController;
-
             // Create village
             Village = new Village()
             {
                 Id = Guid.NewGuid(),
-                Name = $"Village-{_regionController.Villages.Count + 1}",
+                Name = $"Village-{Guid.NewGuid().ToString()}", // temp
                 Villagers = new List<Villager>(),
+                Location = regionLocation,
                 Suspicion = 0
             };
 
@@ -42,7 +39,8 @@ namespace Count.Controllers
             {
                 Name = $"Villager-{villagerCounter}",
                 Strength = (Randomizer.Instance.Roll(6, 20) / 6), // Avg
-                Intelligence = (Randomizer.Instance.Roll(6, 20) / 6) // Avg
+                Intelligence = (Randomizer.Instance.Roll(6, 20) / 6), // Avg
+                Charisma = (Randomizer.Instance.Roll(6, 20) / 6) // Avg
             });
             villagerCounter++;
         }
@@ -73,14 +71,14 @@ namespace Count.Controllers
             get { return Village.Suspicion; }
         }
 
-        public string Name
+        public override string Name
         {
             get { return Village.Name; }
         }
 
         public void IncreaseSuspicion()
         {
-            Village.Suspicion = Math.Min(1, Village.Suspicion + (Randomizer.Instance.Roll(20, 5) / 100f)); // Can't get more suspicious than 1
+            Village.Suspicion = Math.Min(1, Village.Suspicion + (Randomizer.Instance.Roll(15, 5) / 100f)); // Can't get more suspicious than 1
         }
 
         public void DecreaseSuspicion()
@@ -88,14 +86,14 @@ namespace Count.Controllers
             Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(3, 10) / 100f)); // Can't get less suspicious than 0 
         }
 
-        public Type ConvertVillagerToFollower(FollowersController followersController)
+        public FollowerController ConvertVillagerToFollower()
         {
             Villager villager = RandomVillager();
 
             // Effects on village
             KillVillager(villager); // technically not killing but removing
 
-            return followersController.CreateFollower(villager);
+            return FollowerController.CreateFollower(villager);
         }
     }
 }

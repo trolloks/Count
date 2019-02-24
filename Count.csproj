@@ -40,17 +40,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\Base\LocationObjectController.cs" />
     <Compile Include="Controllers\VampireLordController.cs" />
-    <Compile Include="Controllers\FollowersController.cs" />
+    <Compile Include="Controllers\FollowerController.cs" />
+    <Compile Include="Controllers\CastleController.cs" />
     <Compile Include="Controllers\VillageController.cs" />
     <Compile Include="Controllers\RegionController.cs" />
     <Compile Include="Controllers\WorldController.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="Models\Followers\Cultist.cs" />
     <Compile Include="Models\Followers\Zombie.cs" />
+    <Compile Include="Models\Base\LocationObject.cs" />
     <Compile Include="Models\Location.cs" />
     <Compile Include="Models\Follower.cs" />
     <Compile Include="Models\Followers\Vampire.cs" />
     <Compile Include="Models\VampireLord.cs" />
+    <Compile Include="Models\Castle.cs" />
     <Compile Include="Models\Villager.cs" />
     <Compile Include="Models\Region.cs" />
     <Compile Include="Models\World.cs" />

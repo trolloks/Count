@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Count.Models;
 using Count.Models.Followers;
 using Count.Utils;
@@ -13,7 +16,8 @@ namespace Count.Controllers
 
         private WorldController _worldController;
         private VampireLord VampireLord { get; set; }
-        private FollowersController _followersController { get; set; }
+        private CastleController _castleController { get; set; } 
+        private List<FollowerController> _followers { get; set; }
 
         /// <summary>
         /// Hunger logic
@@ -21,19 +25,20 @@ namespace Count.Controllers
         public static int HUNGER_WARNING_THRESHOLD = 5;
         public static int HUNGER_STARVING_THRESHOLD = 10;
 
-        public VampireLordController(WorldController worldController)
+        public VampireLordController(WorldController worldController, CastleController castleController, Location startingWorldLocation, Location startingRegionLocation)
         {
             _worldController = worldController;
-            _followersController = new FollowersController();
+            _castleController = castleController;
+            _followers = new List<FollowerController>();
 
             // Create Vampire Lord
             VampireLord = new VampireLord();
             VampireLord.Hitpoints = 50;
             VampireLord.ActionPointsMax = 1;
             VampireLord.LastFed = _worldController.Day;
-
-            // Init
-            MoveLocation();
+            VampireLord.WorldLocation = startingWorldLocation;
+            VampireLord.RegionLocation = startingRegionLocation;
+          
             Sleep();
         }
 
@@ -43,15 +48,21 @@ namespace Count.Controllers
         /// </summary>
         public bool Feed()
         {
+            var locationObject = _worldController.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
+            if (locationObject == null || locationObject.GetType() != typeof(VillageController))
+                return false;
+
+            var village = locationObject as VillageController;
+
             var feedCheck = true;
             var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
             if (Game.IS_DEV)
             {
                 Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
-                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * _worldController.GetCurrentRegion().GetCurrentVillage().Suspicion))}");
+                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion))}");
             }
 
-            feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * _worldController.GetCurrentRegion().GetCurrentVillage().Suspicion));
+            feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion));
 
             if (feedCheck)
             {
@@ -67,30 +78,33 @@ namespace Count.Controllers
         /// </summary>
         public Type TryConvertFollower()
         {
+            var locationObject = _worldController.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
+            if (locationObject == null || locationObject.GetType() != typeof(VillageController))
+                return null;
+
+            var village = locationObject as VillageController;
+
             var convertCheck = true;
             var convertRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
             if (Game.IS_DEV)
             {
                 Console.WriteLine($"(DEV) CONVERT CHECK: {convertRoll}");
-                Console.WriteLine($"(DEV) CONVERT DC CHECK: {(BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * _worldController.GetCurrentRegion().GetCurrentVillage().Suspicion))}");
+                Console.WriteLine($"(DEV) CONVERT DC CHECK: {(BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * village.Suspicion))}");
             }
 
-            convertCheck = convertRoll >= (BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * _worldController.GetCurrentRegion().GetCurrentVillage().Suspicion));
+            convertCheck = convertRoll >= (BASE_CONVERT_DC + Math.Round((BASE_CHECK_ROLL - BASE_CONVERT_DC) * village.Suspicion));
 
             if (convertCheck)
             {
-                return _worldController.GetCurrentRegion().GetCurrentVillage().ConvertVillagerToFollower(_followersController);
+                var followerController = village.ConvertVillagerToFollower();
+                if (followerController != null)
+                {
+                    _followers.Add(followerController);
+                    return followerController.Follower.GetType();
+                }
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Move your hiding location
-        /// </summary>
-        public void MoveLocation()
-        {
-            VampireLord.Location = _worldController.GenerateWorldLocation();
         }
         #endregion
 
@@ -100,6 +114,8 @@ namespace Count.Controllers
         /// </summary>
         public void Sleep()
         {
+            VampireLord.WorldLocation = _castleController.WorldLocation;
+            VampireLord.RegionLocation = _castleController.RegionLocation;
             VampireLord.ActionPoints = VampireLord.ActionPointsMax;
         }
         #endregion
@@ -123,9 +139,14 @@ namespace Count.Controllers
         /// <summary>
         /// Your current location
         /// </summary>
-        public Location Location
+        public Location WorldLocation
         {
-            get { return VampireLord.Location; }
+            get { return VampireLord.WorldLocation; }
+        }
+
+        public Location RegionLocation
+        {
+            get { return VampireLord.RegionLocation; }
         }
 
         /// <summary>
@@ -144,9 +165,9 @@ namespace Count.Controllers
             return _worldController.Day - VampireLord.LastFed;
         }
 
-        public FollowersController GetFollowers()
+        public ReadOnlyCollection<FollowerController> Followers
         {
-            return _followersController;
+            get { return _followers.AsReadOnly(); }
         }
 
         /// <summary>
@@ -154,9 +175,12 @@ namespace Count.Controllers
         /// </summary>
         public bool TryKill()
         {
-            bool couldKill = !_followersController.TryKillFollower(typeof(Zombie)); // Only zombies can block death
+            bool couldKill = !Followers.Any(i => i.Follower.GetType() == typeof(Zombie)); // Only zombies can block death
             if (couldKill)
+            {
+                _followers.Remove(Followers.FirstOrDefault(i => i.Follower.GetType() == typeof(Zombie)));
                 ForceKill();
+            }
             return couldKill;
         }
 
@@ -185,5 +209,13 @@ namespace Count.Controllers
         {
             VampireLord.ActionPoints -= i;
         }
+
+        public void Move(Location worldLocation, Location regionLocation)
+        {
+            VampireLord.WorldLocation = worldLocation;
+            VampireLord.RegionLocation = regionLocation;
+        }
+
+            
     }
 }

@@ -1,56 +1,75 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using Count.Models;
+using Count.Utils;
 
 namespace Count.Controllers
 {
     public class RegionController
     {
-        private const int REGION_SIZE = 10; // Not used yet
+        private const int REGION_SIZE = 10; 
+        ///private const int MAX_VILLAGES = 4;
 
-        private List<VillageController> _villages { get; }
-        private WorldController _worldController;
         private Region Region { get; set; }
 
-        /// <summary>
-        /// Index pointing to current village
-        /// </summary>
-        private VillageController _currentVillage;
+        public LocationObjectController[,] LocationObjects = new LocationObjectController[REGION_SIZE, REGION_SIZE];
 
-        public RegionController(WorldController worldController)
+        public RegionController(Location worldLocation)
         {
-            _worldController = worldController;
+            Region = new Region {
 
-            Region = new Region();
+                Size = REGION_SIZE,
+                Location = worldLocation
+            };
 
-            _villages = new List<VillageController>();
-
-            // Create first village
-            _villages.Add(new VillageController(this));
-            _currentVillage = _villages[0];
+            // Initialize Villages
+            int villages = Randomizer.Instance.Roll(3, 2);
+            for (int i = 0; i < villages; i++)
+            {
+                var villageLocation = GetUnusedRegionLocation();
+                var village = new VillageController(Region.Location, villageLocation);
+                LocationObjects[villageLocation.X, villageLocation.Y] = village;
+            }
         }
 
-        public ReadOnlyCollection<VillageController> Villages
+        public int Size
         {
-            get { return _villages.AsReadOnly(); }
+            get { return Region.Size; }
         }
 
-        public VillageController AddVillage()
+        public LocationObjectController GetLocationObjectAtLocation(Location location)
         {
-            var village = new VillageController(this);
-            _villages.Add(village);
-            return village;
+            return LocationObjects[location.X, location.Y];
         }
 
-        public VillageController GetCurrentVillage()
+        public T AddLocationObject<T>(T locationObject) where T : LocationObjectController
         {
-            return Villages.FirstOrDefault(i => i.Equals(_currentVillage));
+            if (GetLocationObjectAtLocation(locationObject.RegionLocation) == null)
+            {
+                LocationObjects[locationObject.RegionLocation.X, locationObject.RegionLocation.Y] = locationObject;
+                return locationObject;
+            }
+            return null;
         }
-
-        public void SetCurrentVillage(VillageController village)
+        
+        public Location GetUnusedRegionLocation()
         {
-            _currentVillage = village;
+            var locationsShuffled = new List<Location>();
+            for (int i = 0; i < LocationObjects.GetLength(0); i++)
+            {
+                for (int j = 0; j < LocationObjects.GetLength(1); j++)
+                {
+                    locationsShuffled.Add(new Location(i, j));
+                }
+            }
+            locationsShuffled = locationsShuffled.OrderBy(i => Randomizer.Instance.Random.Next()).ToList();
+
+            foreach(var location in locationsShuffled)
+            {
+                if (GetLocationObjectAtLocation(location) == null)
+                    return location;
+            }
+            return null;
         }
     }
 }

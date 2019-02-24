@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Count.Models
 {
-    public class Village
+    public class Village : LocationObject
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

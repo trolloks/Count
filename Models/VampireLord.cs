@@ -19,8 +19,9 @@
         /// </summary>
         public long LastFed { get; set; }
         /// <summary>
-        /// Vampire's hiding spot
+        /// Vampire's location
         /// </summary>
-        public Location Location { get; set; }
+        public Location WorldLocation { get; set; }
+        public Location RegionLocation { get; set; }
     }
 }
