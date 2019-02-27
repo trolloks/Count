@@ -83,7 +83,7 @@ namespace Count.Controllers
 
         public void DecreaseSuspicion()
         {
-            Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(3, 10) / 100f)); // Can't get less suspicious than 0 
+            Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(5, 5) / 100f)); // Can't get less suspicious than 0 
         }
     }
 }

@@ -32,7 +32,7 @@ namespace Count.Controllers
 
             // Create Vampire Lord
             VampireLord = new VampireLord();
-            VampireLord.Hitpoints = 50;
+            VampireLord.Hitpoints = 5;
             VampireLord.ActionPointsMax = 1;
             VampireLord.LastFed = _worldController.Day;
             VampireLord.WorldLocation = startingWorldLocation;
@@ -41,6 +41,7 @@ namespace Count.Controllers
             Sleep();
         }
 
+       
         #region "Night Actions"
         /// <summary>
         ///  Checks if you succeed on feeding on a unsuspecting villager
@@ -79,6 +80,8 @@ namespace Count.Controllers
                    
                 // Kill Villager
                 village.KillVillager();
+                // Get Soul
+                VampireLord.Souls++;
             }
 
             return status;
@@ -175,6 +178,12 @@ namespace Count.Controllers
             VampireLord.Hitpoints = 0;
         }
 
+        public void SpendSouls(int i)
+        {
+            VampireLord.Souls -= i;
+        }
+
+
         /// <summary>
         /// Damages you
         /// </summary>
@@ -182,6 +191,14 @@ namespace Count.Controllers
         public void Damage(int i)
         {
             VampireLord.Hitpoints -= i;
+        }
+
+        /// <summary>
+        /// Current Souls
+        /// </summary>
+        public int Souls
+        {
+            get { return VampireLord.Souls; }
         }
 
         /// <summary>
@@ -198,7 +215,5 @@ namespace Count.Controllers
             VampireLord.WorldLocation = worldLocation;
             VampireLord.RegionLocation = regionLocation;
         }
-
-            
     }
 }

@@ -27,6 +27,9 @@ namespace Count
     /// 
     /// Zombies could be created either by building a graveyard or researching a raise zombie spell?
     /// 
+    /// VILLAGERS = RESOURCES
+    /// WINCON = PER LEVEL
+    /// 
     /// </summary>
     public class Game
     {
@@ -50,6 +53,9 @@ namespace Count
 
         public static bool IS_DEV = false;
 
+        // Temp
+        List<VillageController> _knownVillages = new List<VillageController>();
+
         public void Start()
         {
             Init();
@@ -62,7 +68,13 @@ namespace Count
             Console.WriteLine("----------------------------------------------------------------------------");
             Console.WriteLine("THE COUNT");
             Console.WriteLine("----------------------------------------------------------------------------");
-            Console.WriteLine("One fateful night you are turned into a vampire. You must now use your wits and cunning to survive.");
+            Console.WriteLine("You are a vampire lord.");
+            Console.WriteLine($"- You must FEED on a villager every {VampireLordController.HUNGER_STARVING_THRESHOLD} days.");
+            Console.WriteLine($"- Villages can be found by exploring the map");
+            Console.WriteLine($"- FEEDING rewards you with SOULS.");
+            Console.WriteLine($"- SOULS are required for discovering new unholy buildings that spawn new followers");
+            Console.WriteLine("");
+            Console.WriteLine($"***You WIN if you create 5 Zombies***");
             Console.WriteLine("");
             Console.WriteLine("Press ENTER to continue");
             Console.ReadLine();
@@ -160,8 +172,7 @@ namespace Count
         {
             if (!_vampire.IsDead)
             {
-                var infoText = "Night falls. You awake from your daily slumber within the walls of your castle. What would you like to do tonight?";
-               
+                var infoText = string.Empty;
                 if (_vampire.DetermineHungerLevel() >= VampireLordController.HUNGER_WARNING_THRESHOLD)
                     infoText += $"\nWarning! You NEED to feed once every {VampireLordController.HUNGER_STARVING_THRESHOLD} days!";
                 if (_vampire.DetermineHungerLevel() >= VampireLordController.HUNGER_STARVING_THRESHOLD)
@@ -176,8 +187,6 @@ namespace Count
                 {
                     Console.Clear();
                     Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
-                    Console.WriteLine("");
-                    Console.WriteLine("----------------------------------------------------------------------------");
                     Console.WriteLine(infoText);
                     Console.WriteLine("----------------------------------------------------------------------------");
                     Console.WriteLine("");
@@ -194,10 +203,8 @@ namespace Count
                     Console.WriteLine("");
 
                     // Actions
-                    Console.WriteLine("1. See the map");
-                    Console.WriteLine("2. Expand Influence");
-                    /*Console.WriteLine("2. Move Lair (1 Action)");
-                    Console.WriteLine("\t- Moving your lair, forces the villagers to restart their search for your location.");*/
+                    Console.WriteLine("1. Enter World");
+                    Console.WriteLine("2. Unlock new unholy buildings");
 
                     Console.WriteLine("");
                     Console.Write(": ");
@@ -209,35 +216,113 @@ namespace Count
                         case "1":
                             EnterRegion();
                             break;
-                        /*case "2":
-                            Console.WriteLine("You spend the night moving to a new location.");
-                            _vampire.MoveLocation();
-                            _world.InvalidateSearch();
-                            // Exert after an action
-                            _vampire.Exert(1);
-                            break;*/
+                        case "2":
+                            EnterCastle();
+                            break;
                     }
-
-                    Console.WriteLine("");
-                    Console.WriteLine("Press ENTER to continue");
-                    Console.ReadLine();
                 }
 
-                // Decay villages' suspicion here. EXCEPT the one that was visited (if any)
-                /*foreach (var region in _world.Regions)
-                {
-                    foreach (var village in region.Villages)
-                    {
-                        if (!village.Equals(region.GetCurrentVillage()))
-                            village.DecreaseSuspicion();
-                    }
-                }*/
-
                 // Basic Win Condition - Will change **DEPRECATED
-                /*if (_villages[0].Villagers <= 0)
-                    _isGameOver = true;*/
+                if (_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie))) >= 5)
+                    _isGameOver = true;
             }
             return false;
+        }
+
+        private void EnterCastle()
+        {
+            var finishedEnterCastle = false;
+            while (!finishedEnterCastle && _vampire.ActionPoints > 0)
+            {
+                Console.Clear();
+                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
+                Console.WriteLine("");
+                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine($"The library of {_castle.Name} offers: ");
+                var hasNextResearchItem = _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).Any();
+                var nextResearchItemName = hasNextResearchItem ? string.Join(",", _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Value.ToList().Select(i => i.Name)) : "N/A";
+                var nextResearchItemLevel = hasNextResearchItem ? (_castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Key - _castle.ResearchPoints) : int.MaxValue;
+                Console.WriteLine($"Next Unlock: {nextResearchItemName}");
+                Console.WriteLine($"Souls Required: {nextResearchItemLevel}");
+                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine("");
+                PrintStats();
+                Console.WriteLine("");
+                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
+                Console.WriteLine("");
+                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine("Actions: ");
+                Console.WriteLine("");
+
+                Console.WriteLine($"1. Research ancient texts (1 Action, {nextResearchItemLevel} Soul/s)");
+                Console.WriteLine($"- Unearth new knowledge to teach you about unholy buildings.");
+                Console.WriteLine("");
+                /*Console.WriteLine("2. Convert Villager into follower (1 Action)");
+                Console.WriteLine("\t- Followers help you further your schemes. They would even give their lives to protect you against the villagers.");*/
+                Console.WriteLine("Q. Go back to previous menu");
+                Console.WriteLine("");
+                Console.Write(": ");
+
+                var option = Console.ReadLine();
+                Console.Clear();
+                switch (option)
+                {
+                    case "1":
+                        // research
+                        var researchItems =_castle.Research(_vampire, nextResearchItemLevel);
+                        if (researchItems == null)
+                        {
+                            Console.WriteLine("You dont have enough souls to research this.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following: ");
+                            foreach(var researchItem in researchItems)
+                            {
+                                Console.WriteLine($"- You find a {researchItem.Name} on the map");
+                                var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation();
+                                if (newLocation != null)
+                                    _world.GetRegion(_vampire.WorldLocation).AddLocationObject<GraveyardController>(new GraveyardController(_vampire.WorldLocation, newLocation) { Name = "Zombie Graveyard" });
+                                else
+                                    throw new Exception("No more space");
+                            }
+
+                            // Exert after an action
+                            _vampire.Exert(1);
+                            finishedEnterCastle = true;
+                        }
+
+                        Console.WriteLine("");
+                        Console.WriteLine("Press ENTER to continue");
+                        Console.ReadLine();
+
+                        break;
+                    /*case "2":
+                        // try to convert
+                        var followerConvertedType = _vampire.TryConvertFollower();
+                        if (followerConvertedType != null)
+                        {
+
+                            if (followerConvertedType == typeof(Zombie))
+                                Console.WriteLine("You have converted a villager into a zombie. This follower would give his life for you.");
+                            if (followerConvertedType == typeof(Cultist))
+                                Console.WriteLine("You have converted a villager into a cultist. This follower will change the thoughts of the villagers.");
+                            if (followerConvertedType == typeof(Vampire))
+                                Console.WriteLine("You have converted a villager into a lesser vampire. This follower will spread your evil.");
+                        }
+                        else
+                            Console.WriteLine("You fail your attempt to convert a villager. The village grows more suspicious.");
+                        village.IncreaseSuspicion();
+                        // Exert after an action
+                        _vampire.Exert(1);
+                        finishedEnterVillage = true;
+                        break;*/
+                    case "Q":
+                        finishedEnterCastle = true;
+                        break;
+
+                }
+            }
         }
 
         private void EnterRegion()
@@ -254,16 +339,13 @@ namespace Count
                 var currentLocationObject = region.GetLocationObjectAtLocation(_vampire.RegionLocation);
                 if (currentLocationObject == null)
                     Console.Write("In the middle of nowhere");
-                else if (currentLocationObject.GetType() == typeof(CastleController))
-                {
-                    var currentCastle = currentLocationObject as CastleController;
-                    Console.WriteLine("Your Castle");
-                }
                 else if (currentLocationObject.GetType() == typeof(VillageController))
                 {
                     var currentVillage = currentLocationObject as VillageController;
                     Console.WriteLine(currentVillage.Name + (currentVillage.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : ""));
                 }
+                else
+                    Console.WriteLine(currentLocationObject.Name);
 
                 Console.WriteLine("");
                 Console.WriteLine("Map:");
@@ -332,7 +414,7 @@ namespace Count
                 {
                     _vampire.Move(pointsOfInterest[poiOption - 1].WorldLocation, pointsOfInterest[poiOption - 1].RegionLocation);
                 }
-                else if (option == "E")
+                else if (option == "E" || option == "e")
                 {
                     // Enter location
                     if (currentLocationObject.GetType() == typeof(VillageController))
@@ -347,7 +429,11 @@ namespace Count
                             Console.ReadLine();
                         }  
                         else
+                        {
                             EnterVillage(village);
+                            if (!_knownVillages.Contains(village))
+                                _knownVillages.Add(village);
+                        }
                     }
                        
                     if (currentLocationObject.GetType() == typeof(CastleController))
@@ -406,7 +492,7 @@ namespace Count
                 Console.WriteLine("");
 
                 Console.WriteLine("1. Feed! (1 Action)");
-                Console.WriteLine($"\t- Feed to sate your hunger. If you don't feed once every {VampireLordController.HUNGER_STARVING_THRESHOLD} days you will start taking damage.");
+                Console.WriteLine($"- Satisfy your hunger. If you don't feed once every {VampireLordController.HUNGER_STARVING_THRESHOLD} days you will start taking damage.");
                 Console.WriteLine("");
                 /*Console.WriteLine("2. Convert Villager into follower (1 Action)");
                 Console.WriteLine("\t- Followers help you further your schemes. They would even give their lives to protect you against the villagers.");*/
@@ -436,9 +522,19 @@ namespace Count
                         
                             
                         village.IncreaseSuspicion();
+                        foreach (var othervillage in _knownVillages.Where(i => !i.Equals(village)))
+                        {
+                            othervillage.DecreaseSuspicion();
+                        }
+
+
                         // Exert after an action
                         _vampire.Exert(1);
                         finishedEnterVillage = true;
+
+                        Console.WriteLine("");
+                        Console.WriteLine("Press ENTER to continue");
+                        Console.ReadLine();
                         break;
                     /*case "2":
                         // try to convert
@@ -540,8 +636,10 @@ namespace Count
 
         private void PrintStats()
         {
+            Console.WriteLine($"GOAL: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie)))}/5 ZOMBIES");
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
+            Console.WriteLine($"SOULS: {_vampire.Souls}");
             Console.WriteLine($"FOLLOWERS: {_vampire.Followers.Count}");
             if (_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire))) > 0)
                 Console.WriteLine($"- VAMPIRES: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire)) && i.Follower.Available)}/{_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire)))}");

@@ -6,7 +6,6 @@ namespace Count.Models
     public class Village : LocationObject
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
         public List<Villager> Villagers { get; set; }
         public float Suspicion { get; set; }
     }

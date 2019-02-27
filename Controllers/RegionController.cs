@@ -7,7 +7,7 @@ namespace Count.Controllers
 {
     public class RegionController
     {
-        private const int REGION_SIZE = 10; 
+        private const int REGION_SIZE = 5; 
         ///private const int MAX_VILLAGES = 4;
 
         private Region Region { get; set; }
@@ -23,7 +23,7 @@ namespace Count.Controllers
             };
 
             // Initialize Villages
-            int villages = Randomizer.Instance.Roll(3, 2);
+            int villages = 2;
             for (int i = 0; i < villages; i++)
             {
                 var villageLocation = GetUnusedRegionLocation();
