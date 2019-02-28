@@ -1,6 +1,9 @@
 ﻿using Count.Models;
+using Count.Models.Followers;
+using Count.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Count.Controllers
 {
@@ -37,6 +40,37 @@ namespace Count.Controllers
             }
             else
                 return null;
+        }
+
+        public VampireController CreateVampire()
+        {
+            var follower = (VampireController)FollowerController.TryCreateFollower(typeof(Vampire), _castle.WorldLocation, _castle.RegionLocation);
+            if (follower != null)
+                _followers.Add(follower);
+            return follower;
+        }
+
+        public override void Upkeep(VampireLordController vampire, List<VillageController> knownVillages, WorldController worldController)
+        {
+            if (knownVillages.Any())
+            {
+                foreach (var followerController in _followers)
+                {
+                    var vampireController = followerController as VampireController;
+                    vampireController.MoveToVillage(knownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault()); // Go to random village
+                    var feedstatus = vampireController.Feed(worldController, vampire); // vampires feed and give you souls
+                    switch (feedstatus)
+                    {
+                        case Enums.FeedStatus.FAILED:
+                            Console.WriteLine("Vampire failed to feed!");
+                            break;
+                        case Enums.FeedStatus.FED:
+                            Console.WriteLine("Vampire Fed Successfully!");
+                            break;
+                    }
+                    Console.ReadLine();
+                }
+            }
         }
         #endregion
 

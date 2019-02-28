@@ -1,4 +1,5 @@
 ﻿using Count.Controllers;
+using Count.Enums;
 using Count.Models;
 using Count.Models.Followers;
 using System;
@@ -55,6 +56,7 @@ namespace Count
 
         // Temp
         List<VillageController> _knownVillages = new List<VillageController>();
+        List<LocationObjectController> _ownedBuildings = new List<LocationObjectController>();
 
         public void Start()
         {
@@ -217,19 +219,26 @@ namespace Count
                             EnterRegion();
                             break;
                         case "2":
-                            EnterCastle();
+                            Research();
                             break;
                     }
                 }
 
+                // Upkeep
+                _castle.Upkeep(_vampire, _knownVillages, _world);
+                foreach (var locationObject in _ownedBuildings)
+                {
+                    locationObject.Upkeep(_vampire, _knownVillages, _world);
+                }
+
                 // Basic Win Condition - Will change **DEPRECATED
-                if (_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie))) >= 5)
+                if (_ownedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count >= 5)
                     _isGameOver = true;
             }
             return false;
         }
 
-        private void EnterCastle()
+        private void Research()
         {
             var finishedEnterCastle = false;
             while (!finishedEnterCastle && _vampire.ActionPoints > 0)
@@ -282,7 +291,12 @@ namespace Count
                                 Console.WriteLine($"- You find a {researchItem.Name} on the map");
                                 var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation();
                                 if (newLocation != null)
-                                    _world.GetRegion(_vampire.WorldLocation).AddLocationObject<GraveyardController>(new GraveyardController(_vampire.WorldLocation, newLocation) { Name = "Zombie Graveyard" });
+                                {
+                                    var currentRgion = _world.GetRegion(_vampire.WorldLocation);
+                                    var newResearchedLocationObject = (LocationObjectController)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation});
+                                    currentRgion.AddLocationObject(newResearchedLocationObject);
+                                    _ownedBuildings.Add(newResearchedLocationObject);
+                                }
                                 else
                                     throw new Exception("No more space");
                             }
@@ -427,7 +441,7 @@ namespace Count
                             Console.WriteLine("");
                             Console.WriteLine("Press ENTER to continue");
                             Console.ReadLine();
-                        }  
+                        }
                         else
                         {
                             EnterVillage(village);
@@ -435,9 +449,10 @@ namespace Count
                                 _knownVillages.Add(village);
                         }
                     }
-                       
-                    if (currentLocationObject.GetType() == typeof(CastleController))
+                    else if (currentLocationObject.GetType() == typeof(CastleController))
                         finishedEnterRegion = true;
+                    else
+                        EnterLocationObject(currentLocationObject);
                 }
                 /*else if (option == "C")
                 {
@@ -467,7 +482,6 @@ namespace Count
             }
         }
 
-        
         private void EnterVillage(VillageController village)
         {
             var finishedEnterVillage = false;
@@ -509,13 +523,13 @@ namespace Count
                         var feedStatus = _vampire.Feed();
                         switch (feedStatus)
                         {
-                            case VampireLordController.FeedStatus.FED:
+                            case FeedStatus.FED:
                                 Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
                                 break;
-                            case VampireLordController.FeedStatus.CONVERTED:
+                            case FeedStatus.CONVERTED:
                                 Console.WriteLine("You feed a villager successfully. You hunger recedes. ...BUT you have created another like yourself. For now he will serve you.\nThe village grows more suspicious.");
                                 break;
-                            case VampireLordController.FeedStatus.FAILED:
+                            case FeedStatus.FAILED:
                                 Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
                                 break;
                         }
@@ -560,6 +574,42 @@ namespace Count
                         finishedEnterVillage = true;
                         break;
 
+                }
+            }
+        }
+
+        private void EnterLocationObject(LocationObjectController locationObject)
+        {
+            var finishedEnterVillage = false;
+            while (!finishedEnterVillage && _vampire.ActionPoints > 0)
+            {
+                Console.Clear();
+                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
+                Console.WriteLine("");
+                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine($"{locationObject.Name}");
+                Console.WriteLine($"{locationObject.Description}");
+                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine("");
+                PrintStats();
+                Console.WriteLine("");
+                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
+                Console.WriteLine("");
+                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine("Actions: ");
+                Console.WriteLine("");
+               
+                Console.WriteLine("Q. Go back to previous menu");
+                Console.WriteLine("");
+                Console.Write(": ");
+
+                var option = Console.ReadLine();
+                Console.Clear();
+                switch (option)
+                {
+                    case "Q":
+                        finishedEnterVillage = true;
+                        break;
                 }
             }
         }
@@ -636,17 +686,15 @@ namespace Count
 
         private void PrintStats()
         {
-            Console.WriteLine($"GOAL: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie)))}/5 ZOMBIES");
+            Console.WriteLine($"GOAL: {(_ownedBuildings.Count > 0 ? (_ownedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count) : 0)}/5 ZOMBIES");
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
             Console.WriteLine($"SOULS: {_vampire.Souls}");
-            Console.WriteLine($"FOLLOWERS: {_vampire.Followers.Count}");
-            if (_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire))) > 0)
-                Console.WriteLine($"- VAMPIRES: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire)) && i.Follower.Available)}/{_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Vampire)))}");
-            if (_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie))) > 0)
-                Console.WriteLine($"- ZOMBIES: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie)) && i.Follower.Available)}/{_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Zombie)))}");
-            if (_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Cultist))) > 0)
-                Console.WriteLine($"- CULTISTS: {_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Cultist)) && i.Follower.Available)}/{_vampire.Followers.Count(i => i.Follower.GetType() == (typeof(Cultist)))}");
+            Console.WriteLine($"FOLLOWERS: {_ownedBuildings?.Sum(i => i.Followers.Count) + _castle.Followers.Count}");
+            if (_castle.Followers.Count > 0)
+                Console.WriteLine($"- VAMPIRES: {_castle.Followers.Count}");
+            if (_ownedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count > 0)
+                Console.WriteLine($"- ZOMBIES: {_ownedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count}");         
         }
 
         private void Win()
@@ -655,7 +703,7 @@ namespace Count
             Console.WriteLine("----------------------------------------------------------------------------");
             Console.WriteLine("GAME OVER");
             Console.WriteLine("----------------------------------------------------------------------------");
-            Console.WriteLine("Congratulations! You have been successful with your schemes.");
+            Console.WriteLine("Congratulations! You have been successfully created 5 Zombies.");
             Console.WriteLine("");
         }
 

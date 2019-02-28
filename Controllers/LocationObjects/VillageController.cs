@@ -22,7 +22,8 @@ namespace Count.Controllers
                 Id = Guid.NewGuid(),
                 Name = $"Village-{Guid.NewGuid().ToString()}", // temp
                 Villagers = new List<Villager>(),
-                Location = regionLocation,
+                WorldLocation = worldLocation,
+                RegionLocation = regionLocation,
                 Suspicion = 0
             };
 
@@ -84,6 +85,11 @@ namespace Count.Controllers
         public void DecreaseSuspicion()
         {
             Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(5, 5) / 100f)); // Can't get less suspicious than 0 
+        }
+
+        public override void Upkeep(VampireLordController vampire, List<VillageController> knownVillages, WorldController worldController)
+        {
+           
         }
     }
 }

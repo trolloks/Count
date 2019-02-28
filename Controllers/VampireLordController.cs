@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Count.Enums;
 using Count.Models;
 using Count.Models.Followers;
 using Count.Utils;
@@ -16,7 +17,6 @@ namespace Count.Controllers
         private WorldController _worldController;
         private VampireLord VampireLord { get; set; }
         private CastleController _castleController { get; set; } 
-        private List<FollowerController> _followers { get; set; }
 
         /// <summary>
         /// Hunger logic
@@ -28,7 +28,6 @@ namespace Count.Controllers
         {
             _worldController = worldController;
             _castleController = castleController;
-            _followers = new List<FollowerController>();
 
             // Create Vampire Lord
             VampireLord = new VampireLord();
@@ -71,11 +70,10 @@ namespace Count.Controllers
                 // Effects on you
                 VampireLord.LastFed = _worldController.Day;
                 // Could convert into a vampire
-                var follower = FollowerController.TryCreateFollower(typeof(Vampire));
+                var follower = _castleController.CreateVampire();
                 if (follower != null)
                 {
                     status = FeedStatus.CONVERTED;
-                    _followers.Add(follower);
                 }
                    
                 // Kill Villager
@@ -87,10 +85,7 @@ namespace Count.Controllers
             return status;
         }
 
-        public enum FeedStatus
-        {
-            FAILED, FED, CONVERTED
-        }
+       
 
         #endregion
 
@@ -151,15 +146,10 @@ namespace Count.Controllers
             return _worldController.Day - VampireLord.LastFed;
         }
 
-        public ReadOnlyCollection<FollowerController> Followers
-        {
-            get { return _followers.AsReadOnly(); }
-        }
-
         /// <summary>
         /// Tries to kill you
         /// </summary>
-        public bool TryKill()
+        /*public bool TryKill()
         {
             bool couldKill = !Followers.Any(i => i.Follower.GetType() == typeof(Zombie)); // Only zombies can block death
             if (couldKill)
@@ -168,7 +158,7 @@ namespace Count.Controllers
                 ForceKill();
             }
             return couldKill;
-        }
+        }*/
 
         /// <summary>
         /// Kills you definitely
@@ -181,6 +171,11 @@ namespace Count.Controllers
         public void SpendSouls(int i)
         {
             VampireLord.Souls -= i;
+        }
+
+        public void IncreaseSouls(int i)
+        {
+            VampireLord.Souls += i;
         }
 
 

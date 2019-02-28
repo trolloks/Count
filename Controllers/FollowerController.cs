@@ -10,22 +10,14 @@ namespace Count.Controllers
         private const int BASE_CONVERT_DC = 5;
         private const int BASE_CHECK_ROLL = 20;
 
-        private Follower _follower { get; set; }
+        protected Follower _follower { get; set; }
 
-        private FollowerController(Type followerType) {
-            if (followerType == typeof(Zombie))
-                _follower = new Zombie { Available = true };
-            if (followerType == typeof(Vampire))
-                _follower = new Vampire { Available = true };
-            if (followerType == typeof(Cultist))
-                _follower = new Cultist { Available = true };
-
-        }
+        protected FollowerController(Location worldLocation, Location regionLocation) { }
 
         /// <summary>
         ///  Checks if you succeed on creating a follower
         /// </summary>
-        public static FollowerController TryCreateFollower(Type followerType)
+        public static FollowerController TryCreateFollower(Type followerType, Location worldLocation, Location regionLocation)
         {
             var convertCheck = true;
             var convertRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
@@ -39,7 +31,12 @@ namespace Count.Controllers
 
             if (convertCheck)
             {
-                return new FollowerController(followerType);
+                if (followerType == typeof(Zombie))
+                    return new ZombieController(worldLocation, regionLocation);
+                if (followerType == typeof(Vampire))
+                    return new VampireController(worldLocation, regionLocation);
+                /*if (followerType == typeof(Cultist))
+                    _follower = new Cultist { Available = true };*/
             }
 
             return null;

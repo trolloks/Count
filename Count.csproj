@@ -40,6 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\Followers\ZombieController.cs" />
+    <Compile Include="Controllers\Followers\VampireController.cs" />
     <Compile Include="Controllers\LocationObjectController.cs" />
     <Compile Include="Controllers\LocationObjects\GraveyardController.cs" />
     <Compile Include="Controllers\VampireLordController.cs" />
@@ -48,6 +50,7 @@
     <Compile Include="Controllers\LocationObjects\VillageController.cs" />
     <Compile Include="Controllers\RegionController.cs" />
     <Compile Include="Controllers\WorldController.cs" />
+    <Compile Include="Enums\FeedStatus.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Models\Followers\Cultist.cs" />
     <Compile Include="Models\Followers\Zombie.cs" />
