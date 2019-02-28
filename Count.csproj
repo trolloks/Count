@@ -43,6 +43,7 @@
     <Compile Include="Controllers\Followers\ZombieController.cs" />
     <Compile Include="Controllers\Followers\VampireController.cs" />
     <Compile Include="Controllers\LocationObjectController.cs" />
+    <Compile Include="Controllers\LocationObjects\UnexploredController.cs" />
     <Compile Include="Controllers\LocationObjects\GraveyardController.cs" />
     <Compile Include="Controllers\VampireLordController.cs" />
     <Compile Include="Controllers\FollowerController.cs" />

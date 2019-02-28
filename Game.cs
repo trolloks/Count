@@ -57,6 +57,7 @@ namespace Count
         // Temp
         List<VillageController> _knownVillages = new List<VillageController>();
         List<LocationObjectController> _ownedBuildings = new List<LocationObjectController>();
+        List<Location> _knownRegionLocations = new List<Location>();
 
         public void Start()
         {
@@ -93,7 +94,8 @@ namespace Count
             _castle = startingRegion.AddLocationObject(new CastleController(_startingWorldLocation, _startingRegionLocation));
             // Create vampire
             _vampire = new VampireLordController(_world, _castle, _startingWorldLocation, _startingRegionLocation);
-            
+
+            _knownRegionLocations.Add(_startingRegionLocation);
         }
 
         private void Loop()
@@ -224,12 +226,18 @@ namespace Count
                     }
                 }
 
+                Console.Clear();
+                Console.WriteLine("During the the night the following happened:");
                 // Upkeep
                 _castle.Upkeep(_vampire, _knownVillages, _world);
                 foreach (var locationObject in _ownedBuildings)
                 {
                     locationObject.Upkeep(_vampire, _knownVillages, _world);
                 }
+
+                Console.WriteLine("");
+                Console.WriteLine("Press ENTER to continue");
+                Console.ReadLine();
 
                 // Basic Win Condition - Will change **DEPRECATED
                 if (_ownedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count >= 5)
@@ -285,25 +293,31 @@ namespace Count
                         }
                         else
                         {
-                            Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following: ");
-                            foreach(var researchItem in researchItems)
-                            {
-                                Console.WriteLine($"- You find a {researchItem.Name} on the map");
-                                var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation();
-                                if (newLocation != null)
-                                {
-                                    var currentRgion = _world.GetRegion(_vampire.WorldLocation);
-                                    var newResearchedLocationObject = (LocationObjectController)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation});
-                                    currentRgion.AddLocationObject(newResearchedLocationObject);
-                                    _ownedBuildings.Add(newResearchedLocationObject);
-                                }
-                                else
-                                    throw new Exception("No more space");
-                            }
-
                             // Exert after an action
-                            _vampire.Exert(1);
-                            finishedEnterCastle = true;
+                            if (_vampire.TryExert(1))
+                            {
+                                Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following: ");
+                                foreach (var researchItem in researchItems)
+                                {
+                                    Console.WriteLine($"- You find a {researchItem.Name} on the map");
+                                    var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation();
+                                    if (newLocation != null)
+                                    {
+                                        var currentRgion = _world.GetRegion(_vampire.WorldLocation);
+                                        var newResearchedLocationObject = (LocationObjectController)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
+                                        currentRgion.AddLocationObject(newResearchedLocationObject);
+                                        _ownedBuildings.Add(newResearchedLocationObject);
+                                    }
+                                    else
+                                        throw new Exception("No more space");
+                                }
+                                finishedEnterCastle = true;
+                            }
+                            else
+                            {
+                                Console.WriteLine("You dont have enough action points to research this.");
+                            }
+                            
                         }
 
                         Console.WriteLine("");
@@ -332,6 +346,7 @@ namespace Count
                         finishedEnterVillage = true;
                         break;*/
                     case "Q":
+                    case "q":
                         finishedEnterCastle = true;
                         break;
 
@@ -350,10 +365,14 @@ namespace Count
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("Current Location: (L)");
                 var region = _world.GetRegion(_vampire.WorldLocation);
-                var currentLocationObject = region.GetLocationObjectAtLocation(_vampire.RegionLocation);
-                if (currentLocationObject == null)
-                    Console.Write("In the middle of nowhere");
-                else if (currentLocationObject.GetType() == typeof(VillageController))
+                LocationObjectController currentLocationObject = null;
+                // Only check if known
+                if (_knownRegionLocations.Any(p => p.X == _vampire.RegionLocation.X && p.Y == _vampire.RegionLocation.Y))
+                    currentLocationObject = region.GetLocationObjectAtLocation(_vampire.RegionLocation);
+                else
+                    currentLocationObject = new UnexploredController(_vampire.WorldLocation, _vampire.RegionLocation);
+
+                if (currentLocationObject.GetType() == typeof(VillageController))
                 {
                     var currentVillage = currentLocationObject as VillageController;
                     Console.WriteLine(currentVillage.Name + (currentVillage.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : ""));
@@ -365,35 +384,16 @@ namespace Count
                 Console.WriteLine("Map:");
                 
                 var pointsOfInterest = new List<LocationObjectController>();
-                int poi = 1;
-                for (int i = 0; i < region.LocationObjects.GetLength(0); i++)
-                {
-                    for (int j = 0; j < region.LocationObjects.GetLength(1); j++)
-                    {
-                        var currentLocation = new Location(i, j);
-                        if (_vampire.RegionLocation.X == i && _vampire.RegionLocation.Y == j)
-                        {
-                            Console.Write("L");
-                            continue;
-                        }
 
-                        var locationObject = region.GetLocationObjectAtLocation(currentLocation);
-                        if (locationObject == null)
-                            Console.Write("-");
-                        else 
-                        {
-                            pointsOfInterest.Add(locationObject);
-                            Console.Write($"{poi++}");
-                        }
-                    }
-                    Console.WriteLine("");
-                }
+                // Draw Map
+                DrawMap(region, pointsOfInterest);
+
                 Console.WriteLine("");
                 Console.WriteLine("Points of interest:");
+                int index = 0;
                 foreach (var pointOfInterest in pointsOfInterest)
                 {
-
-                    Console.Write($"{pointsOfInterest.IndexOf(pointOfInterest) + 1}. {pointOfInterest.Name}");
+                    Console.Write($"{++index}. {pointOfInterest.Name}");
                     if (pointOfInterest.GetType() == typeof(VillageController))
                         Console.Write($"{((pointOfInterest as VillageController).Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : "")}");
 
@@ -426,7 +426,9 @@ namespace Count
                 int poiOption = -1;
                 if (int.TryParse(option, out poiOption))
                 {
-                    _vampire.Move(pointsOfInterest[poiOption - 1].WorldLocation, pointsOfInterest[poiOption - 1].RegionLocation);
+                    var pointOfInterest = pointsOfInterest[poiOption - 1];
+                    if (pointOfInterest != null)
+                        _vampire.Move(pointsOfInterest[poiOption - 1].WorldLocation, pointsOfInterest[poiOption - 1].RegionLocation);
                 }
                 else if (option == "E" || option == "e")
                 {
@@ -451,6 +453,8 @@ namespace Count
                     }
                     else if (currentLocationObject.GetType() == typeof(CastleController))
                         finishedEnterRegion = true;
+                    else if (currentLocationObject.GetType() == typeof(UnexploredController))
+                        EnterUnexploredArea(currentLocationObject as UnexploredController);
                     else
                         EnterLocationObject(currentLocationObject);
                 }
@@ -475,10 +479,50 @@ namespace Count
                         }
                     }
                 }*/
-                else if (option == "Q")
+                else if (option == "Q" || option == "q")
                 {
                     finishedEnterRegion = true;
                 }
+            }
+        }
+
+        private void DrawMap(RegionController region, List<LocationObjectController> pointsOfInterest)
+        {
+            int poi = 1;
+            for (int i = 0; i < region.LocationObjects.GetLength(0); i++)
+            {
+                for (int j = 0; j < region.LocationObjects.GetLength(1); j++)
+                {
+                    var currentLocation = new Location(i, j);
+                    if (_knownRegionLocations.Any(p => p.X == i && p.Y == j))
+                    {
+                        if (_vampire.RegionLocation.X == i && _vampire.RegionLocation.Y == j)
+                        {
+                            Console.Write("L");
+                            continue;
+                        }
+
+                        var locationObject = region.GetLocationObjectAtLocation(currentLocation);
+                        if (locationObject == null)
+                            Console.Write("-");
+                        else
+                        {
+                            pointsOfInterest.Add(locationObject);
+                            Console.Write($"{poi++}");
+                        }
+                    }
+                    else if (_knownRegionLocations.Any(p => ((p.X <= i + 1) && (p.X >= i - 1)) && ((p.Y <= j + 1) && (p.Y >= j - 1))))
+                    {
+                        pointsOfInterest.Add(new UnexploredController(_vampire.WorldLocation, currentLocation) { });
+                        Console.Write($"{poi++}");
+                    }
+                    else
+                    {
+                        Console.Write("?");
+                    }
+                }
+
+                Console.WriteLine("");
             }
         }
 
@@ -519,32 +563,36 @@ namespace Count
                 switch (option)
                 {
                     case "1":
-                        // try to feed
-                        var feedStatus = _vampire.Feed();
-                        switch (feedStatus)
-                        {
-                            case FeedStatus.FED:
-                                Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
-                                break;
-                            case FeedStatus.CONVERTED:
-                                Console.WriteLine("You feed a villager successfully. You hunger recedes. ...BUT you have created another like yourself. For now he will serve you.\nThe village grows more suspicious.");
-                                break;
-                            case FeedStatus.FAILED:
-                                Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
-                                break;
-                        }
-                        
-                            
-                        village.IncreaseSuspicion();
-                        foreach (var othervillage in _knownVillages.Where(i => !i.Equals(village)))
-                        {
-                            othervillage.DecreaseSuspicion();
-                        }
-
-
                         // Exert after an action
-                        _vampire.Exert(1);
-                        finishedEnterVillage = true;
+                        if (_vampire.TryExert(1))
+                        {
+                            // try to feed
+                            var feedStatus = _vampire.Feed();
+                            switch (feedStatus)
+                            {
+                                case FeedStatus.FED:
+                                    Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
+                                    break;
+                                case FeedStatus.CONVERTED:
+                                    Console.WriteLine("You feed a villager successfully. You hunger recedes. ...BUT you have created another like yourself. For now he will serve you.\nThe village grows more suspicious.");
+                                    break;
+                                case FeedStatus.FAILED:
+                                    Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
+                                    break;
+                            }
+
+
+                            village.IncreaseSuspicion();
+                            foreach (var othervillage in _knownVillages.Where(i => !i.Equals(village)))
+                            {
+                                othervillage.DecreaseSuspicion();
+                            }
+                            finishedEnterVillage = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("You dont have enough action points to feed.");
+                        }
 
                         Console.WriteLine("");
                         Console.WriteLine("Press ENTER to continue");
@@ -571,6 +619,7 @@ namespace Count
                         finishedEnterVillage = true;
                         break;*/
                     case "Q":
+                    case "q":
                         finishedEnterVillage = true;
                         break;
 
@@ -608,7 +657,65 @@ namespace Count
                 switch (option)
                 {
                     case "Q":
+                    case "q":
                         finishedEnterVillage = true;
+                        break;
+                }
+            }
+        }
+
+        private void EnterUnexploredArea(UnexploredController unexploredArea)
+        {
+            var finishedEnterUnexploredArea = false;
+            while (!finishedEnterUnexploredArea && _vampire.ActionPoints > 0)
+            {
+                Console.Clear();
+                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
+                Console.WriteLine("");
+                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine($"{unexploredArea.Name}");
+                Console.WriteLine($"{unexploredArea.Description}");
+                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine("");
+                PrintStats();
+                Console.WriteLine("");
+                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
+                Console.WriteLine("");
+                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine("Actions: ");
+                Console.WriteLine("");
+
+                Console.WriteLine("E. Explore the area (1 Action)");
+                Console.WriteLine("Q. Go back to previous menu");
+                Console.WriteLine("");
+                Console.Write(": ");
+
+                var option = Console.ReadLine();
+                Console.Clear();
+                switch (option)
+                {
+                    case "E":
+                    case "e":
+                        if (_vampire.TryExert(1))
+                        {
+                            var locationObject = unexploredArea.Explore(_knownRegionLocations, _world);
+                            if (locationObject != null)
+                            {
+                                Console.WriteLine($"You found a {locationObject.Name}");
+                            }
+                            else
+                                Console.WriteLine("You found nothing.");
+
+                            finishedEnterUnexploredArea = true;
+                        }
+
+                        Console.WriteLine("");
+                        Console.WriteLine("Press ENTER to continue");
+                        Console.ReadLine();
+                        break;
+                    case "Q":
+                    case "q":
+                        finishedEnterUnexploredArea = true;
                         break;
                 }
             }

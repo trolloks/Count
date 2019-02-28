@@ -59,6 +59,7 @@ namespace Count.Controllers
         {
             if (knownVillages.Any())
             {
+                int feeded = 0;
                 foreach (var followerController in _followers)
                 {
                     var vampireController = followerController as VampireController;
@@ -66,15 +67,14 @@ namespace Count.Controllers
                     var feedstatus = vampireController.Feed(worldController, vampire); // vampires feed and give you souls
                     switch (feedstatus)
                     {
-                        case Enums.FeedStatus.FAILED:
-                            Console.WriteLine("Vampire failed to feed!");
-                            break;
                         case Enums.FeedStatus.FED:
-                            Console.WriteLine("Vampire Fed Successfully!");
+                            feeded++;
                             break;
                     }
-                    Console.ReadLine();
                 }
+
+                if (feeded > 0)
+                    Console.WriteLine($"{feeded} Vampire/s Fed Successfully! Granting you {feeded} extra souls!");
             }
         }
         #endregion

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Count.Models;
 using Count.Models.Followers;
 
@@ -26,6 +27,7 @@ namespace Count.Controllers
             if (follower != null)
             {
                 _followers.Add(follower);
+                Console.WriteLine("A Zombie rises from the graveyard");
             }
         }
     }

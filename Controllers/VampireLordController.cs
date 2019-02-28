@@ -201,9 +201,14 @@ namespace Count.Controllers
         /// Exerts your actionpoints
         /// </summary>
         /// <param name="i">amount of exertion</param>
-        public void Exert(int i)
+        public bool TryExert(int i)
         {
-            VampireLord.ActionPoints -= i;
+            if (i <= VampireLord.ActionPoints)
+            {
+                VampireLord.ActionPoints -= i;
+                return true;
+            }
+            return false;
         }
 
         public void Move(Location worldLocation, Location regionLocation)
