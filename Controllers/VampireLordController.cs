@@ -16,7 +16,9 @@ namespace Count.Controllers
 
         private WorldController _worldController;
         private VampireLord VampireLord { get; set; }
-        private CastleController _castleController { get; set; } 
+        private CastleController _castleController { get; set; }
+
+        private bool _firstFeed = true;
 
         /// <summary>
         /// Hunger logic
@@ -62,7 +64,7 @@ namespace Count.Controllers
                 Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion))}");
             }
 
-            feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion));
+            feedCheck = _firstFeed || feedRoll >= (BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion));
 
             if (feedCheck)
             {
@@ -70,18 +72,17 @@ namespace Count.Controllers
                 // Effects on you
                 VampireLord.LastFed = _worldController.Day;
                 // Could convert into a vampire
-                var follower = _castleController.CreateVampire();
+                var follower = _castleController.CreateVampire(_firstFeed);
                 if (follower != null)
-                {
                     status = FeedStatus.CONVERTED;
-                }
-                   
+
                 // Kill Villager
                 village.KillVillager();
                 // Get Soul
-                VampireLord.Souls++;
+                IncreaseSouls(1);
             }
 
+            _firstFeed = false;
             return status;
         }
 

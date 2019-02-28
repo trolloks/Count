@@ -17,7 +17,7 @@ namespace Count.Controllers
         /// <summary>
         ///  Checks if you succeed on creating a follower
         /// </summary>
-        public static FollowerController TryCreateFollower(Type followerType, Location worldLocation, Location regionLocation)
+        public static FollowerController TryCreateFollower(Type followerType, Location worldLocation, Location regionLocation, bool force)
         {
             var convertCheck = true;
             var convertRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
@@ -27,7 +27,7 @@ namespace Count.Controllers
                 Console.WriteLine($"(DEV) CONVERT DC CHECK: {BASE_CONVERT_DC}");
             }
 
-            convertCheck = convertRoll >= (BASE_CONVERT_DC);
+            convertCheck = force || convertRoll >= (BASE_CONVERT_DC);
 
             if (convertCheck)
             {

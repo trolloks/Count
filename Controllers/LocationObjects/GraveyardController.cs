@@ -22,7 +22,7 @@ namespace Count.Controllers
 
         public override void Upkeep(VampireLordController vampire, List<VillageController> knownVillages, WorldController worldController)
         {
-            var follower = (ZombieController)FollowerController.TryCreateFollower(typeof(Zombie), _graveyard.WorldLocation, _graveyard.RegionLocation);
+            var follower = (ZombieController)FollowerController.TryCreateFollower(typeof(Zombie), _graveyard.WorldLocation, _graveyard.RegionLocation, true);
             if (follower != null)
             {
                 _followers.Add(follower);
