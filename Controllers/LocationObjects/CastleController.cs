@@ -55,16 +55,16 @@ namespace Count.Controllers
             return follower;
         }
 
-        public override void Upkeep(VampireLordController vampire, List<VillageController> knownVillages, WorldController worldController)
+        public override void Upkeep(Models.Game game)
         {
-            if (knownVillages.Any())
+            if (game.KnownVillages.Any())
             {
                 int feeded = 0;
                 foreach (var followerController in _followers)
                 {
                     var vampireController = followerController as VampireController;
-                    vampireController.MoveToVillage(knownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault()); // Go to random village
-                    var feedstatus = vampireController.Feed(worldController, vampire); // vampires feed and give you souls
+                    vampireController.MoveToVillage(game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault()); // Go to random village
+                    var feedstatus = vampireController.Feed(game.World, game.VampireLord); // vampires feed and give you souls
                     switch (feedstatus)
                     {
                         case Enums.FeedStatus.FED:

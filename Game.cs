@@ -36,28 +36,12 @@ namespace Count
     {
         bool _isGameOver = false;
 
-        /// <summary>
-        /// You, the vampire lord
-        /// </summary>
-        VampireLordController _vampire;
-        /// <summary>
-        /// Your castle
-        /// </summary>
-        CastleController _castle;
-        /// <summary>
-        /// The world you interact with
-        /// </summary>
-        WorldController _world;
-
-        Location _startingWorldLocation;
-        Location _startingRegionLocation;
+        internal Models.Game _game;
+        private VampireLordController _vampire;
+        private WorldController _world;
+        private CastleController _castle;
 
         public static bool IS_DEV = false;
-
-        // Temp
-        List<VillageController> _knownVillages = new List<VillageController>();
-        List<LocationObjectController> _ownedBuildings = new List<LocationObjectController>();
-        List<Location> _knownRegionLocations = new List<Location>();
 
         public void Start()
         {
@@ -82,20 +66,20 @@ namespace Count
             Console.WriteLine("Press ENTER to continue");
             Console.ReadLine();
 
-            _world = new WorldController();
+            _game = new Models.Game();
+            _game.World = _world = new WorldController();
 
             // Get starting World location
-            _startingWorldLocation = _world.GetUnusedWorldLocation();
+            _game.StartingWorldLocation = _game.World.GetUnusedWorldLocation();
             // Generate starting Region
-            var startingRegion = _world.AddRegionAtLocation(_startingWorldLocation);
+            var startingRegion = _game.World.AddRegionAtLocation(_game.StartingWorldLocation);
             // Get starting Region location
-            _startingRegionLocation = startingRegion.GetUnusedRegionLocation();
+            _game.StartingRegionLocation = startingRegion.GetUnusedRegionLocation();
             // Create castle
-            _castle = startingRegion.AddLocationObject(new CastleController(_startingWorldLocation, _startingRegionLocation));
+            _game.Castle = _castle = startingRegion.AddLocationObject(new CastleController(_game.StartingWorldLocation, _game.StartingRegionLocation));
             // Create vampire
-            _vampire = new VampireLordController(_world, _castle, _startingWorldLocation, _startingRegionLocation);
-
-            _knownRegionLocations.Add(_startingRegionLocation);
+            _game.VampireLord = _vampire = new VampireLordController(_game);
+            _game.KnownLocations.Add(_game.StartingRegionLocation);
         }
 
         private void Loop()
@@ -191,6 +175,8 @@ namespace Count
                 {
                     Console.Clear();
                     Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
+                    Console.WriteLine("----------------------------------------------------------------------------");
+                    Console.WriteLine($"Welcome to {_castle.Name}");
                     Console.WriteLine(infoText);
                     Console.WriteLine("----------------------------------------------------------------------------");
                     Console.WriteLine("");
@@ -207,7 +193,7 @@ namespace Count
                     Console.WriteLine("");
 
                     // Actions
-                    Console.WriteLine("1. Enter World");
+                    Console.WriteLine("1. Leave Castle");
                     Console.WriteLine("2. Unlock new unholy buildings");
 
                     Console.WriteLine("");
@@ -229,10 +215,10 @@ namespace Count
                 Console.Clear();
                 Console.WriteLine("During the the night the following happened:");
                 // Upkeep
-                _castle.Upkeep(_vampire, _knownVillages, _world);
-                foreach (var locationObject in _ownedBuildings)
+                _castle.Upkeep(_game);
+                foreach (var locationObject in _game.OwnedBuildings)
                 {
-                    locationObject.Upkeep(_vampire, _knownVillages, _world);
+                    locationObject.Upkeep(_game);
                 }
 
                 Console.WriteLine("");
@@ -240,7 +226,7 @@ namespace Count
                 Console.ReadLine();
 
                 // Basic Win Condition - Will change **DEPRECATED
-                if (_ownedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count >= 5)
+                if (_game.OwnedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count >= 5)
                     _isGameOver = true;
             }
             return false;
@@ -299,14 +285,15 @@ namespace Count
                                 Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following: ");
                                 foreach (var researchItem in researchItems)
                                 {
-                                    Console.WriteLine($"- You find a {researchItem.Name} on the map");
+                                    Console.WriteLine($"- A {researchItem.Name} appears on the map");
                                     var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation();
                                     if (newLocation != null)
                                     {
                                         var currentRgion = _world.GetRegion(_vampire.WorldLocation);
                                         var newResearchedLocationObject = (LocationObjectController)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
                                         currentRgion.AddLocationObject(newResearchedLocationObject);
-                                        _ownedBuildings.Add(newResearchedLocationObject);
+                                        _game.OwnedBuildings.Add(newResearchedLocationObject);
+                                        Console.WriteLine($"If you don't see it on the map you'll have to find it first");
                                     }
                                     else
                                         throw new Exception("No more space");
@@ -367,7 +354,7 @@ namespace Count
                 var region = _world.GetRegion(_vampire.WorldLocation);
                 LocationObjectController currentLocationObject = null;
                 // Only check if known
-                if (_knownRegionLocations.Any(p => p.X == _vampire.RegionLocation.X && p.Y == _vampire.RegionLocation.Y))
+                if (_game.KnownLocations.Any(p => p.X == _vampire.RegionLocation.X && p.Y == _vampire.RegionLocation.Y))
                     currentLocationObject = region.GetLocationObjectAtLocation(_vampire.RegionLocation);
                 else
                     currentLocationObject = new UnexploredController(_vampire.WorldLocation, _vampire.RegionLocation);
@@ -447,8 +434,8 @@ namespace Count
                         else
                         {
                             EnterVillage(village);
-                            if (!_knownVillages.Contains(village))
-                                _knownVillages.Add(village);
+                            if (!_game.KnownVillages.Contains(village))
+                                _game.KnownVillages.Add(village);
                         }
                     }
                     else if (currentLocationObject.GetType() == typeof(CastleController))
@@ -494,14 +481,13 @@ namespace Count
                 for (int j = 0; j < region.LocationObjects.GetLength(1); j++)
                 {
                     var currentLocation = new Location(i, j);
-                    if (_knownRegionLocations.Any(p => p.X == i && p.Y == j))
+                    if (_vampire.RegionLocation.X == i && _vampire.RegionLocation.Y == j)
                     {
-                        if (_vampire.RegionLocation.X == i && _vampire.RegionLocation.Y == j)
-                        {
-                            Console.Write("L");
-                            continue;
-                        }
-
+                        Console.Write("L");
+                        continue;
+                    }
+                    else if (_game.KnownLocations.Any(p => p.X == i && p.Y == j))
+                    {
                         var locationObject = region.GetLocationObjectAtLocation(currentLocation);
                         if (locationObject == null)
                             Console.Write("-");
@@ -511,7 +497,7 @@ namespace Count
                             Console.Write($"{poi++}");
                         }
                     }
-                    else if (_knownRegionLocations.Any(p => ((p.X <= i + 1) && (p.X >= i - 1)) && ((p.Y <= j + 1) && (p.Y >= j - 1))))
+                    else if (_game.KnownLocations.Any(p => ((p.X <= i + 1) && (p.X >= i - 1)) && ((p.Y <= j + 1) && (p.Y >= j - 1))))
                     {
                         pointsOfInterest.Add(new UnexploredController(_vampire.WorldLocation, currentLocation) { });
                         Console.Write($"{poi++}");
@@ -583,7 +569,7 @@ namespace Count
 
 
                             village.IncreaseSuspicion();
-                            foreach (var othervillage in _knownVillages.Where(i => !i.Equals(village)))
+                            foreach (var othervillage in _game.KnownVillages.Where(i => !i.Equals(village)))
                             {
                                 othervillage.DecreaseSuspicion();
                             }
@@ -685,7 +671,7 @@ namespace Count
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
 
-                Console.WriteLine("E. Explore the area (1 Action)");
+                Console.WriteLine("1. Explore the area (1 Action)");
                 Console.WriteLine("Q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -694,11 +680,10 @@ namespace Count
                 Console.Clear();
                 switch (option)
                 {
-                    case "E":
-                    case "e":
+                    case "1":
                         if (_vampire.TryExert(1))
                         {
-                            var locationObject = unexploredArea.Explore(_knownRegionLocations, _world);
+                            var locationObject = unexploredArea.Explore(_game.KnownLocations, _world);
                             if (locationObject != null)
                             {
                                 Console.WriteLine($"You found a {locationObject.Name}");
@@ -793,15 +778,15 @@ namespace Count
 
         private void PrintStats()
         {
-            Console.WriteLine($"GOAL: {(_ownedBuildings.Count > 0 ? (_ownedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count) : 0)}/5 ZOMBIES");
+            Console.WriteLine($"GOAL: {(_game.OwnedBuildings.Count > 0 ? (_game.OwnedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count) : 0)}/5 ZOMBIES");
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
             Console.WriteLine($"SOULS: {_vampire.Souls}");
-            Console.WriteLine($"FOLLOWERS: {_ownedBuildings?.Sum(i => i.Followers.Count) + _castle.Followers.Count}");
+            Console.WriteLine($"FOLLOWERS: {_game.OwnedBuildings?.Sum(i => i.Followers.Count) + _castle.Followers.Count}");
             if (_castle.Followers.Count > 0)
                 Console.WriteLine($"- VAMPIRES: {_castle.Followers.Count}");
-            if (_ownedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count > 0)
-                Console.WriteLine($"- ZOMBIES: {_ownedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count}");         
+            if (_game.OwnedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count > 0)
+                Console.WriteLine($"- ZOMBIES: {_game.OwnedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count}");         
         }
 
         private void Win()

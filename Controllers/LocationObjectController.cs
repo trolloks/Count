@@ -15,7 +15,7 @@ namespace Count.Controllers
         /// <summary>
         /// Abstract upkeep method
         /// </summary>
-        public abstract void Upkeep(VampireLordController vampire, List<VillageController> knownVillages, WorldController worldController);
+        public abstract void Upkeep(Models.Game game);
 
         public LocationObjectController(Location worldLocation, Location regionLocation) {
             WorldLocation = worldLocation;

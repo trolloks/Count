@@ -14,9 +14,8 @@ namespace Count.Controllers
         private const int BASE_FEED_DC = 8;
         private const int BASE_CHECK_ROLL = 20;
 
-        private WorldController _worldController;
+        private Models.Game _game;
         private VampireLord VampireLord { get; set; }
-        private CastleController _castleController { get; set; }
 
         private bool _firstFeed = true;
 
@@ -26,19 +25,18 @@ namespace Count.Controllers
         public static int HUNGER_WARNING_THRESHOLD = 5;
         public static int HUNGER_STARVING_THRESHOLD = 10;
 
-        public VampireLordController(WorldController worldController, CastleController castleController, Location startingWorldLocation, Location startingRegionLocation)
+        public VampireLordController(Models.Game game)
         {
-            _worldController = worldController;
-            _castleController = castleController;
+            _game = game;
 
             // Create Vampire Lord
             VampireLord = new VampireLord();
             VampireLord.Hitpoints = 5;
             VampireLord.ActionPointsMax = 1;
-            VampireLord.LastFed = _worldController.Day;
-            VampireLord.WorldLocation = startingWorldLocation;
-            VampireLord.RegionLocation = startingRegionLocation;
-          
+            VampireLord.LastFed = _game.World.Day;
+            VampireLord.WorldLocation = _game.StartingWorldLocation;
+            VampireLord.RegionLocation = _game.StartingRegionLocation;
+
             Sleep();
         }
 
@@ -50,7 +48,7 @@ namespace Count.Controllers
         public FeedStatus? Feed()
         {
             var status = FeedStatus.FAILED;
-            var locationObject = _worldController.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
+            var locationObject = _game.World.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
             if (locationObject == null || locationObject.GetType() != typeof(VillageController))
                 return null;
 
@@ -70,9 +68,9 @@ namespace Count.Controllers
             {
                 status = FeedStatus.FED;
                 // Effects on you
-                VampireLord.LastFed = _worldController.Day;
+                VampireLord.LastFed = _game.World.Day;
                 // Could convert into a vampire
-                var follower = _castleController.CreateVampire(_firstFeed);
+                var follower = _game.Castle.CreateVampire(_firstFeed);
                 if (follower != null)
                     status = FeedStatus.CONVERTED;
 
@@ -96,8 +94,8 @@ namespace Count.Controllers
         /// </summary>
         public void Sleep()
         {
-            VampireLord.WorldLocation = _castleController.WorldLocation;
-            VampireLord.RegionLocation = _castleController.RegionLocation;
+            VampireLord.WorldLocation = _game.Castle.WorldLocation;
+            VampireLord.RegionLocation = _game.Castle.RegionLocation;
             VampireLord.ActionPoints = VampireLord.ActionPointsMax;
         }
         #endregion
@@ -144,7 +142,7 @@ namespace Count.Controllers
         /// </summary>
         public long DetermineHungerLevel()
         {
-            return _worldController.Day - VampireLord.LastFed;
+            return _game.World.Day - VampireLord.LastFed;
         }
 
         /// <summary>

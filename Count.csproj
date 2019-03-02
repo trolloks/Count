@@ -55,6 +55,7 @@
     <Compile Include="Game.cs" />
     <Compile Include="Models\Followers\Cultist.cs" />
     <Compile Include="Models\Followers\Zombie.cs" />
+    <Compile Include="Models\Game.cs" />
     <Compile Include="Models\LocationObject.cs" />
     <Compile Include="Models\Location.cs" />
     <Compile Include="Models\Follower.cs" />

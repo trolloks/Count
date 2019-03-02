@@ -87,7 +87,7 @@ namespace Count.Controllers
             Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(5, 5) / 100f)); // Can't get less suspicious than 0 
         }
 
-        public override void Upkeep(VampireLordController vampire, List<VillageController> knownVillages, WorldController worldController)
+        public override void Upkeep(Models.Game game)
         {
            
         }
