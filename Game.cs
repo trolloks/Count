@@ -31,6 +31,10 @@ namespace Count
     /// VILLAGERS = RESOURCES
     /// WINCON = PER LEVEL
     /// 
+    /// NEW NEW PLAN :
+    /// 
+    /// Create MUCH bigger map! Much bigger amount of zombies to win. Can create multiple graveyards. maybe increase price. graveyards only on known locations
+    /// 
     /// </summary>
     public class Game
     {
