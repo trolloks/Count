@@ -551,6 +551,8 @@ namespace Count
 
         private void DrawMap(RegionController region, List<LocationObjectController> pointsOfInterest)
         {
+            int minY = int.MaxValue;
+            int maxY = int.MinValue;
             int poi = 1;
             for (int i = 0; i < region.LocationObjects.GetLength(0); i++)
             {
@@ -574,17 +576,28 @@ namespace Count
                         else
                         {
                             pointsOfInterest.Add(locationObject);
-                            Console.Write($"({poi++})");
+                            Console.Write($"({poi++}:L)");
                         }
+                        minY = Math.Min(minY, j);
+                        maxY = Math.Max(maxY, j);
                         rowDrawn = true;
                     } 
                     else if (_game.KnownLocations.Any(p => ((p.X <= i + 1) && (p.X >= i - 1)) && ((p.Y <= j + 1) && (p.Y >= j - 1))))
                     {
                         pointsOfInterest.Add(new UnexploredController(_vampire.WorldLocation, currentLocation) { });
                         Console.Write($"({poi++})");
+                        minY = Math.Min(minY, j);
+                        maxY = Math.Max(maxY, j);
                         rowDrawn = true;
                     }
+                    // WIP
+                    /*else if (j > minY && j < maxY)
+                    {
+                        Console.Write("?");
+                    }*/
+
                 }
+               
                 if (rowDrawn)
                     Console.WriteLine("");
             }
