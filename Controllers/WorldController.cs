@@ -10,6 +10,7 @@ namespace Count.Controllers
     {
         private const int WORLD_SIZE = 10;
         private World World { get; set; }
+        private List<HeroController> _heroes;
 
         private readonly RegionController [,] _regions;
 
@@ -20,6 +21,7 @@ namespace Count.Controllers
             World.Day = 1;
 
             _regions = new RegionController[WORLD_SIZE, WORLD_SIZE];
+            _heroes = new List<HeroController>();
         }
 
         public int Size
@@ -77,6 +79,37 @@ namespace Count.Controllers
         public void FinishDay()
         {
             World.Day++;
+        }
+
+        public void Upkeep(Models.Game game)
+        {
+            // Every 5th day create
+            if (World.Day % 5 == 0)
+            {
+                var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
+                if (village != null)
+                {
+                    var hero = new HeroController(village.WorldLocation, village.RegionLocation);
+                    _heroes.Add(hero);
+                    Console.WriteLine($"{hero.Name} rises from {village.Name} to challenge your power");
+                }
+            }
+
+            var heroCount = _heroes.Count;
+            for (int i = 0; i < heroCount; i++)
+            {
+                var hero = _heroes[i];
+                Location location = game.KnownLocations.OrderBy(j => Randomizer.Instance.Random.Next()).FirstOrDefault();
+                hero.MoveToLocation(hero.WorldLocation, location);
+                Console.WriteLine($"{hero.Name} is still at large.");
+                var lives = hero.Hero(game);
+                if (!lives)
+                {
+                    _heroes.Remove(hero);
+                    heroCount--;
+                }
+                   
+            }
         }
 
         /// <summary>

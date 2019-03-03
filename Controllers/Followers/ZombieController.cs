@@ -10,5 +10,11 @@ namespace Count.Controllers
         {
             _follower = new Zombie() { Available = true, WorldLocation = worldLocation, RegionLocation = regionLocation };
         }
+
+        public void MoveToLocation(Location worldLocation, Location regionLocation)
+        {
+            _follower.WorldLocation = worldLocation;
+            _follower.RegionLocation = regionLocation;
+        }
     }
 }

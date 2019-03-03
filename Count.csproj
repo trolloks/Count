@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Controllers\Followers\ZombieController.cs" />
     <Compile Include="Controllers\Followers\VampireController.cs" />
+    <Compile Include="Controllers\HeroController.cs" />
     <Compile Include="Controllers\LocationObjectController.cs" />
     <Compile Include="Controllers\LocationObjects\UnexploredController.cs" />
     <Compile Include="Controllers\LocationObjects\GraveyardController.cs" />
@@ -58,6 +59,7 @@
     <Compile Include="Models\Followers\Cultist.cs" />
     <Compile Include="Models\Followers\Zombie.cs" />
     <Compile Include="Models\Game.cs" />
+    <Compile Include="Models\Hero.cs" />
     <Compile Include="Models\LocationObject.cs" />
     <Compile Include="Models\Location.cs" />
     <Compile Include="Models\Follower.cs" />
@@ -74,6 +76,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\LocationUtil.cs" />
     <Compile Include="Utils\Randomizer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Controllers\Heroes\" />
+    <Folder Include="Models\Heroes\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

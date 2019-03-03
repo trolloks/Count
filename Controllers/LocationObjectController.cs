@@ -23,5 +23,10 @@ namespace Count.Controllers
         }
 
         public ReadOnlyCollection<FollowerController> Followers { get { return _followers.AsReadOnly(); } }
+
+        public void KillFollower(FollowerController follower)
+        {
+            _followers.Remove(follower);
+        }
     }
 }

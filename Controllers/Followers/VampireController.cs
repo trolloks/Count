@@ -16,10 +16,10 @@ namespace Count.Controllers
             _follower = new Vampire() { Available = true, WorldLocation = worldLocation, RegionLocation = regionLocation };
         }
 
-        public void MoveToVillage(VillageController village)
+        public void MoveToLocation(Location worldLocation, Location regionLocation)
         {
-            _follower.WorldLocation = village.WorldLocation;
-            _follower.RegionLocation = village.RegionLocation;
+            _follower.WorldLocation = worldLocation;
+            _follower.RegionLocation = regionLocation;
         }
 
         /// <summary>

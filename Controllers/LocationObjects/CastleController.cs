@@ -62,7 +62,8 @@ namespace Count.Controllers
                 foreach (var followerController in _followers)
                 {
                     var vampireController = followerController as VampireController;
-                    vampireController.MoveToVillage(game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault()); // Go to random village
+                    var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
+                    vampireController.MoveToLocation(village.WorldLocation, village.RegionLocation); // Go to random village
                     var feedstatus = vampireController.Feed(game.World, game.VampireLord); // vampires feed and give you souls
                     switch (feedstatus)
                     {

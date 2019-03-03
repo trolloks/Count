@@ -46,7 +46,7 @@ namespace Count
         private CastleController _castle;
 
         public static bool IS_DEV = false;
-        public static int ZOMBIE_WIN_COUNT = 50;
+        public static int ZOMBIE_WIN_COUNT = 250;
 
         public void Start()
         {
@@ -117,7 +117,7 @@ namespace Count
         {
             if (!_vampire.IsDead)
             {
-                /*Console.Clear();
+                Console.Clear();
                 Console.WriteLine($"~~~ Day {_world.Day} (Day) ~~~");
                 Console.WriteLine("");
 
@@ -128,7 +128,7 @@ namespace Count
                 // Stat Report
                 PrintStats();
                 Console.WriteLine("");
-
+                _world.Upkeep(_game);
                 Console.WriteLine("");
                 Console.WriteLine("Press ENTER to continue");
                 var option = Console.ReadLine();

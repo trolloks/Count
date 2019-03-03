@@ -2,6 +2,7 @@
 using System.Linq;
 using Count.Models;
 using Count.Models.Followers;
+using Count.Utils;
 
 namespace Count.Controllers
 {
@@ -43,6 +44,11 @@ namespace Count.Controllers
             }
 
             // move zombies
+            foreach (var follower in Followers)
+            {
+                Location location = game.KnownLocations.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
+                (follower as ZombieController).MoveToLocation(_graveyard.WorldLocation, location);
+            }
         }
     }
 }
