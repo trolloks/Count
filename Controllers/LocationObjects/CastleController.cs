@@ -14,7 +14,7 @@ namespace Count.Controllers
         // Research
         public readonly Dictionary<int, ResearchItem []> ResearchOptions = new Dictionary<int, ResearchItem []>()
         {
-            { 5 , new ResearchItem [] { new ResearchItem{ Name = "Graveyard", Unlocks = typeof(GraveyardController) } } }
+            { 5 , new ResearchItem [] { new ResearchItem{ Name = "Graveyard", Unlocks = typeof(GraveyardController), Souls = 5 } } }
         };
 
         public CastleController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
@@ -27,12 +27,11 @@ namespace Count.Controllers
         }
 
         #region "Actions"
-        public ResearchItem[] Research(VampireLordController vampire, int soulMax)
+        public ResearchItem[] Research(int soulsCurrent, int soulMax)
         {
-            if (ResearchOptions.ContainsKey(_castle.ResearchPoints + Math.Min(vampire.Souls, soulMax)))
+            if (ResearchOptions.ContainsKey(_castle.ResearchPoints + Math.Min(soulsCurrent, soulMax)))
             {
-                _castle.ResearchPoints += Math.Min(vampire.Souls, soulMax);
-                vampire.SpendSouls(Math.Min(vampire.Souls, soulMax));
+                _castle.ResearchPoints += Math.Min(soulsCurrent, soulMax);
                 var researchItems = ResearchOptions[_castle.ResearchPoints];
                 foreach (var researchItem in researchItems)
                     _castle.UnlockedResearch.Add(researchItem);

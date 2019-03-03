@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Count.Models;
 using Count.Utils;
@@ -7,7 +8,8 @@ namespace Count.Controllers
 {
     public class RegionController
     {
-        private const int REGION_SIZE = 3; 
+        private const int REGION_SIZE = 64;
+        private const int INNER_REGION_SIZE = 4;
         ///private const int MAX_VILLAGES = 4;
 
         private Region Region { get; set; }
@@ -22,13 +24,36 @@ namespace Count.Controllers
                 Location = worldLocation
             };
 
-            // Initialize Villages
-            int villages = 1 + Randomizer.Instance.Roll(1, 2);
-            for (int i = 0; i < villages; i++)
+            GenerateVillages();
+        }
+
+        private void GenerateVillages()
+        {
+            for (int k = 0; k < (REGION_SIZE / INNER_REGION_SIZE); k++)
             {
-                var villageLocation = GetUnusedRegionLocation();
-                var village = new VillageController(Region.Location, villageLocation);
-                LocationObjects[villageLocation.X, villageLocation.Y] = village;
+                int xOffset = INNER_REGION_SIZE * k;
+                for (int l = 0; l < (REGION_SIZE / INNER_REGION_SIZE); l++)
+                {
+                    int yOffset = INNER_REGION_SIZE * l;
+                    var locations = new List<Location>();
+
+                    for (int x = xOffset; x < (xOffset + INNER_REGION_SIZE); x++)
+                    {
+                        for (int y = yOffset; y < (yOffset + INNER_REGION_SIZE); y++)
+                        {
+                            locations.Add(new Location(x, y));
+                        }
+                    }
+
+                    // Initialize Villages
+                    int villages = 3 + Randomizer.Instance.Roll(2, 3);
+                    for (int i = 0; i < villages; i++)
+                    {
+                        var villageLocation = GetUnusedRegionLocation(locations);
+                        var village = new VillageController(Region.Location, villageLocation);
+                        LocationObjects[villageLocation.X, villageLocation.Y] = village;
+                    }
+                }
             }
         }
 
@@ -54,17 +79,32 @@ namespace Count.Controllers
         
         public Location GetUnusedRegionLocation()
         {
-            var locationsShuffled = new List<Location>();
-            for (int i = 0; i < LocationObjects.GetLength(0); i++)
+            return GetUnusedRegionLocation(null);
+        }
+
+        public Location GetUnusedRegionLocation(List<Location> locations)
+        {
+            List<Location> locationsShuffled = null;
+            if (locations != null)
             {
-                for (int j = 0; j < LocationObjects.GetLength(1); j++)
+                Location[] copiedList = new Location[locations.Count];
+                locations.CopyTo(copiedList);
+                locationsShuffled = copiedList.ToList();
+            }
+            else
+            {
+                locationsShuffled = new List<Location>();
+                for (int i = 0; i < LocationObjects.GetLength(0); i++)
                 {
-                    locationsShuffled.Add(new Location(i, j));
+                    for (int j = 0; j < LocationObjects.GetLength(1); j++)
+                    {
+                        locationsShuffled.Add(new Location(i, j));
+                    }
                 }
             }
-            locationsShuffled = locationsShuffled.OrderBy(i => Randomizer.Instance.Random.Next()).ToList();
 
-            foreach(var location in locationsShuffled)
+            locationsShuffled = locationsShuffled.OrderBy(i => Randomizer.Instance.Random.Next()).ToList();
+            foreach (var location in locationsShuffled)
             {
                 if (GetLocationObjectAtLocation(location) == null)
                     return location;

@@ -46,6 +46,7 @@ namespace Count
         private CastleController _castle;
 
         public static bool IS_DEV = false;
+        public static int ZOMBIE_WIN_COUNT = 50;
 
         public void Start()
         {
@@ -65,7 +66,7 @@ namespace Count
             Console.WriteLine($"- FEEDING rewards you with SOULS.");
             Console.WriteLine($"- SOULS are required for discovering new unholy buildings that spawn new followers");
             Console.WriteLine("");
-            Console.WriteLine($"***You WIN if you create 5 Zombies***");
+            Console.WriteLine($"***You WIN if you create {ZOMBIE_WIN_COUNT} Zombies***");
             Console.WriteLine("");
             Console.WriteLine("Press ENTER to continue");
             Console.ReadLine();
@@ -230,7 +231,7 @@ namespace Count
                 Console.ReadLine();
 
                 // Basic Win Condition - Will change **DEPRECATED
-                if (_game.OwnedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count >= 5)
+                if (_game.OwnedBuildings?.Where(i => i.GetType() == typeof(GraveyardController))?.Sum(j => j.Followers.Count) >= ZOMBIE_WIN_COUNT)
                     _isGameOver = true;
             }
             return false;
@@ -260,8 +261,12 @@ namespace Count
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
-
-                Console.WriteLine($"1. Research ancient texts (1 Action, {nextResearchItemLevel} Soul/s)");
+                int researchIndex = 0;
+                foreach(var researchItem in _game.KnownResearch)
+                {
+                    Console.WriteLine($"{++researchIndex}. Build {researchItem.Name} (1 Action, {researchItem.Souls} Soul/s)");
+                }
+                Console.WriteLine($"R. Research ancient texts (1 Action, {nextResearchItemLevel} Soul/s)");
                 Console.WriteLine($"- Unearth new knowledge to teach you about unholy buildings.");
                 Console.WriteLine("");
                 /*Console.WriteLine("2. Convert Villager into follower (1 Action)");
@@ -272,44 +277,111 @@ namespace Count
 
                 var option = Console.ReadLine();
                 Console.Clear();
-                switch (option)
+                int buildOption = -1;
+                if (int.TryParse(option, out buildOption))
                 {
-                    case "1":
-                        // research
-                        var researchItems =_castle.Research(_vampire, nextResearchItemLevel);
-                        if (researchItems == null)
+                    if (buildOption < _game.KnownResearch.Count + 1 && buildOption > 0)
+                    {
+                        var researchItem = _game.KnownResearch[buildOption - 1];
+                        if (_vampire.Souls >= researchItem.Souls)
                         {
-                            Console.WriteLine("You dont have enough souls to research this.");
-                        }
-                        else
-                        {
-                            // Exert after an action
-                            if (_vampire.TryExert(1))
+                            var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation(_game.KnownLocations);
+                            if (newLocation != null)
                             {
-                                Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following: ");
-                                foreach (var researchItem in researchItems)
+                                if (_vampire.ActionPoints >= 1)
                                 {
                                     Console.WriteLine($"- A {researchItem.Name} appears on the map");
-                                    var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation();
-                                    if (newLocation != null)
-                                    {
-                                        var currentRgion = _world.GetRegion(_vampire.WorldLocation);
-                                        var newResearchedLocationObject = (LocationObjectController)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
-                                        currentRgion.AddLocationObject(newResearchedLocationObject);
-                                        _game.OwnedBuildings.Add(newResearchedLocationObject);
-                                        Console.WriteLine($"If you don't see it on the map you'll have to find it first");
-                                    }
-                                    else
-                                        throw new Exception("No more space");
+                                    var currentRgion = _world.GetRegion(_vampire.WorldLocation);
+                                    var newResearchedLocationObject = (LocationObjectController)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
+                                    currentRgion.AddLocationObject(newResearchedLocationObject);
+                                    _game.OwnedBuildings.Add(newResearchedLocationObject);
+
+                                    _vampire.TryExert(1);
+                                    _vampire.SpendSouls(researchItem.Souls);
+                                    finishedEnterCastle = true;
+
+                                    Console.WriteLine("");
+                                    Console.WriteLine("Press ENTER to continue");
+                                    Console.ReadLine();
                                 }
-                                finishedEnterCastle = true;
+                                else
+                                {
+                                    Console.WriteLine("You dont have enough action points to research this.");
+                                    Console.WriteLine("");
+                                    Console.WriteLine("Press ENTER to continue");
+                                    Console.ReadLine();
+                                }
+
                             }
                             else
                             {
-                                Console.WriteLine("You dont have enough action points to research this.");
+                                Console.WriteLine("There is no space for this item.");
+                                Console.WriteLine("");
+                                Console.WriteLine("Press ENTER to continue");
+                                Console.ReadLine();
                             }
-                            
                         }
+                        else
+                        {
+                            Console.WriteLine("You dont have enough souls to build this.");
+                            Console.WriteLine("");
+                            Console.WriteLine("Press ENTER to continue");
+                            Console.ReadLine();
+                        }
+                    }
+                }
+                else 
+                switch (option)
+                {
+                    case "R":
+                    case "r":
+                        // research
+                        if (_vampire.Souls < nextResearchItemLevel)
+                        {
+                            Console.WriteLine("You dont have enough souls to research this.");
+                            Console.WriteLine("");
+                            Console.WriteLine("Press ENTER to continue");
+                            Console.ReadLine();
+                            break;
+                        }
+
+                        var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation(_game.KnownLocations);
+                        if (newLocation == null)
+                        {
+                            Console.WriteLine("There is no space for this item.");
+                            Console.WriteLine("");
+                            Console.WriteLine("Press ENTER to continue");
+                            Console.ReadLine();
+                            break;
+                        }
+
+                        if (_vampire.ActionPoints < 1)
+                        {
+                            Console.WriteLine("You dont have enough action points to research this.");
+                            Console.WriteLine("");
+                            Console.WriteLine("Press ENTER to continue");
+                            Console.ReadLine();
+                            break;
+                        }
+
+                        var soulsToSpend = nextResearchItemLevel;
+                        var researchItems =_castle.Research(_vampire.Souls, nextResearchItemLevel);
+                        _vampire.SpendSouls(soulsToSpend);
+
+                        Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following: ");
+                        foreach (var researchItem in researchItems)
+                        {
+                                
+                            _game.KnownResearch.Add(researchItem);
+                            Console.WriteLine($"- A {researchItem.Name} appears on the map");
+                            var currentRegion = _world.GetRegion(_vampire.WorldLocation);
+                            var newResearchedLocationObject = (LocationObjectController)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
+                            currentRegion.AddLocationObject(newResearchedLocationObject);
+                            _game.OwnedBuildings.Add(newResearchedLocationObject);
+                        }
+
+                        _vampire.TryExert(1);
+                        finishedEnterCastle = true;
 
                         Console.WriteLine("");
                         Console.WriteLine("Press ENTER to continue");
@@ -354,7 +426,7 @@ namespace Count
                 Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
                 Console.WriteLine("");
                 Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("Current Location: (L)");
+                Console.WriteLine("Current Location: (X)");
                 var region = _world.GetRegion(_vampire.WorldLocation);
                 LocationObjectController currentLocationObject = null;
                 // Only check if known
@@ -482,37 +554,39 @@ namespace Count
             int poi = 1;
             for (int i = 0; i < region.LocationObjects.GetLength(0); i++)
             {
+                bool rowDrawn = false;
                 for (int j = 0; j < region.LocationObjects.GetLength(1); j++)
                 {
                     var currentLocation = new Location(i, j);
                     if (_vampire.RegionLocation.X == i && _vampire.RegionLocation.Y == j)
                     {
-                        Console.Write("L");
+                        Console.Write("(X)");
+                        rowDrawn = true;
                         continue;
                     }
                     else if (_game.KnownLocations.Any(p => p.X == i && p.Y == j))
                     {
                         var locationObject = region.GetLocationObjectAtLocation(currentLocation);
                         if (locationObject == null)
+                        {
                             Console.Write("-");
+                        }
                         else
                         {
                             pointsOfInterest.Add(locationObject);
-                            Console.Write($"{poi++}");
+                            Console.Write($"({poi++})");
                         }
-                    }
+                        rowDrawn = true;
+                    } 
                     else if (_game.KnownLocations.Any(p => ((p.X <= i + 1) && (p.X >= i - 1)) && ((p.Y <= j + 1) && (p.Y >= j - 1))))
                     {
                         pointsOfInterest.Add(new UnexploredController(_vampire.WorldLocation, currentLocation) { });
-                        Console.Write($"{poi++}");
-                    }
-                    else
-                    {
-                        Console.Write("?");
+                        Console.Write($"({poi++})");
+                        rowDrawn = true;
                     }
                 }
-
-                Console.WriteLine("");
+                if (rowDrawn)
+                    Console.WriteLine("");
             }
         }
 
@@ -573,10 +647,10 @@ namespace Count
 
 
                             village.IncreaseSuspicion();
-                            foreach (var othervillage in _game.KnownVillages.Where(i => !i.Equals(village)))
+                            /*foreach (var othervillage in _game.KnownVillages.Where(i => !i.Equals(village)))
                             {
                                 othervillage.DecreaseSuspicion();
-                            }
+                            }*/
                             finishedEnterVillage = true;
                         }
                         else
@@ -782,15 +856,16 @@ namespace Count
 
         private void PrintStats()
         {
-            Console.WriteLine($"GOAL: {(_game.OwnedBuildings.Count > 0 ? (_game.OwnedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count) : 0)}/5 ZOMBIES");
+            var totalZombies = _game.OwnedBuildings?.Where(i => i.GetType() == typeof(GraveyardController))?.Sum(j => j.Followers.Count);
+            Console.WriteLine($"GOAL: {(_game.OwnedBuildings.Count > 0 ? (totalZombies) : 0)}/{ZOMBIE_WIN_COUNT} ZOMBIES");
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
             Console.WriteLine($"SOULS: {_vampire.Souls}");
             Console.WriteLine($"FOLLOWERS: {_game.OwnedBuildings?.Sum(i => i.Followers.Count) + _castle.Followers.Count}");
             if (_castle.Followers.Count > 0)
                 Console.WriteLine($"- VAMPIRES: {_castle.Followers.Count}");
-            if (_game.OwnedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count > 0)
-                Console.WriteLine($"- ZOMBIES: {_game.OwnedBuildings?.FirstOrDefault(i => i.GetType() == typeof(GraveyardController))?.Followers.Count}");         
+            if (totalZombies > 0)
+                Console.WriteLine($"- ZOMBIES: {totalZombies}");         
         }
 
         private void Win()
@@ -799,7 +874,7 @@ namespace Count
             Console.WriteLine("----------------------------------------------------------------------------");
             Console.WriteLine("GAME OVER");
             Console.WriteLine("----------------------------------------------------------------------------");
-            Console.WriteLine("Congratulations! You have been successfully created 5 Zombies.");
+            Console.WriteLine($"Congratulations! You have been successfully created {ZOMBIE_WIN_COUNT} Zombies.");
             Console.WriteLine("");
         }
 

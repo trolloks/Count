@@ -11,7 +11,7 @@ namespace Count.Controllers
 {
     public class VampireLordController
     {
-        private const int BASE_FEED_DC = 8;
+        private const int BASE_FEED_DC = 5;
         private const int BASE_CHECK_ROLL = 20;
 
         private Models.Game _game;
@@ -31,7 +31,7 @@ namespace Count.Controllers
 
             // Create Vampire Lord
             VampireLord = new VampireLord();
-            VampireLord.Hitpoints = 5;
+            VampireLord.Hitpoints = 10;
             VampireLord.ActionPointsMax = 1;
             VampireLord.LastFed = _game.World.Day;
             VampireLord.WorldLocation = _game.StartingWorldLocation;

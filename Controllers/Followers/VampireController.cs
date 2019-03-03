@@ -8,7 +8,7 @@ namespace Count.Controllers
 {
     public class VampireController : FollowerController
     {
-        private const int BASE_FEED_DC = 8;
+        private const int BASE_FEED_DC = 5;
         private const int BASE_CHECK_ROLL = 20;
 
         public VampireController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)

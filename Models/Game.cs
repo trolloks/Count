@@ -21,6 +21,7 @@ namespace Count.Models
         public List<Location> KnownLocations { get; set; } = new List<Location>();
         public List<VillageController> KnownVillages { get; set; } = new List<VillageController>();
         public List<LocationObjectController> OwnedBuildings { get; set; } = new List<LocationObjectController>();
+        public List<ResearchItem> KnownResearch { get; set; } = new List<ResearchItem>();
 
         public Location StartingWorldLocation { get; set; }
         public Location StartingRegionLocation { get; set; }

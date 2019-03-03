@@ -16,8 +16,7 @@ namespace Count.Controllers
             {
                 Name = "Zombie Graveyard",
                 Description = $"The graveyard is void of all life, but this doesn't mean there is none to serve you. Zombies will rise from these graves every night." +
-                $"\n Can support {ZOMBIE_MAX} Zombies" +
-                $"\n Currently : {_followers.Count}/{ZOMBIE_MAX}",
+                $"\n Can support {ZOMBIE_MAX} Zombies",
                 WorldLocation = worldLocation,
                 RegionLocation = regionLocation
             };
@@ -28,6 +27,7 @@ namespace Count.Controllers
 
         public override void Upkeep(Models.Game game)
         {
+            // create new zombie!
             if (game.KnownLocations.Any(i => i.X == _graveyard.RegionLocation.X && i.Y == _graveyard.RegionLocation.Y))
             {
                 // Only if you havent reached max capacity
@@ -41,6 +41,8 @@ namespace Count.Controllers
                     }
                 }
             }
+
+            // move zombies
         }
     }
 }
