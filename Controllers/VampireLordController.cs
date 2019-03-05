@@ -31,7 +31,7 @@ namespace Count.Controllers
 
             // Create Vampire Lord
             VampireLord = new VampireLord();
-            VampireLord.Hitpoints = 10;
+            VampireLord.Hitpoints = 20;
             VampireLord.ActionPointsMax = 1;
             VampireLord.LastFed = _game.World.Day;
             VampireLord.WorldLocation = _game.StartingWorldLocation;

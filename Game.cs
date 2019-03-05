@@ -35,6 +35,8 @@ namespace Count
     /// 
     /// Create MUCH bigger map! Much bigger amount of zombies to win. Can create multiple graveyards. maybe increase price. graveyards only on known locations
     /// 
+    /// Vampires should also defend you. but just in castle
+    /// 
     /// </summary>
     public class Game
     {
