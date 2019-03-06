@@ -48,7 +48,7 @@ namespace Count
         private CastleController _castle;
 
         public static bool IS_DEV = false;
-        public static int ZOMBIE_WIN_COUNT = 250;
+        public static int ZOMBIE_WIN_COUNT = 25;
 
         public void Start()
         {

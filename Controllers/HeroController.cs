@@ -15,7 +15,7 @@ namespace Count.Controllers
             _hero = new Hero()
             {
                 Name = $"Hero-{Guid.NewGuid().ToString()}", // temp
-                Hitpoints = 5,
+                Hitpoints = 3,
                 WorldLocation = worldLocation,
                 RegionLocation = regionLocation
             };
@@ -49,10 +49,11 @@ namespace Count.Controllers
                         // hero not dead yet
                         if (_hero.Hitpoints > 0)
                         {
-                            _hero.Hitpoints--;
+                            _hero.Hitpoints -= followerModel.Damage;
                             graveyard.KillFollower(follower);
                             zombieCount--;
-                            Console.WriteLine($"{_hero.Name} kills a Zombie, but takes 1 damage in response");
+                            i--;
+                            Console.WriteLine($"{_hero.Name} kills a Zombie, but takes {followerModel.Damage} damage in response");
                         }
                         else
                         {
@@ -66,15 +67,50 @@ namespace Count.Controllers
             // attacks you
             if (locationObject != null && locationObject.GetType() == typeof(CastleController) && _hero.Hitpoints > 0)
             {
-                _hero.Hitpoints--;
-                game.VampireLord.Damage(1);
-                Console.WriteLine($"{_hero.Name} makes his way towards your chamber and damages you!");
+                var castle = locationObject as CastleController;
+                var vampireCount = castle.Followers.Count;
+                for (int i = 0; i < vampireCount; i++)
+                {
+                    var follower = castle.Followers[i];
+                    var followerModel = follower.Follower;
+                    // If this follower is at same spot as hero.
+                    if (_hero.RegionLocation.X == followerModel.RegionLocation.X && _hero.RegionLocation.Y == followerModel.RegionLocation.Y
+                        && _hero.WorldLocation.X == followerModel.WorldLocation.X && _hero.WorldLocation.Y == followerModel.WorldLocation.Y)
+                    {
+                        // hero not dead yet
+                        if (_hero.Hitpoints > 0)
+                        {
+                            _hero.Hitpoints -= followerModel.Damage;
+                            castle.KillFollower(follower);
+                            vampireCount--;
+                            i--;
+                            Console.WriteLine($"{_hero.Name} kills a Vampire, but takes {followerModel.Damage} damage in response");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{_hero.Name} dies valiantly. You are safe against this hero.");
+                            return false;
+                        }
+                    }
+                }
+
+                if (_hero.Hitpoints > 0)
+                {
+                    _hero.Hitpoints--;
+                    game.VampireLord.ForceKill();
+                    Console.WriteLine($"{_hero.Name} makes his way towards your chamber and kills you!");
+                }
+                else
+                {
+                    Console.WriteLine($"{_hero.Name} dies valiantly. You are safe against this hero.");
+                }
             }
 
             if (_hero.Hitpoints > 0)
             {
                 return true;
             }
+
             return false;
         }
     }

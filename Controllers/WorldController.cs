@@ -81,10 +81,43 @@ namespace Count.Controllers
             World.Day++;
         }
 
+        private const int BASE_SPAWN_MAX_HERO = 5;
+        private const int BASE_SPAWN_MIN_DAY = 5;
+        private const int BASE_SPAWN_DC = 16;
+        private const int BASE_CHECK_ROLL = 20;
+        private const int BASE_SPAWN_PITY = 5;
+
+        private int _pityCounter = 0;
+
         public void Upkeep(Models.Game game)
         {
-            // Every 5th day create
-            if (World.Day % 5 == 0)
+            var heroCount = _heroes.Count;
+            for (int i = 0; i < heroCount; i++)
+            {
+                var hero = _heroes[i];
+                Location location = game.KnownLocations.OrderBy(j => Randomizer.Instance.Random.Next()).FirstOrDefault();
+                hero.MoveToLocation(hero.WorldLocation, location);
+                var lives = hero.Hero(game);
+                if (!lives)
+                {
+                    _heroes.Remove(hero);
+                    heroCount--;
+                }
+                else
+                {
+                    Console.WriteLine($"{hero.Name} is still at large.");
+                }
+
+            }
+
+            // Roll for adventurer spawn
+            // - MAX 5
+            // - MUST ROLL MORE THAN 16
+            // - IF SUCCEEDS CAN ROLL AGAIN
+            // - TODO - Should have 'pity' counter
+            var roll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
+            while ((roll >= BASE_SPAWN_DC && Day >= BASE_SPAWN_MIN_DAY && heroCount <= BASE_SPAWN_MAX_HERO) ||
+                (_pityCounter >= BASE_SPAWN_PITY && Day >= BASE_SPAWN_MIN_DAY && heroCount <= BASE_SPAWN_MAX_HERO)) // only able to spawn after day 5
             {
                 var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
                 if (village != null)
@@ -93,23 +126,15 @@ namespace Count.Controllers
                     _heroes.Add(hero);
                     Console.WriteLine($"{hero.Name} rises from {village.Name} to challenge your power");
                 }
-            }
 
-            var heroCount = _heroes.Count;
-            for (int i = 0; i < heroCount; i++)
-            {
-                var hero = _heroes[i];
-                Location location = game.KnownLocations.OrderBy(j => Randomizer.Instance.Random.Next()).FirstOrDefault();
-                hero.MoveToLocation(hero.WorldLocation, location);
-                Console.WriteLine($"{hero.Name} is still at large.");
-                var lives = hero.Hero(game);
-                if (!lives)
-                {
-                    _heroes.Remove(hero);
-                    heroCount--;
-                }
-                   
+                // only extra roll on non-pity
+                if (_pityCounter < BASE_SPAWN_PITY)
+                    roll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
+                else
+                    roll = 0;
+                _pityCounter = 0;
             }
+            _pityCounter++;
         }
 
         /// <summary>

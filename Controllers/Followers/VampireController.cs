@@ -13,7 +13,7 @@ namespace Count.Controllers
 
         public VampireController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
-            _follower = new Vampire() { Available = true, WorldLocation = worldLocation, RegionLocation = regionLocation };
+            _follower = new Vampire() { Available = true, WorldLocation = worldLocation, RegionLocation = regionLocation, Damage = 3 };
         }
 
         public void MoveToLocation(Location worldLocation, Location regionLocation)

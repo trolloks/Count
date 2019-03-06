@@ -22,7 +22,9 @@ namespace Count.Controllers
             _castle = new Castle()
             {
                 Name = "Castle Varrak",
-                ResearchPoints = 0
+                ResearchPoints = 0,
+                WorldLocation = worldLocation,
+                RegionLocation = regionLocation
             };
         }
 
@@ -71,6 +73,8 @@ namespace Count.Controllers
                             feeded++;
                             break;
                     }
+                    // Move vampire back to castle
+                    vampireController.MoveToLocation(_castle.WorldLocation, _castle.RegionLocation); 
                 }
 
                 if (feeded > 0)

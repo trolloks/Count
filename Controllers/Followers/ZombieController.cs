@@ -8,7 +8,7 @@ namespace Count.Controllers
     {
         public ZombieController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
-            _follower = new Zombie() { Available = true, WorldLocation = worldLocation, RegionLocation = regionLocation };
+            _follower = new Zombie() { Available = true, WorldLocation = worldLocation, RegionLocation = regionLocation, Damage = 1 };
         }
 
         public void MoveToLocation(Location worldLocation, Location regionLocation)
