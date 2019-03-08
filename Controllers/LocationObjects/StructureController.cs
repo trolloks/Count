@@ -12,18 +12,17 @@ namespace Count.Controllers
         public StructureController(Location worldLocation, Location regionLocation): base(worldLocation, regionLocation)
         {}
         
-        public Structure Object
+        public Structure GenericObject
         {
-            get { return _object; }
             set { _object = value; }
         }
 
         public Type GenericType { get; set; }
-        public string RawGenericData { get; set; }
+        public string RawSerializedData { get; set; }
 
         public T Convert<T, S>() where T : StructureController<S> where S : Structure
         {
-            return JsonConvert.DeserializeObject<T>(RawGenericData);
+            return JsonConvert.DeserializeObject<T>(RawSerializedData);
         }
     }
 }

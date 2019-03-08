@@ -14,7 +14,7 @@ namespace Count.Controllers
         /// <summary>
         /// Abstract upkeep method
         /// </summary>
-        public abstract bool Upkeep(Models.Game game);
+        public abstract bool Upkeep(Game game);
 
         public ReadOnlyCollection<FollowerController<S>> Followers { get { return _followers.AsReadOnly(); } }
 

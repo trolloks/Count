@@ -11,13 +11,15 @@ namespace Count.Controllers
         public StructureController(Location worldLocation, Location regionLocation): base(worldLocation, regionLocation)
         {}
 
+        protected StructureController _structureController;
+
         public StructureController Convert()
         {
-            var structureController = new StructureController(_object.WorldLocation, _object.RegionLocation);
-            structureController.GenericType = this.GetType();
-            structureController.RawGenericData = JsonConvert.SerializeObject(this);
-            structureController.Object = _object;
-            return structureController;
+            _structureController = new StructureController(_object.WorldLocation, _object.RegionLocation);
+            _structureController.GenericObject = _object;
+            _structureController.GenericType = this.GetType();
+            _structureController.RawSerializedData = JsonConvert.SerializeObject(this);
+            return _structureController;
         }
     }
 }

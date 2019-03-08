@@ -229,7 +229,11 @@ namespace Count
                 somethingHappened = somethingHappened || _castle.Upkeep(_game);
                 foreach (var locationObject in _game.OwnedBuildings)
                 {
-                    somethingHappened = somethingHappened || (locationObject.Convert<FriendlyLocationController<Structure, Follower>, Structure>()).Upkeep(_game);
+                    if (locationObject.GenericType == typeof(GraveyardController))
+                    {
+                        var graveyard = locationObject.Convert<GraveyardController, Graveyard>();
+                        somethingHappened = somethingHappened || graveyard.Upkeep(_game);
+                    }
                 }
 
                 if (!somethingHappened)
@@ -242,7 +246,7 @@ namespace Count
                 Console.ReadLine();
 
                 // Basic Win Condition - Will change **DEPRECATED
-                if (_game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Convert<FriendlyLocationController<Structure, Follower>, Structure>()).Followers.Count) >= ZOMBIE_WIN_COUNT)
+                if (_game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Convert<GraveyardController, Graveyard>()).Followers.Count) >= ZOMBIE_WIN_COUNT)
                     _isGameOver = true;
             }
             return false;
@@ -312,8 +316,12 @@ namespace Count
                                     invokable.Invoke(currentRegion, new object[] { newResearchedLocationObject });
 
                                     // Reflection magic # 2
+                                    var convertToStructureController = newResearchedLocationObject.GetType().GetMethod("Convert");
+                                    var structureControllerObject = convertToStructureController.Invoke(newResearchedLocationObject, null);
+
+                                    // Reflection magic # 3
                                     var addToOwnedBuildings = _game.OwnedBuildings.GetType().GetMethod("Add");
-                                    addToOwnedBuildings.Invoke(_game.OwnedBuildings, new object[] { newResearchedLocationObject });
+                                    addToOwnedBuildings.Invoke(_game.OwnedBuildings, new object[] { structureControllerObject });
 
                                     _vampire.TryExert(1);
                                     _vampire.SpendSouls(researchItem.Souls);
@@ -403,8 +411,12 @@ namespace Count
                                 invokable.Invoke(currentRegion, new object[] { newResearchedLocationObject });
 
                                 // Reflection magic # 2
+                                var convertToStructureController = newResearchedLocationObject.GetType().GetMethod("Convert");
+                                var structureControllerObject = convertToStructureController.Invoke(newResearchedLocationObject, null);
+
+                                // Reflection magic # 3
                                 var addToOwnedBuildings = _game.OwnedBuildings.GetType().GetMethod("Add");
-                                addToOwnedBuildings.Invoke(_game.OwnedBuildings, new object[] { newResearchedLocationObject });
+                                addToOwnedBuildings.Invoke(_game.OwnedBuildings, new object[] { structureControllerObject });
                             }
 
                             _vampire.TryExert(1);
@@ -896,14 +908,16 @@ namespace Count
 
         private void PrintStats()
         {
-            var totalZombies = _game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Convert<FriendlyLocationController<Structure, Follower> ,Structure>()).Followers.Count);
+            var totalZombies = _game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Convert<GraveyardController, Graveyard>()).Followers.Count);
+            var totalVampires = _castle.Followers.Count;
+
             Console.WriteLine($"GOAL: {(_game.OwnedBuildings.Count > 0 ? (totalZombies) : 0)}/{ZOMBIE_WIN_COUNT} ZOMBIES");
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
             Console.WriteLine($"SOULS: {_vampire.Souls}");
-            Console.WriteLine($"FOLLOWERS: {_game.OwnedBuildings?.Sum(i => (i.Convert<FriendlyLocationController<Structure, Follower>, Structure>()).Followers.Count) + _castle.Followers.Count}");
+            Console.WriteLine($"FOLLOWERS: {totalZombies + totalVampires}");
             if (_castle.Followers.Count > 0)
-                Console.WriteLine($"- VAMPIRES: {_castle.Followers.Count}");
+                Console.WriteLine($"- VAMPIRES: {totalVampires}");
             if (totalZombies > 0)
                 Console.WriteLine($"- ZOMBIES: {totalZombies}");
         }
