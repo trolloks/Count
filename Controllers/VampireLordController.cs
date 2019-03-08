@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using Count.Enums;
 using Count.Models;
-using Count.Models.Followers;
 using Count.Utils;
 
 namespace Count.Controllers
@@ -40,7 +36,7 @@ namespace Count.Controllers
             Sleep();
         }
 
-       
+
         #region "Night Actions"
         /// <summary>
         ///  Checks if you succeed on feeding on a unsuspecting villager
@@ -56,7 +52,7 @@ namespace Count.Controllers
 
             var feedCheck = true;
             var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-            if (Game.IS_DEV)
+            if (GameViewController.IS_DEV)
             {
                 Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
                 Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion))}");
@@ -84,7 +80,7 @@ namespace Count.Controllers
             return status;
         }
 
-       
+
 
         #endregion
 

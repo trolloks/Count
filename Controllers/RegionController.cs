@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Count.Models;
 using Count.Utils;
@@ -18,7 +17,8 @@ namespace Count.Controllers
 
         public RegionController(Location worldLocation)
         {
-            Region = new Region {
+            Region = new Region
+            {
 
                 Size = REGION_SIZE,
                 Location = worldLocation
@@ -76,7 +76,7 @@ namespace Count.Controllers
             }
             return null;
         }
-        
+
         public Location GetUnusedRegionLocation()
         {
             return GetUnusedRegionLocation(null);

@@ -21,7 +21,7 @@ namespace Count.Controllers
         {
             var convertCheck = true;
             var convertRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-            if (Game.IS_DEV)
+            if (GameViewController.IS_DEV)
             {
                 Console.WriteLine($"(DEV) CONVERT CHECK: {convertRoll}");
                 Console.WriteLine($"(DEV) CONVERT DC CHECK: {BASE_CONVERT_DC}");

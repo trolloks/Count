@@ -53,9 +53,8 @@
     <Compile Include="Controllers\LocationObjects\VillageController.cs" />
     <Compile Include="Controllers\RegionController.cs" />
     <Compile Include="Controllers\WorldController.cs" />
-    <Compile Include="Enums\BuildStatus.cs" />
     <Compile Include="Enums\FeedStatus.cs" />
-    <Compile Include="Game.cs" />
+    <Compile Include="GameViewController.cs" />
     <Compile Include="Models\Followers\Cultist.cs" />
     <Compile Include="Models\Followers\Zombie.cs" />
     <Compile Include="Models\Game.cs" />

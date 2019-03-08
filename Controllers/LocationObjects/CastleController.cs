@@ -56,11 +56,12 @@ namespace Count.Controllers
             return follower;
         }
 
-        public override void Upkeep(Models.Game game)
+        public override bool Upkeep(Models.Game game)
         {
+            bool somethingHappened = false;
             if (game.KnownVillages.Any())
             {
-                int feeded = 0;
+                int fed = 0;
                 foreach (var followerController in _followers)
                 {
                     var vampireController = followerController as VampireController;
@@ -70,16 +71,21 @@ namespace Count.Controllers
                     switch (feedstatus)
                     {
                         case Enums.FeedStatus.FED:
-                            feeded++;
+                            fed++;
                             break;
                     }
                     // Move vampire back to castle
                     vampireController.MoveToLocation(_castle.WorldLocation, _castle.RegionLocation); 
                 }
 
-                if (feeded > 0)
-                    Console.WriteLine($"{feeded} Vampire/s Fed Successfully! Granting you {feeded} extra souls!");
+                if (fed > 0)
+                {
+                    Console.WriteLine($"{fed} Vampire/s Fed Successfully! Granting you {fed} extra souls!");
+                    somethingHappened = true;
+                } 
             }
+
+            return somethingHappened;
         }
         #endregion
 
@@ -87,9 +93,5 @@ namespace Count.Controllers
         public override string Name { get { return _castle.Name; } }
         public int ResearchPoints { get { return _castle.ResearchPoints; } }
         #endregion
-
-
-
-
     }
 }

@@ -26,8 +26,9 @@ namespace Count.Controllers
         public override string Description { get { return _graveyard.Description; } }
         public override string Name { get { return _graveyard.Name; } }
 
-        public override void Upkeep(Models.Game game)
+        public override bool Upkeep(Models.Game game)
         {
+            bool somethingHappened = false;
             // create new zombie!
             if (game.KnownLocations.Any(i => i.X == _graveyard.RegionLocation.X && i.Y == _graveyard.RegionLocation.Y))
             {
@@ -39,6 +40,7 @@ namespace Count.Controllers
                     {
                         _followers.Add(follower);
                         Console.WriteLine("A Zombie rises from the graveyard");
+                        somethingHappened = true;
                     }
                 }
             }
@@ -49,6 +51,8 @@ namespace Count.Controllers
                 Location location = game.KnownLocations.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
                 (follower as ZombieController).MoveToLocation(_graveyard.WorldLocation, location);
             }
+
+            return somethingHappened;
         }
     }
 }

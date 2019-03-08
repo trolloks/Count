@@ -12,8 +12,10 @@ namespace Count.Controllers
         public override string Description { get { return ""; } }
         public override string Name { get { return "Unexplored Area"; } }
 
-        public override void Upkeep(Models.Game game)
-        {}
+        public override bool Upkeep(Models.Game game)
+        {
+            return false;
+        }
 
         public LocationObjectController Explore(List<Location> knownLocations, WorldController worldController)
         {

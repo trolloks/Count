@@ -10,12 +10,13 @@ namespace Count.Controllers
         public Location RegionLocation { get; set; }
         public virtual string Name { get; set; }
         public virtual string Description { get; }
+
         protected List<FollowerController> _followers = new List<FollowerController>();
 
         /// <summary>
         /// Abstract upkeep method
         /// </summary>
-        public abstract void Upkeep(Models.Game game);
+        public abstract bool Upkeep(Models.Game game);
 
         public LocationObjectController(Location worldLocation, Location regionLocation) {
             WorldLocation = worldLocation;

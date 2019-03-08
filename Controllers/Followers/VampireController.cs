@@ -36,7 +36,7 @@ namespace Count.Controllers
 
             var feedCheck = true;
             var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-            if (Game.IS_DEV)
+            if (GameViewController.IS_DEV)
             {
                 Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
                 Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion))}");
