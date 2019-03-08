@@ -11,13 +11,13 @@ namespace Count.Controllers
         private const int INNER_REGION_SIZE = 4;
         ///private const int MAX_VILLAGES = 4;
 
-        private Region Region { get; set; }
+        private Region _region { get; set; }
 
-        public LocationObjectController[,] LocationObjects = new LocationObjectController[REGION_SIZE, REGION_SIZE];
+        public StructureController[,] LocationObjects = new StructureController[REGION_SIZE, REGION_SIZE];
 
         public RegionController(Location worldLocation)
         {
-            Region = new Region
+            _region = new Region
             {
 
                 Size = REGION_SIZE,
@@ -50,7 +50,7 @@ namespace Count.Controllers
                     for (int i = 0; i < villages; i++)
                     {
                         var villageLocation = GetUnusedRegionLocation(locations);
-                        var village = new VillageController(Region.Location, villageLocation);
+                        var village = new VillageController(_region.Location, villageLocation);
                         LocationObjects[villageLocation.X, villageLocation.Y] = village;
                     }
                 }
@@ -59,15 +59,15 @@ namespace Count.Controllers
 
         public int Size
         {
-            get { return Region.Size; }
+            get { return _region.Size; }
         }
 
-        public LocationObjectController GetLocationObjectAtLocation(Location location)
+        public StructureController GetLocationObjectAtLocation(Location location)
         {
             return LocationObjects[location.X, location.Y];
         }
 
-        public T AddLocationObject<T>(T locationObject) where T : LocationObjectController
+        public T AddLocationObject<T>(T locationObject) where T : StructureController
         {
             if (GetLocationObjectAtLocation(locationObject.RegionLocation) == null)
             {

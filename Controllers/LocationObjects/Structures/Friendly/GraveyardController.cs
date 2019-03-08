@@ -6,14 +6,13 @@ using Count.Utils;
 
 namespace Count.Controllers
 {
-    public class GraveyardController : FriendlyLocationController<Zombie>
+    public class GraveyardController : FriendlyLocationController<Graveyard, Zombie>
     {
-        private Graveyard _graveyard;
         private const int ZOMBIE_MAX = 5;
 
         public GraveyardController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
-            _graveyard = new Graveyard()
+            _object = new Graveyard()
             {
                 Name = "Zombie Graveyard",
                 Description = $"The graveyard is void of all life, but this doesn't mean there is none to serve you. Zombies will rise from these graves every night." +
@@ -23,19 +22,16 @@ namespace Count.Controllers
             };
         }
 
-        public override string Description { get { return _graveyard.Description; } }
-        public override string Name { get { return _graveyard.Name; } }
-
         public override bool Upkeep(Models.Game game)
         {
             bool somethingHappened = false;
             // create new zombie!
-            if (game.KnownLocations.Any(i => i.X == _graveyard.RegionLocation.X && i.Y == _graveyard.RegionLocation.Y))
+            if (game.KnownLocations.Any(i => i.X == _object.RegionLocation.X && i.Y == _object.RegionLocation.Y))
             {
                 // Only if you havent reached max capacity
                 if (_followers.Count < ZOMBIE_MAX)
                 {
-                    var follower = (ZombieController)FollowerController<Zombie>.TryCreateFollower(_graveyard.WorldLocation, _graveyard.RegionLocation, true);
+                    var follower = (ZombieController)FollowerController<Zombie>.TryCreateFollower(_object.WorldLocation, _object.RegionLocation, true);
                     if (follower != null)
                     {
                         _followers.Add(follower);
@@ -49,7 +45,7 @@ namespace Count.Controllers
             foreach (var follower in Followers)
             {
                 Location location = game.KnownLocations.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
-                (follower as ZombieController).MoveToLocation(_graveyard.WorldLocation, location);
+                (follower as ZombieController).MoveToLocation(_object.WorldLocation, location);
             }
 
             return somethingHappened;

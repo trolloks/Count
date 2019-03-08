@@ -7,10 +7,8 @@ using System.Linq;
 
 namespace Count.Controllers
 {
-    public class CastleController : FriendlyLocationController<Vampire>
+    public class CastleController : FriendlyLocationController<Castle, Vampire>
     {
-        private Castle _castle;
-
         // Research
         public readonly Dictionary<int, ResearchItem []> ResearchOptions = new Dictionary<int, ResearchItem []>()
         {
@@ -19,7 +17,7 @@ namespace Count.Controllers
 
         public CastleController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
-            _castle = new Castle()
+            _object = new Castle()
             {
                 Name = "Castle Varrak",
                 ResearchPoints = 0,
@@ -31,12 +29,12 @@ namespace Count.Controllers
         #region "Actions"
         public ResearchItem[] Research(int soulsCurrent, int soulMax)
         {
-            if (ResearchOptions.ContainsKey(_castle.ResearchPoints + Math.Min(soulsCurrent, soulMax)))
+            if (ResearchOptions.ContainsKey(_object.ResearchPoints + Math.Min(soulsCurrent, soulMax)))
             {
-                _castle.ResearchPoints += Math.Min(soulsCurrent, soulMax);
-                var researchItems = ResearchOptions[_castle.ResearchPoints];
+                _object.ResearchPoints += Math.Min(soulsCurrent, soulMax);
+                var researchItems = ResearchOptions[_object.ResearchPoints];
                 foreach (var researchItem in researchItems)
-                    _castle.UnlockedResearch.Add(researchItem);
+                    _object.UnlockedResearch.Add(researchItem);
                 return researchItems;
             }
             else
@@ -50,7 +48,7 @@ namespace Count.Controllers
 
         public VampireController CreateVampire(bool force)
         {
-            var follower = (VampireController)FollowerController<Vampire>.TryCreateFollower(_castle.WorldLocation, _castle.RegionLocation, force);
+            var follower = (VampireController)FollowerController<Vampire>.TryCreateFollower(_object.WorldLocation, _object.RegionLocation, force);
             if (follower != null)
                 _followers.Add(follower);
             return follower;
@@ -75,7 +73,7 @@ namespace Count.Controllers
                             break;
                     }
                     // Move vampire back to castle
-                    vampireController.MoveToLocation(_castle.WorldLocation, _castle.RegionLocation); 
+                    vampireController.MoveToLocation(_object.WorldLocation, _object.RegionLocation); 
                 }
 
                 if (fed > 0)
@@ -90,8 +88,7 @@ namespace Count.Controllers
         #endregion
 
         #region "Properties"
-        public override string Name { get { return _castle.Name; } }
-        public int ResearchPoints { get { return _castle.ResearchPoints; } }
+        public int ResearchPoints { get { return _object.ResearchPoints; } }
         #endregion
     }
 }

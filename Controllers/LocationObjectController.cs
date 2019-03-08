@@ -2,17 +2,12 @@
 
 namespace Count.Controllers
 {
-    public abstract class LocationObjectController
+    public abstract class LocationObjectController<T> where T : LocationObject
     {
-        public Location WorldLocation { get; set; }
-        public Location RegionLocation { get; set; }
-        public virtual string Name { get; set; }
-        public virtual string Description { get; }
+        protected T _object;
+        protected LocationObjectController(Location worldLocation, Location regionLocation) { }
 
-        public LocationObjectController(Location worldLocation, Location regionLocation)
-        {
-            WorldLocation = worldLocation;
-            RegionLocation = regionLocation;
-        }
+        public Location WorldLocation { get { return _object.WorldLocation; } }
+        public Location RegionLocation { get { return _object.RegionLocation; } }
     }
 }

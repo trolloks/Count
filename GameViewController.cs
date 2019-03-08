@@ -439,7 +439,7 @@ namespace Count
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("Current Location: (X)");
                 var region = _world.GetRegion(_vampire.WorldLocation);
-                LocationObjectController currentLocationObject = null;
+                StructureController currentLocationObject = null;
                 // Only check if known
                 if (_game.KnownLocations.Any(p => p.X == _vampire.RegionLocation.X && p.Y == _vampire.RegionLocation.Y))
                     currentLocationObject = region.GetLocationObjectAtLocation(_vampire.RegionLocation);
@@ -457,7 +457,7 @@ namespace Count
                 Console.WriteLine("");
                 Console.WriteLine("Map:");
 
-                var pointsOfInterest = new List<LocationObjectController>();
+                var pointsOfInterest = new List<StructureController>();
 
                 // Draw Map
                 DrawMap(region, pointsOfInterest);
@@ -502,7 +502,7 @@ namespace Count
                 {
                     var pointOfInterest = pointsOfInterest[poiOption - 1];
                     if (pointOfInterest != null)
-                        _vampire.Move(pointsOfInterest[poiOption - 1].WorldLocation, pointsOfInterest[poiOption - 1].RegionLocation);
+                        _vampire.MoveLocation(pointsOfInterest[poiOption - 1].WorldLocation, pointsOfInterest[poiOption - 1].RegionLocation);
                 }
                 else if (option == "E" || option == "e")
                 {
@@ -560,7 +560,7 @@ namespace Count
             }
         }
 
-        private void DrawMap(RegionController region, List<LocationObjectController> pointsOfInterest)
+        private void DrawMap(RegionController region, List<StructureController> pointsOfInterest)
         {
             int minY = int.MaxValue;
             int maxY = int.MinValue;
@@ -715,7 +715,7 @@ namespace Count
             }
         }
 
-        private void EnterLocationObject(LocationObjectController locationObject)
+        private void EnterLocationObject(StructureController locationObject)
         {
             var finishedEnterVillage = false;
             while (!finishedEnterVillage && _vampire.ActionPoints > 0)
@@ -785,7 +785,7 @@ namespace Count
                     case "1":
                         if (_vampire.TryExert(1))
                         {
-                            var locationObject = unexploredArea.Explore(_game.KnownLocations, _world);
+                            var locationObject = unexploredArea.Explore(_game);
                             if (locationObject != null)
                             {
                                 Console.WriteLine($"You found a {locationObject.Name}");

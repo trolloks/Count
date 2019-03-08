@@ -13,13 +13,7 @@ namespace Count.Controllers
 
         public VampireController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
-            _follower = new Vampire() { Available = true, WorldLocation = worldLocation, RegionLocation = regionLocation, Damage = 3 };
-        }
-
-        public void MoveToLocation(Location worldLocation, Location regionLocation)
-        {
-            _follower.WorldLocation = worldLocation;
-            _follower.RegionLocation = regionLocation;
+            _object = new Vampire() { WorldLocation = worldLocation, RegionLocation = regionLocation, Damage = 3 };
         }
 
         /// <summary>
@@ -28,7 +22,7 @@ namespace Count.Controllers
         public FeedStatus? Feed(WorldController worldController, VampireLordController vampireLord)
         {
             var status = FeedStatus.FAILED;
-            var locationObject = worldController.GetRegion(_follower.WorldLocation).GetLocationObjectAtLocation(_follower.RegionLocation);
+            var locationObject = worldController.GetRegion(_object.WorldLocation).GetLocationObjectAtLocation(_object.RegionLocation);
             if (locationObject == null || locationObject.GetType() != typeof(VillageController))
                 return null;
 

@@ -4,21 +4,21 @@ using Count.Models;
 
 namespace Count.Controllers
 {
-    public abstract class FriendlyLocationController<T> : LocationObjectController where T : Follower 
+    public abstract class FriendlyLocationController<T, S> : LocationObjectController<T> where S : Follower where T : Structure
     {
         public FriendlyLocationController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {}
 
-        protected List<FollowerController<T>> _followers = new List<FollowerController<T>>();
+        protected List<FollowerController<S>> _followers = new List<FollowerController<S>>();
 
         /// <summary>
         /// Abstract upkeep method
         /// </summary>
         public abstract bool Upkeep(Models.Game game);
 
-        public ReadOnlyCollection<FollowerController<T>> Followers { get { return _followers.AsReadOnly(); } }
+        public ReadOnlyCollection<FollowerController<S>> Followers { get { return _followers.AsReadOnly(); } }
 
-        public void KillFollower(FollowerController<T> follower)
+        public void KillFollower(FollowerController<S> follower)
         {
             _followers.Remove(follower);
         }

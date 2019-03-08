@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Count.Models
 {
-    public class Castle : LocationObject
+    public class Castle : Structure
     {
         /// <summary>
         /// Castle's Total Research

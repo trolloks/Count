@@ -11,7 +11,7 @@ namespace Count.Controllers
         private const int BASE_CHECK_ROLL = 20;
 
         private Models.Game _game;
-        private VampireLord VampireLord { get; set; }
+        private VampireLord _vampireLord { get; set; }
 
         private bool _firstFeed = true;
 
@@ -26,18 +26,21 @@ namespace Count.Controllers
             _game = game;
 
             // Create Vampire Lord
-            VampireLord = new VampireLord();
-            VampireLord.Hitpoints = 20;
-            VampireLord.ActionPointsMax = 1;
-            VampireLord.LastFed = _game.World.Day;
-            VampireLord.WorldLocation = _game.StartingWorldLocation;
-            VampireLord.RegionLocation = _game.StartingRegionLocation;
-
+            _vampireLord = new VampireLord()
+            {
+                Hitpoints = 20,
+                ActionPointsMax = 1,
+                LastFed = _game.World.Day,
+                WorldLocation = _game.StartingWorldLocation,
+                RegionLocation = _game.StartingRegionLocation
+            };
+          
+            // Start first night after a sleep
             Sleep();
         }
 
-
         #region "Night Actions"
+
         /// <summary>
         ///  Checks if you succeed on feeding on a unsuspecting villager
         /// </summary>
@@ -64,7 +67,7 @@ namespace Count.Controllers
             {
                 status = FeedStatus.FED;
                 // Effects on you
-                VampireLord.LastFed = _game.World.Day;
+                _vampireLord.LastFed = _game.World.Day;
                 // Could convert into a vampire
                 var follower = _game.Castle.CreateVampire(_firstFeed);
                 if (follower != null)
@@ -80,8 +83,6 @@ namespace Count.Controllers
             return status;
         }
 
-
-
         #endregion
 
         #region "Day Actions"
@@ -90,9 +91,9 @@ namespace Count.Controllers
         /// </summary>
         public void Sleep()
         {
-            VampireLord.WorldLocation = _game.Castle.WorldLocation;
-            VampireLord.RegionLocation = _game.Castle.RegionLocation;
-            VampireLord.ActionPoints = VampireLord.ActionPointsMax;
+            _vampireLord.WorldLocation = _game.Castle.WorldLocation;
+            _vampireLord.RegionLocation = _game.Castle.RegionLocation;
+            _vampireLord.ActionPoints = _vampireLord.ActionPointsMax;
         }
         #endregion
 
@@ -102,7 +103,7 @@ namespace Count.Controllers
         /// </summary>
         public bool IsDead
         {
-            get { return VampireLord.Hitpoints <= 0; }
+            get { return _vampireLord.Hitpoints <= 0; }
         }
 
         /// <summary>
@@ -110,19 +111,19 @@ namespace Count.Controllers
         /// </summary>
         public int Hitpoints
         {
-            get { return VampireLord.Hitpoints; }
+            get { return _vampireLord.Hitpoints; }
         }
         /// <summary>
         /// Your current location
         /// </summary>
         public Location WorldLocation
         {
-            get { return VampireLord.WorldLocation; }
+            get { return _vampireLord.WorldLocation; }
         }
 
         public Location RegionLocation
         {
-            get { return VampireLord.RegionLocation; }
+            get { return _vampireLord.RegionLocation; }
         }
 
         /// <summary>
@@ -130,57 +131,7 @@ namespace Count.Controllers
         /// </summary>
         public int ActionPoints
         {
-            get { return VampireLord.ActionPoints; }
-        }
-        #endregion
-        /// <summary>
-        /// The level of your hunger
-        /// </summary>
-        public long DetermineHungerLevel()
-        {
-            return _game.World.Day - VampireLord.LastFed;
-        }
-
-        /// <summary>
-        /// Tries to kill you
-        /// </summary>
-        /*public bool TryKill()
-        {
-            bool couldKill = !Followers.Any(i => i.Follower.GetType() == typeof(Zombie)); // Only zombies can block death
-            if (couldKill)
-            {
-                _followers.Remove(Followers.FirstOrDefault(i => i.Follower.GetType() == typeof(Zombie)));
-                ForceKill();
-            }
-            return couldKill;
-        }*/
-
-        /// <summary>
-        /// Kills you definitely
-        /// </summary>
-        public void ForceKill()
-        {
-            VampireLord.Hitpoints = 0;
-        }
-
-        public void SpendSouls(int i)
-        {
-            VampireLord.Souls -= i;
-        }
-
-        public void IncreaseSouls(int i)
-        {
-            VampireLord.Souls += i;
-        }
-
-
-        /// <summary>
-        /// Damages you
-        /// </summary>
-        /// <param name="i">amount of damage</param>
-        public void Damage(int i)
-        {
-            VampireLord.Hitpoints -= i;
+            get { return _vampireLord.ActionPoints; }
         }
 
         /// <summary>
@@ -188,7 +139,46 @@ namespace Count.Controllers
         /// </summary>
         public int Souls
         {
-            get { return VampireLord.Souls; }
+            get { return _vampireLord.Souls; }
+        }
+
+        #endregion
+
+        #region "General Actions"
+
+        /// <summary>
+        /// The level of your hunger
+        /// </summary>
+        public long DetermineHungerLevel()
+        {
+            return _game.World.Day - _vampireLord.LastFed;
+        }
+
+        /// <summary>
+        /// Kills you definitely
+        /// </summary>
+        public void ForceKill()
+        {
+            _vampireLord.Hitpoints = 0;
+        }
+
+        public void SpendSouls(int i)
+        {
+            _vampireLord.Souls -= i;
+        }
+
+        public void IncreaseSouls(int i)
+        {
+            _vampireLord.Souls += i;
+        }
+
+        /// <summary>
+        /// Damages you
+        /// </summary>
+        /// <param name="i">amount of damage</param>
+        public void Damage(int i)
+        {
+            _vampireLord.Hitpoints -= i;
         }
 
         /// <summary>
@@ -197,18 +187,20 @@ namespace Count.Controllers
         /// <param name="i">amount of exertion</param>
         public bool TryExert(int i)
         {
-            if (i <= VampireLord.ActionPoints)
+            if (i <= _vampireLord.ActionPoints)
             {
-                VampireLord.ActionPoints -= i;
+                _vampireLord.ActionPoints -= i;
                 return true;
             }
             return false;
         }
 
-        public void Move(Location worldLocation, Location regionLocation)
+        public void MoveLocation(Location worldLocation, Location regionLocation)
         {
-            VampireLord.WorldLocation = worldLocation;
-            VampireLord.RegionLocation = regionLocation;
+            _vampireLord.WorldLocation = worldLocation;
+            _vampireLord.RegionLocation = regionLocation;
         }
+
+        #endregion
     }
 }
