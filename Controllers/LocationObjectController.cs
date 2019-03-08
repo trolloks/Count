@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Count.Models;
+﻿using Count.Models;
 
 namespace Count.Controllers
 {
@@ -11,23 +9,10 @@ namespace Count.Controllers
         public virtual string Name { get; set; }
         public virtual string Description { get; }
 
-        protected List<FollowerController> _followers = new List<FollowerController>();
-
-        /// <summary>
-        /// Abstract upkeep method
-        /// </summary>
-        public abstract bool Upkeep(Models.Game game);
-
-        public LocationObjectController(Location worldLocation, Location regionLocation) {
+        public LocationObjectController(Location worldLocation, Location regionLocation)
+        {
             WorldLocation = worldLocation;
             RegionLocation = regionLocation;
-        }
-
-        public ReadOnlyCollection<FollowerController> Followers { get { return _followers.AsReadOnly(); } }
-
-        public void KillFollower(FollowerController follower)
-        {
-            _followers.Remove(follower);
         }
     }
 }

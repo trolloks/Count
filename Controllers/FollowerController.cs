@@ -5,19 +5,19 @@ using Count.Utils;
 
 namespace Count.Controllers
 {
-    public class FollowerController
+    public class FollowerController<T> where T : Follower
     {
         private const int BASE_CONVERT_DC = 5;
         private const int BASE_CHECK_ROLL = 20;
 
-        protected Follower _follower { get; set; }
+        protected T _follower { get; set; }
 
         protected FollowerController(Location worldLocation, Location regionLocation) { }
 
         /// <summary>
         ///  Checks if you succeed on creating a follower
         /// </summary>
-        public static FollowerController TryCreateFollower(Type followerType, Location worldLocation, Location regionLocation, bool force)
+        public static FollowerController<T> TryCreateFollower(Location worldLocation, Location regionLocation, bool force)
         {
             var convertCheck = true;
             var convertRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
@@ -31,12 +31,10 @@ namespace Count.Controllers
 
             if (convertCheck)
             {
-                if (followerType == typeof(Zombie))
-                    return new ZombieController(worldLocation, regionLocation);
-                if (followerType == typeof(Vampire))
-                    return new VampireController(worldLocation, regionLocation);
-                /*if (followerType == typeof(Cultist))
-                    _follower = new Cultist { Available = true };*/
+                if (typeof(T) == typeof(Zombie))
+                    return new ZombieController(worldLocation, regionLocation) as FollowerController<T>;
+                if (typeof(T) == typeof(Vampire))
+                    return new VampireController(worldLocation, regionLocation) as FollowerController<T>;
             }
 
             return null;

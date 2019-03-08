@@ -303,7 +303,7 @@ namespace Count
                                 {
                                     Console.WriteLine($"- A {researchItem.Name} appears on the map");
                                     var currentRgion = _world.GetRegion(_vampire.WorldLocation);
-                                    var newResearchedLocationObject = (LocationObjectController)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
+                                    var newResearchedLocationObject = (FriendlyLocationController<Follower>)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
                                     currentRgion.AddLocationObject(newResearchedLocationObject);
                                     _game.OwnedBuildings.Add(newResearchedLocationObject);
 
@@ -386,7 +386,7 @@ namespace Count
                                 _game.KnownResearch.Add(researchItem);
                                 Console.WriteLine($"- A {researchItem.Name} appears on the map");
                                 var currentRegion = _world.GetRegion(_vampire.WorldLocation);
-                                var newResearchedLocationObject = (LocationObjectController)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
+                                var newResearchedLocationObject = (FriendlyLocationController<Follower>)researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
                                 currentRegion.AddLocationObject(newResearchedLocationObject);
                                 _game.OwnedBuildings.Add(newResearchedLocationObject);
                             }

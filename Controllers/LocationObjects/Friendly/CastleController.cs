@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Count.Controllers
 {
-    public class CastleController : LocationObjectController
+    public class CastleController : FriendlyLocationController<Vampire>
     {
         private Castle _castle;
 
@@ -50,7 +50,7 @@ namespace Count.Controllers
 
         public VampireController CreateVampire(bool force)
         {
-            var follower = (VampireController)FollowerController.TryCreateFollower(typeof(Vampire), _castle.WorldLocation, _castle.RegionLocation, force);
+            var follower = (VampireController)FollowerController<Vampire>.TryCreateFollower(_castle.WorldLocation, _castle.RegionLocation, force);
             if (follower != null)
                 _followers.Add(follower);
             return follower;

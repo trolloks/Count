@@ -125,7 +125,7 @@ namespace Count.Controllers
                 var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
                 if (village != null)
                 {
-                    var hero = new HeroController(village.WorldLocation, village.RegionLocation);
+                    var hero = new FighterController(village.WorldLocation, village.RegionLocation);
                     _heroes.Add(hero);
                     Console.WriteLine($"{hero.Name} rises from {village.Name} to challenge your power");
                     somethingHappened = true;

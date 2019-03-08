@@ -6,7 +6,7 @@ using Count.Utils;
 
 namespace Count.Controllers
 {
-    public class VampireController : FollowerController
+    public class VampireController : FollowerController<Vampire>
     {
         private const int BASE_FEED_DC = 5;
         private const int BASE_CHECK_ROLL = 20;

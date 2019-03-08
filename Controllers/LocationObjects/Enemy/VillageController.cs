@@ -5,7 +5,7 @@ using Count.Utils;
 
 namespace Count.Controllers
 {
-    public class VillageController : LocationObjectController
+    public class VillageController : EnemyLocationController
     {
         private Village Village { get; set; }
 
@@ -85,12 +85,6 @@ namespace Count.Controllers
         public void DecreaseSuspicion()
         {
             Village.Suspicion = Math.Max(0, Village.Suspicion - (Randomizer.Instance.Roll(5, 5) / 100f)); // Can't get less suspicious than 0 
-        }
-
-        public override bool Upkeep(Models.Game game)
-        {
-            // Do nothing
-            return false;
         }
     }
 }

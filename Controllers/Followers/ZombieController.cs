@@ -4,7 +4,7 @@ using Count.Models.Followers;
 
 namespace Count.Controllers
 {
-    public class ZombieController : FollowerController
+    public class ZombieController : FollowerController<Zombie>
     {
         public ZombieController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {

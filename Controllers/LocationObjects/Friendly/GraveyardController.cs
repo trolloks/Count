@@ -6,7 +6,7 @@ using Count.Utils;
 
 namespace Count.Controllers
 {
-    public class GraveyardController : LocationObjectController
+    public class GraveyardController : FriendlyLocationController<Zombie>
     {
         private Graveyard _graveyard;
         private const int ZOMBIE_MAX = 5;
@@ -35,7 +35,7 @@ namespace Count.Controllers
                 // Only if you havent reached max capacity
                 if (_followers.Count < ZOMBIE_MAX)
                 {
-                    var follower = (ZombieController)FollowerController.TryCreateFollower(typeof(Zombie), _graveyard.WorldLocation, _graveyard.RegionLocation, true);
+                    var follower = (ZombieController)FollowerController<Zombie>.TryCreateFollower(_graveyard.WorldLocation, _graveyard.RegionLocation, true);
                     if (follower != null)
                     {
                         _followers.Add(follower);
