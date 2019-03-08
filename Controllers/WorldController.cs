@@ -178,16 +178,5 @@ namespace Count.Controllers
             return false;
         }
         */
-        public bool IsVampireLocationFound
-        {
-            get { return World.IsVampireLocationFound; }
-        }
-
-        public void InvalidateSearch()
-        {
-            World.IsVampireLocationFound = false;
-            // Instead of clearing.. remove only x amount of searched locations
-            World.VampireLocationsSearched.Clear();
-        }
     }
 }

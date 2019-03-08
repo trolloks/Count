@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Count.Controllers
 {
-    public class StructureController<T> : LocationObjectController<T> where T : Structure
+    public abstract class StructureController<T> : LocationObjectController<T> where T : Structure
     {
         public virtual string Name { get { return _object.Name; } }
         public virtual string Description { get { return _object.Description; } }
