@@ -14,14 +14,8 @@ namespace Count.Controllers
         
         public Structure Object
         {
-            get
-            {
-                return _object;
-            }
-            set
-            {
-                _object = value;
-            }
+            get { return _object; }
+            set { _object = value; }
         }
 
         public Type GenericType { get; set; }
