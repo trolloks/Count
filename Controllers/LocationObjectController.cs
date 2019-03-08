@@ -9,6 +9,6 @@ namespace Count.Controllers
 
         public Location WorldLocation { get { return _object.WorldLocation; } }
         public Location RegionLocation { get { return _object.RegionLocation; } }
-        public T Object { get; }
+        public T Object { get { return _object; } }
     }
 }

@@ -308,7 +308,7 @@ namespace Count
                                     // Reflection magic
                                     // AddLocationObject()
                                     var addLocationObjectMethod = currentRegion.GetType().GetMethod("AddLocationObject");
-                                    var invokable = addLocationObjectMethod.MakeGenericMethod(new Type[] { newResearchedLocationObject.GetType(), newResearchedLocationObject.GetType().GetProperty("Object").GetType() });
+                                    var invokable = addLocationObjectMethod.MakeGenericMethod(new Type[] { newResearchedLocationObject.GetType(), newResearchedLocationObject.GetType().GetProperty("Object").GetValue(newResearchedLocationObject, null)?.GetType() });
                                     invokable.Invoke(currentRegion, new object[] { newResearchedLocationObject });
 
                                     // Reflection magic # 2
@@ -399,7 +399,7 @@ namespace Count
                                 // Reflection magic
                                 // AddLocationObject()
                                 var addLocationObjectMethod = currentRegion.GetType().GetMethod("AddLocationObject");
-                                var invokable = addLocationObjectMethod.MakeGenericMethod(new Type[] { newResearchedLocationObject.GetType(), newResearchedLocationObject.GetType().GetProperty("Object").GetType() });
+                                var invokable = addLocationObjectMethod.MakeGenericMethod(new Type[] { newResearchedLocationObject.GetType(), newResearchedLocationObject.GetType().GetProperty("Object").GetValue(newResearchedLocationObject, null)?.GetType() });
                                 invokable.Invoke(currentRegion, new object[] { newResearchedLocationObject });
 
                                 // Reflection magic # 2
