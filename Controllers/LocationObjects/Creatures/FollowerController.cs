@@ -5,7 +5,7 @@ using Count.Utils;
 
 namespace Count.Controllers
 {
-    public class FollowerController<T> : CreatureController<T> where T : Follower
+    public abstract class FollowerController<T> : CreatureController<T> where T : Follower
     {
         private const int BASE_CONVERT_DC = 5;
         private const int BASE_CHECK_ROLL = 20;

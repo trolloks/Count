@@ -69,6 +69,7 @@
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\LocationObjects\Creature.cs" />
     <Compile Include="Models\LocationObjects\Creatures\Hero.cs" />
+    <Compile Include="Models\LocationObjects\Creatures\Heroes\Fighter.cs" />
     <Compile Include="Models\LocationObjects\Structure.cs" />
     <Compile Include="Models\LocationObject.cs" />
     <Compile Include="Models\Location.cs" />
@@ -87,9 +88,7 @@
     <Compile Include="Utils\LocationUtil.cs" />
     <Compile Include="Utils\Randomizer.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\LocationObjects\Creatures\Heroes\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

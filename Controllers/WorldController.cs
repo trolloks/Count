@@ -10,7 +10,7 @@ namespace Count.Controllers
     {
         private const int WORLD_SIZE = 10;
         private World World { get; set; }
-        private List<HeroController> _heroes;
+        private List<HeroController<Fighter>> _heroes;
 
         private readonly RegionController[,] _regions;
 
@@ -21,7 +21,7 @@ namespace Count.Controllers
             World.Day = 1;
 
             _regions = new RegionController[WORLD_SIZE, WORLD_SIZE];
-            _heroes = new List<HeroController>();
+            _heroes = new List<HeroController<Fighter>>();
         }
 
         public int Size
@@ -82,9 +82,6 @@ namespace Count.Controllers
         }
 
         private const int BASE_SPAWN_MAX_HERO = 5;
-        private const int BASE_SPAWN_MIN_DAY = 5;
-        private const int BASE_SPAWN_DC = 16;
-        private const int BASE_CHECK_ROLL = 20;
         private const int BASE_SPAWN_PITY = 5;
 
         private int _pityCounter = 0;
@@ -113,33 +110,23 @@ namespace Count.Controllers
             }
 
             // Roll for adventurer spawn
-            // - MAX 5
+            // - MAX 5 -- NOT IMPLEMENTED
             // - MUST ROLL MORE THAN 16
-            // - IF SUCCEEDS CAN ROLL AGAIN
-            // - only able to spawn after day 5
-            // - have 'pity' counter
-            var roll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-            while ((roll >= BASE_SPAWN_DC && Day >= BASE_SPAWN_MIN_DAY && heroCount < BASE_SPAWN_MAX_HERO) ||
-                (_pityCounter >= BASE_SPAWN_PITY && Day >= BASE_SPAWN_MIN_DAY && heroCount < BASE_SPAWN_MAX_HERO)) // only able to spawn after day 5
+            // - IF SUCCEEDS CAN ROLL AGAIN -- NOT IMPLEMENTED
+            // - only able to spawn after day 5 
+            // - have 'pity' counter -- NOT IMPLEMENTED
+            var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
+            if (village != null)
             {
-                var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
-                if (village != null)
+                var hero = HeroController<Fighter>.TryCreateHero(game, village.WorldLocation, village.RegionLocation, false);
+                if (hero != null)
                 {
-                    var hero = new FighterController(village.WorldLocation, village.RegionLocation);
                     _heroes.Add(hero);
+
                     Console.WriteLine($"{hero.Name} rises from {village.Name} to challenge your power");
                     somethingHappened = true;
                 }
-
-                // only extra roll on non-pity
-                if (_pityCounter < BASE_SPAWN_PITY)
-                    roll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-                else
-                    roll = 0;
-                _pityCounter = 0;
-                heroCount = _heroes.Count;
             }
-            _pityCounter++;
 
             return somethingHappened;
         }

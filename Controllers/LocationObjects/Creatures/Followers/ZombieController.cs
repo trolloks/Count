@@ -1,5 +1,4 @@
-﻿using System;
-using Count.Models;
+﻿using Count.Models;
 using Count.Models.Followers;
 
 namespace Count.Controllers
