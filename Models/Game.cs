@@ -20,7 +20,7 @@ namespace Count.Models
 
         public List<Location> KnownLocations { get; set; } = new List<Location>();
         public List<VillageController> KnownVillages { get; set; } = new List<VillageController>();
-        public List<FriendlyLocationController<Follower>> OwnedBuildings { get; set; } = new List<FriendlyLocationController<Follower>>();
+        public List<StructureController> OwnedBuildings { get; set; } = new List<StructureController>();
         public List<ResearchItem> KnownResearch { get; set; } = new List<ResearchItem>();
 
         public Location StartingWorldLocation { get; set; }

@@ -23,10 +23,10 @@ namespace Count.Controllers
         {
             var status = FeedStatus.FAILED;
             var locationObject = worldController.GetRegion(_object.WorldLocation).GetLocationObjectAtLocation(_object.RegionLocation);
-            if (locationObject == null || locationObject.GetType() != typeof(VillageController))
+            if (locationObject == null || locationObject.GenericType != typeof(VillageController))
                 return null;
 
-            var village = locationObject as VillageController;
+            var village = locationObject.Convert<VillageController, Village>() as VillageController;
 
             var feedCheck = true;
             var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);

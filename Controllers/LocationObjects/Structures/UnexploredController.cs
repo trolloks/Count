@@ -14,9 +14,9 @@ namespace Count.Controllers
             };
         }
 
-        public StructureController<Structure> Explore(Game game)
+        public StructureController Explore(Game game)
         {
-            StructureController<Structure> locationObject = game.World.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
+            StructureController locationObject = game.World.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
             game.KnownLocations.Add(RegionLocation);
             return locationObject;
         }

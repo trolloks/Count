@@ -51,7 +51,7 @@ namespace Count.Controllers
                     {
                         var villageLocation = GetUnusedRegionLocation(locations);
                         var village = new VillageController(_region.Location, villageLocation);
-                        LocationObjects[villageLocation.X, villageLocation.Y] = village;
+                        LocationObjects[villageLocation.X, villageLocation.Y] = village.Convert();
                     }
                 }
             }
@@ -67,11 +67,11 @@ namespace Count.Controllers
             return LocationObjects[location.X, location.Y];
         }
 
-        public T AddLocationObject<T>(T locationObject) where T : StructureController
+        public T AddLocationObject<T, S>(T locationObject) where T : StructureController<S> where S : Structure
         {
             if (GetLocationObjectAtLocation(locationObject.RegionLocation) == null)
             {
-                LocationObjects[locationObject.RegionLocation.X, locationObject.RegionLocation.Y] = locationObject;
+                LocationObjects[locationObject.RegionLocation.X, locationObject.RegionLocation.Y] = locationObject.Convert();
                 return locationObject;
             }
             return null;

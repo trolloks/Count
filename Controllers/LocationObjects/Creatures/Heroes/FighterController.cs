@@ -13,9 +13,10 @@ namespace Count.Controllers
         public override bool Hero(Game game)
         {
             var locationObject = game.World.GetRegion(_object.WorldLocation).GetLocationObjectAtLocation(_object.RegionLocation);
-            var graveyards = game.OwnedBuildings.Where(i => i.GetType() == typeof(GraveyardController));
-            foreach (var graveyard in graveyards)
+            var graveyards = game.OwnedBuildings.Where(i => i.GenericType == typeof(GraveyardController));
+            foreach (var graveyardRaw in graveyards)
             {
+                var graveyard = graveyardRaw.Convert<GraveyardController, Graveyard>();
                 var zombieCount = graveyard.Followers.Count;
                 for (int i = 0; i < zombieCount; i++)
                 {
@@ -44,9 +45,9 @@ namespace Count.Controllers
             }
 
             // attacks you
-            if (locationObject != null && locationObject.GetType() == typeof(CastleController) && _object.Hitpoints > 0)
+            if (locationObject != null && locationObject.GenericType == typeof(CastleController) && _object.Hitpoints > 0)
             {
-                var castle = locationObject as CastleController;
+                var castle = locationObject.Convert<CastleController, Castle>();
                 var vampireCount = castle.Followers.Count;
                 for (int i = 0; i < vampireCount; i++)
                 {

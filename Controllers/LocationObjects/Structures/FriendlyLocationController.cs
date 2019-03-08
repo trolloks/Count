@@ -4,7 +4,7 @@ using Count.Models;
 
 namespace Count.Controllers
 {
-    public abstract class FriendlyLocationController<T, S> : LocationObjectController<T> where S : Follower where T : Structure
+    public abstract class FriendlyLocationController<T, S> : StructureController<T> where S : Follower where T : Structure
     {
         public FriendlyLocationController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {}
