@@ -231,7 +231,7 @@ namespace Count
                 {
                     if (locationObject.GenericType == typeof(GraveyardController))
                     {
-                        var graveyard = locationObject.Convert<GraveyardController, Graveyard>();
+                        var graveyard = locationObject.Get<GraveyardController, Graveyard>();
                         somethingHappened = somethingHappened || graveyard.Upkeep(_game);
                     }
                 }
@@ -246,7 +246,7 @@ namespace Count
                 Console.ReadLine();
 
                 // Basic Win Condition - Will change **DEPRECATED
-                if (_game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Convert<GraveyardController, Graveyard>()).Followers.Count) >= ZOMBIE_WIN_COUNT)
+                if (_game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Get<GraveyardController, Graveyard>()).Followers.Count) >= ZOMBIE_WIN_COUNT)
                     _isGameOver = true;
             }
             return false;
@@ -476,7 +476,7 @@ namespace Count
 
                 if (currentLocationObject.GenericType == typeof(VillageController))
                 {
-                    var currentVillage = currentLocationObject.Convert<VillageController, Village>();
+                    var currentVillage = currentLocationObject.Get<VillageController, Village>();
                     Console.WriteLine(currentVillage.Name + (currentVillage.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : ""));
                 }
                 else
@@ -497,7 +497,7 @@ namespace Count
                 {
                     Console.Write($"{++index}. {pointOfInterest.Name}");
                     if (pointOfInterest.GenericType == typeof(VillageController))
-                        Console.Write($"{((pointOfInterest.Convert<VillageController, Village>()).Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : "")}");
+                        Console.Write($"{((pointOfInterest.Get<VillageController, Village>()).Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : "")}");
 
                     Console.WriteLine("");
                 }
@@ -537,7 +537,7 @@ namespace Count
                     // Enter location
                     if (currentLocationObject.GenericType == typeof(VillageController))
                     {
-                        var village = currentLocationObject.Convert<VillageController, Village>();
+                        var village = currentLocationObject.Get<VillageController, Village>();
                         if (village.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD)
                         {
                             Console.Clear();
@@ -556,7 +556,7 @@ namespace Count
                     else if (currentLocationObject.GenericType == typeof(CastleController))
                         finishedEnterRegion = true;
                     else if (currentLocationObject.GenericType == typeof(UnexploredController))
-                        EnterUnexploredArea(currentLocationObject.Convert<UnexploredController, Structure>());
+                        EnterUnexploredArea(currentLocationObject.Get<UnexploredController, Structure>());
                     else
                         EnterLocationObject(currentLocationObject);
                 }
@@ -908,7 +908,7 @@ namespace Count
 
         private void PrintStats()
         {
-            var totalZombies = _game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Convert<GraveyardController, Graveyard>()).Followers.Count);
+            var totalZombies = _game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Get<GraveyardController, Graveyard>()).Followers.Count);
             var totalVampires = _castle.Followers.Count;
 
             Console.WriteLine($"GOAL: {(_game.OwnedBuildings.Count > 0 ? (totalZombies) : 0)}/{ZOMBIE_WIN_COUNT} ZOMBIES");

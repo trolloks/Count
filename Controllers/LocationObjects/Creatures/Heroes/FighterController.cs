@@ -4,7 +4,7 @@ using Count.Models;
 
 namespace Count.Controllers
 {
-    public class FighterController : HeroController<Hero>
+    public class FighterController : HeroController<Fighter>
     {
         public FighterController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
@@ -23,7 +23,7 @@ namespace Count.Controllers
             var graveyards = game.OwnedBuildings.Where(i => i.GenericType == typeof(GraveyardController));
             foreach (var graveyardRaw in graveyards)
             {
-                var graveyard = graveyardRaw.Convert<GraveyardController, Graveyard>();
+                var graveyard = graveyardRaw.Get<GraveyardController, Graveyard>();
                 var zombieCount = graveyard.Followers.Count;
                 for (int i = 0; i < zombieCount; i++)
                 {
@@ -54,7 +54,7 @@ namespace Count.Controllers
             // attacks you
             if (locationObject != null && locationObject.GenericType == typeof(CastleController) && _object.Hitpoints > 0)
             {
-                var castle = locationObject.Convert<CastleController, Castle>();
+                var castle = locationObject.Get<CastleController, Castle>();
                 var vampireCount = castle.Followers.Count;
                 for (int i = 0; i < vampireCount; i++)
                 {

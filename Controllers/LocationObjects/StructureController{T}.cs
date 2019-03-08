@@ -17,8 +17,8 @@ namespace Count.Controllers
         {
             _structureController = new StructureController(_object.WorldLocation, _object.RegionLocation);
             _structureController.GenericObject = _object;
-            _structureController.GenericType = this.GetType();
-            _structureController.RawSerializedData = JsonConvert.SerializeObject(this);
+            _structureController.GenericType = GetType();
+            _structureController.Data = this;
             return _structureController;
         }
     }

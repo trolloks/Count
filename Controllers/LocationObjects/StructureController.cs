@@ -18,11 +18,11 @@ namespace Count.Controllers
         }
 
         public Type GenericType { get; set; }
-        public string RawSerializedData { get; set; }
+        public object Data { get; set; }
 
-        public T Convert<T, S>() where T : StructureController<S> where S : Structure
+        public T Get<T, S>() where T : StructureController<S> where S : Structure
         {
-            return JsonConvert.DeserializeObject<T>(RawSerializedData);
+            return (T)Data;
         }
     }
 }

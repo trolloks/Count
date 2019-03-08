@@ -51,7 +51,7 @@ namespace Count.Controllers
             if (locationObject == null || locationObject.GenericType != typeof(VillageController))
                 return null;
 
-            var village = locationObject.Convert<VillageController, Village>();
+            var village = locationObject.Get<VillageController, Village>();
 
             var feedCheck = true;
             var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);

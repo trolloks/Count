@@ -115,6 +115,7 @@ namespace Count.Controllers
             // - IF SUCCEEDS CAN ROLL AGAIN -- NOT IMPLEMENTED
             // - only able to spawn after day 5 
             // - have 'pity' counter -- NOT IMPLEMENTED
+
             var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
             if (village != null)
             {
