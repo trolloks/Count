@@ -4,8 +4,9 @@ using Count.Models;
 
 namespace Count.Controllers
 {
-    public class FighterController : HeroController<Fighter>
-    {
+    public class FighterController : HeroController
+    { 
+
         public FighterController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
             _object = new Fighter()
@@ -20,10 +21,10 @@ namespace Count.Controllers
         public override bool Hero(Game game)
         {
             var locationObject = game.World.GetRegion(_object.WorldLocation).GetLocationObjectAtLocation(_object.RegionLocation);
-            var graveyards = game.OwnedBuildings.Where(i => i.GenericType == typeof(GraveyardController));
-            foreach (var graveyardRaw in graveyards)
+            var ownedGraveyardStructures = game.OwnedBuildings.Where(i => i.GetType() == typeof(GraveyardController));
+            foreach (var structure in ownedGraveyardStructures)
             {
-                var graveyard = graveyardRaw.Get<GraveyardController, Graveyard>();
+                var graveyard = structure as GraveyardController;
                 var zombieCount = graveyard.Followers.Count;
                 for (int i = 0; i < zombieCount; i++)
                 {
@@ -34,17 +35,17 @@ namespace Count.Controllers
                         && _object.WorldLocation.X == followerModel.WorldLocation.X && _object.WorldLocation.Y == followerModel.WorldLocation.Y)
                     {
                         // hero not dead yet
-                        if (_object.Hitpoints > 0)
+                        if (_hero.Hitpoints > 0)
                         {
-                            _object.Hitpoints -= followerModel.Damage;
+                            _hero.Hitpoints -= followerModel.Damage;
                             graveyard.KillFollower(follower);
                             zombieCount--;
                             i--;
-                            Console.WriteLine($"{_object.Name} kills a Zombie, but takes {followerModel.Damage} damage in response");
+                            Console.WriteLine($"{_hero.Name} kills a Zombie, but takes {followerModel.Damage} damage in response");
                         }
                         else
                         {
-                            Console.WriteLine($"{_object.Name} dies valiantly. You are safe against this hero.");
+                            Console.WriteLine($"{_hero.Name} dies valiantly. You are safe against this hero.");
                             return false;
                         }
                     }
@@ -52,9 +53,9 @@ namespace Count.Controllers
             }
 
             // attacks you
-            if (locationObject != null && locationObject.GenericType == typeof(CastleController) && _object.Hitpoints > 0)
+            if (locationObject != null && locationObject.GetType() == typeof(CastleController) && _hero.Hitpoints > 0)
             {
-                var castle = locationObject.Get<CastleController, Castle>();
+                var castle = locationObject as CastleController;
                 var vampireCount = castle.Followers.Count;
                 for (int i = 0; i < vampireCount; i++)
                 {
@@ -65,35 +66,35 @@ namespace Count.Controllers
                         && _object.WorldLocation.X == followerModel.WorldLocation.X && _object.WorldLocation.Y == followerModel.WorldLocation.Y)
                     {
                         // hero not dead yet
-                        if (_object.Hitpoints > 0)
+                        if (_hero.Hitpoints > 0)
                         {
-                            _object.Hitpoints -= followerModel.Damage;
+                            _hero.Hitpoints -= followerModel.Damage;
                             castle.KillFollower(follower);
                             vampireCount--;
                             i--;
-                            Console.WriteLine($"{_object.Name} kills a Vampire, but takes {followerModel.Damage} damage in response");
+                            Console.WriteLine($"{_hero.Name} kills a Vampire, but takes {followerModel.Damage} damage in response");
                         }
                         else
                         {
-                            Console.WriteLine($"{_object.Name} dies valiantly. You are safe against this hero.");
+                            Console.WriteLine($"{_hero.Name} dies valiantly. You are safe against this hero.");
                             return false;
                         }
                     }
                 }
 
-                if (_object.Hitpoints > 0)
+                if (_hero.Hitpoints > 0)
                 {
-                    _object.Hitpoints--;
+                    _hero.Hitpoints--;
                     game.VampireLord.ForceKill();
-                    Console.WriteLine($"{_object.Name} makes his way towards your chamber and kills you!");
+                    Console.WriteLine($"{_hero.Name} makes his way towards your chamber and kills you!");
                 }
                 else
                 {
-                    Console.WriteLine($"{_object.Name} dies valiantly. You are safe against this hero.");
+                    Console.WriteLine($"{_hero.Name} dies valiantly. You are safe against this hero.");
                 }
             }
 
-            if (_object.Hitpoints > 0)
+            if (_hero.Hitpoints > 0)
             {
                 return true;
             }

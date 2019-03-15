@@ -1,10 +1,13 @@
-﻿using Count.Models;
+﻿using System;
+using Count.Models;
 using Count.Utils;
 
 namespace Count.Controllers
 {
-    public abstract class HeroController<T> : CreatureController<T> where T : Hero
+    public abstract class HeroController : CreatureController
     {
+        protected Hero _hero { get { return _object as Hero; } }
+
         private static int BASE_SPAWN_MAX_HERO = 5;
         private static int BASE_SPAWN_MIN_DAY = 5;
         private static int BASE_SPAWN_DC = 16;
@@ -17,7 +20,7 @@ namespace Count.Controllers
         /// <summary>
         ///  Checks if you succeed on creating a follower
         /// </summary>
-        public static HeroController<T> TryCreateHero(Game game, Location worldLocation, Location regionLocation, bool force)
+        public static HeroController TryCreateHero(Type heroType, Game game, Location worldLocation, Location regionLocation, bool force)
         {
             // Roll for adventurer spawn
             // - MAX 5
@@ -29,8 +32,8 @@ namespace Count.Controllers
             var convertCheck = (roll >= BASE_SPAWN_DC && game.World.Day >= BASE_SPAWN_MIN_DAY) || force;
             if (convertCheck)
             {
-                if (typeof(T) == typeof(Fighter))
-                    return new FighterController(worldLocation, regionLocation) as HeroController<T>;
+                if (heroType == typeof(Fighter))
+                    return new FighterController(worldLocation, regionLocation) as HeroController;
             }
 
             return null;

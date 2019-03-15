@@ -82,7 +82,7 @@ namespace Count
             // Get starting Region location
             _game.StartingRegionLocation = startingRegion.GetUnusedRegionLocation();
             // Create castle
-            _game.Castle = _castle = startingRegion.AddLocationObject<CastleController, Castle>(new CastleController(_game.StartingWorldLocation, _game.StartingRegionLocation));
+            _game.Castle = _castle = startingRegion.AddLocationObject(new CastleController(_game.StartingWorldLocation, _game.StartingRegionLocation)) as CastleController;
             // Create vampire
             _game.VampireLord = _vampire = new VampireLordController(_game);
             _game.KnownLocations.Add(_game.StartingRegionLocation);
@@ -229,9 +229,9 @@ namespace Count
                 somethingHappened = somethingHappened || _castle.Upkeep(_game);
                 foreach (var locationObject in _game.OwnedBuildings)
                 {
-                    if (locationObject.GenericType == typeof(GraveyardController))
+                    if (locationObject.GetType() == typeof(GraveyardController))
                     {
-                        var graveyard = locationObject.Get<GraveyardController, Graveyard>();
+                        var graveyard = locationObject as GraveyardController;
                         somethingHappened = somethingHappened || graveyard.Upkeep(_game);
                     }
                 }
@@ -246,7 +246,7 @@ namespace Count
                 Console.ReadLine();
 
                 // Basic Win Condition - Will change **DEPRECATED
-                if (_game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Get<GraveyardController, Graveyard>()).Followers.Count) >= ZOMBIE_WIN_COUNT)
+                if (_game.OwnedBuildings?.Where(i => i.GetType() == typeof(GraveyardController))?.Sum(j => (j as GraveyardController). Followers.Count) >= ZOMBIE_WIN_COUNT)
                     _isGameOver = true;
             }
             return false;
@@ -472,11 +472,11 @@ namespace Count
                 if (_game.KnownLocations.Any(p => p.X == _vampire.RegionLocation.X && p.Y == _vampire.RegionLocation.Y))
                     currentLocationObject = region.GetLocationObjectAtLocation(_vampire.RegionLocation);
                 else
-                    currentLocationObject = new UnexploredController(_vampire.WorldLocation, _vampire.RegionLocation).Convert();
+                    currentLocationObject = new UnexploredController(_vampire.WorldLocation, _vampire.RegionLocation);
 
-                if (currentLocationObject.GenericType == typeof(VillageController))
+                if (currentLocationObject.GetType() == typeof(VillageController))
                 {
-                    var currentVillage = currentLocationObject.Get<VillageController, Village>();
+                    var currentVillage = currentLocationObject as VillageController;
                     Console.WriteLine(currentVillage.Name + (currentVillage.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : ""));
                 }
                 else
@@ -496,8 +496,8 @@ namespace Count
                 foreach (var pointOfInterest in pointsOfInterest)
                 {
                     Console.Write($"{++index}. {pointOfInterest.Name}");
-                    if (pointOfInterest.GenericType == typeof(VillageController))
-                        Console.Write($"{((pointOfInterest.Get<VillageController, Village>()).Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : "")}");
+                    if (pointOfInterest.GetType() == typeof(VillageController))
+                        Console.Write($"{((pointOfInterest as VillageController).Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : "")}");
 
                     Console.WriteLine("");
                 }
@@ -535,9 +535,9 @@ namespace Count
                 else if (option == "E" || option == "e")
                 {
                     // Enter location
-                    if (currentLocationObject.GenericType == typeof(VillageController))
+                    if (currentLocationObject.GetType() == typeof(VillageController))
                     {
-                        var village = currentLocationObject.Get<VillageController, Village>();
+                        var village = currentLocationObject as VillageController;
                         if (village.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD)
                         {
                             Console.Clear();
@@ -553,10 +553,10 @@ namespace Count
                                 _game.KnownVillages.Add(village);
                         }
                     }
-                    else if (currentLocationObject.GenericType == typeof(CastleController))
+                    else if (currentLocationObject.GetType() == typeof(CastleController))
                         finishedEnterRegion = true;
-                    else if (currentLocationObject.GenericType == typeof(UnexploredController))
-                        EnterUnexploredArea(currentLocationObject.Get<UnexploredController, Structure>());
+                    else if (currentLocationObject.GetType() == typeof(UnexploredController))
+                        EnterUnexploredArea(currentLocationObject as UnexploredController);
                     else
                         EnterLocationObject(currentLocationObject);
                 }
@@ -623,7 +623,7 @@ namespace Count
                     }
                     else if (_game.KnownLocations.Any(p => ((p.X <= i + 1) && (p.X >= i - 1)) && ((p.Y <= j + 1) && (p.Y >= j - 1))))
                     {
-                        pointsOfInterest.Add(new UnexploredController(_vampire.WorldLocation, currentLocation).Convert());
+                        pointsOfInterest.Add(new UnexploredController(_vampire.WorldLocation, currentLocation));
                         Console.Write($"({poi++})");
                         minY = Math.Min(minY, j);
                         maxY = Math.Max(maxY, j);
@@ -908,7 +908,7 @@ namespace Count
 
         private void PrintStats()
         {
-            var totalZombies = _game.OwnedBuildings?.Where(i => i.GenericType == typeof(GraveyardController))?.Sum(j => (j.Get<GraveyardController, Graveyard>()).Followers.Count);
+            var totalZombies = _game.OwnedBuildings?.Where(i => i.GetType() == typeof(GraveyardController))?.Sum(j => (j as GraveyardController).Followers.Count);
             var totalVampires = _castle.Followers.Count;
 
             Console.WriteLine($"GOAL: {(_game.OwnedBuildings.Count > 0 ? (totalZombies) : 0)}/{ZOMBIE_WIN_COUNT} ZOMBIES");

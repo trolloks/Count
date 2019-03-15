@@ -7,8 +7,10 @@ using System.Linq;
 
 namespace Count.Controllers
 {
-    public class CastleController : FriendlyLocationController<Castle, Vampire>
+    public class CastleController : FriendlyLocationController
     {
+        protected Castle _castle { get { return _object as Castle; } }
+
         // Research
         public readonly Dictionary<int, ResearchItem []> ResearchOptions = new Dictionary<int, ResearchItem []>()
         {
@@ -29,12 +31,12 @@ namespace Count.Controllers
         #region "Actions"
         public ResearchItem[] Research(int soulsCurrent, int soulMax)
         {
-            if (ResearchOptions.ContainsKey(_object.ResearchPoints + Math.Min(soulsCurrent, soulMax)))
+            if (ResearchOptions.ContainsKey(_castle.ResearchPoints + Math.Min(soulsCurrent, soulMax)))
             {
-                _object.ResearchPoints += Math.Min(soulsCurrent, soulMax);
-                var researchItems = ResearchOptions[_object.ResearchPoints];
+                _castle.ResearchPoints += Math.Min(soulsCurrent, soulMax);
+                var researchItems = ResearchOptions[_castle.ResearchPoints];
                 foreach (var researchItem in researchItems)
-                    _object.UnlockedResearch.Add(researchItem);
+                    _castle.UnlockedResearch.Add(researchItem);
                 return researchItems;
             }
             else
@@ -48,7 +50,7 @@ namespace Count.Controllers
 
         public VampireController CreateVampire(bool force)
         {
-            var follower = (VampireController)FollowerController<Vampire>.TryCreateFollower(_object.WorldLocation, _object.RegionLocation, force);
+            var follower = (VampireController)FollowerController.TryCreateFollower(typeof(Vampire), _object.WorldLocation, _object.RegionLocation, force);
             if (follower != null)
                 _followers.Add(follower);
             return follower;
@@ -88,7 +90,7 @@ namespace Count.Controllers
         #endregion
 
         #region "Properties"
-        public int ResearchPoints { get { return _object.ResearchPoints; } }
+        public int ResearchPoints { get { return _castle.ResearchPoints; } }
         #endregion
     }
 }

@@ -10,7 +10,7 @@ namespace Count.Controllers
     {
         private const int WORLD_SIZE = 10;
         private World World { get; set; }
-        private List<HeroController<Fighter>> _heroes;
+        private List<HeroController> _heroes;
 
         private readonly RegionController[,] _regions;
 
@@ -21,7 +21,7 @@ namespace Count.Controllers
             World.Day = 1;
 
             _regions = new RegionController[WORLD_SIZE, WORLD_SIZE];
-            _heroes = new List<HeroController<Fighter>>();
+            _heroes = new List<HeroController>();
         }
 
         public int Size
@@ -119,7 +119,7 @@ namespace Count.Controllers
             var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
             if (village != null)
             {
-                var hero = HeroController<Fighter>.TryCreateHero(game, village.WorldLocation, village.RegionLocation, false);
+                var hero = HeroController.TryCreateHero(typeof(Fighter), game, village.WorldLocation, village.RegionLocation, false);
                 if (hero != null)
                 {
                     _heroes.Add(hero);

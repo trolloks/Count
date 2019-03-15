@@ -2,11 +2,13 @@
 
 namespace Count.Controllers
 {
-    public abstract class CreatureController<T> : LocationObjectController<T> where T : Creature
+    public abstract class CreatureController : LocationObjectController
     {
-        public virtual string Name { get { return _object.Name; } }
-        public virtual int Hitpoints { get { return _object.Hitpoints; } }
-        public virtual int Damage { get { return _object.Damage; } }
+        protected Creature _creature { get { return _object as Creature; } }
+
+        public virtual string Name { get { return _creature.Name; } }
+        public virtual int Hitpoints { get { return _creature.Hitpoints; } }
+        public virtual int Damage { get { return _creature.Damage; } }
 
         protected CreatureController(Location worldLocation, Location regionLocation): base(worldLocation, regionLocation) {}
 

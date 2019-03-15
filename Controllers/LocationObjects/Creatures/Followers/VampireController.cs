@@ -6,7 +6,7 @@ using Count.Utils;
 
 namespace Count.Controllers
 {
-    public class VampireController : FollowerController<Vampire>
+    public class VampireController : FollowerController
     {
         private const int BASE_FEED_DC = 5;
         private const int BASE_CHECK_ROLL = 20;
@@ -23,10 +23,10 @@ namespace Count.Controllers
         {
             var status = FeedStatus.FAILED;
             var locationObject = worldController.GetRegion(_object.WorldLocation).GetLocationObjectAtLocation(_object.RegionLocation);
-            if (locationObject == null || locationObject.GenericType != typeof(VillageController))
+            if (locationObject == null || locationObject.GetType() != typeof(VillageController))
                 return null;
 
-            var village = locationObject.Get<VillageController, Village>() as VillageController;
+            var village = locationObject as VillageController;
 
             var feedCheck = true;
             var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);

@@ -2,7 +2,7 @@
 
 namespace Count.Controllers
 {
-    public abstract class EnemyLocationController<T> : StructureController<T> where T : Structure
+    public abstract class EnemyLocationController : StructureController
     {
         public EnemyLocationController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         { }

@@ -5,8 +5,10 @@ using Count.Utils;
 
 namespace Count.Controllers
 {
-    public class VillageController : EnemyLocationController<Village>
+    public class VillageController : EnemyLocationController
     {
+        private Village _village { get { return _object as Village; } }
+
         // temp (For names)
         int villagerCounter = 1;
 
@@ -34,7 +36,7 @@ namespace Count.Controllers
 
         public void SpawnVillager()
         {
-            _object.Villagers.Add(new Villager
+            _village.Villagers.Add(new Villager
             {
                 Name = $"Villager-{villagerCounter}",
                 Strength = (Randomizer.Instance.Roll(6, 20) / 6), // Avg
@@ -51,38 +53,38 @@ namespace Count.Controllers
 
         private void KillVillager(Villager villager)
         {
-            _object.Villagers.Remove(villager);
+            _village.Villagers.Remove(villager);
         }
 
         private Villager RandomVillager()
         {
             var unluckyPerson = Randomizer.Instance.Random.Next(Size);
-            return _object.Villagers[unluckyPerson];
+            return _village.Villagers[unluckyPerson];
         }
 
         public int Size
         {
-            get { return _object.Villagers.Count; }
+            get { return _village.Villagers.Count; }
         }
 
         public float Suspicion
         {
-            get { return _object.Suspicion; }
+            get { return _village.Suspicion; }
         }
 
         public override string Name
         {
-            get { return _object.Name; }
+            get { return _village.Name; }
         }
 
         public void IncreaseSuspicion()
         {
-            _object.Suspicion = Math.Min(1, _object.Suspicion + (Randomizer.Instance.Roll(15, 5) / 100f)); // Can't get more suspicious than 1
+            _village.Suspicion = Math.Min(1, _village.Suspicion + (Randomizer.Instance.Roll(15, 5) / 100f)); // Can't get more suspicious than 1
         }
 
         public void DecreaseSuspicion()
         {
-            _object.Suspicion = Math.Max(0, _object.Suspicion - (Randomizer.Instance.Roll(5, 5) / 100f)); // Can't get less suspicious than 0 
+            _village.Suspicion = Math.Max(0, _village.Suspicion - (Randomizer.Instance.Roll(5, 5) / 100f)); // Can't get less suspicious than 0 
         }
     }
 }

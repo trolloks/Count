@@ -2,7 +2,7 @@
 
 namespace Count.Controllers
 {
-    public class UnexploredController : StructureController<Structure>
+    public class UnexploredController : StructureController
     {
         public UnexploredController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation) {
             _object = new Structure

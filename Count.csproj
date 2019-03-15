@@ -51,7 +51,6 @@
     <Compile Include="Controllers\LocationObjects\Creatures\Heroes\FighterController.cs" />
     <Compile Include="Controllers\LocationObjects\CreatureController.cs" />
     <Compile Include="Controllers\LocationObjects\StructureController.cs" />
-    <Compile Include="Controllers\LocationObjects\StructureController{T}.cs" />
     <Compile Include="Controllers\LocationObjects\Structures\FriendlyLocationController.cs" />
     <Compile Include="Controllers\LocationObjects\Structures\EnemyLocationController.cs" />
     <Compile Include="Controllers\LocationObjects\Structures\UnexploredController.cs" />
