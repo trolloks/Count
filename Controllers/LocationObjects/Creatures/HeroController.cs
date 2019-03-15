@@ -9,10 +9,9 @@ namespace Count.Controllers
     {
         protected Hero _hero { get { return _object as Hero; } }
         public Hero Hero { get { return _hero; } }
-
-        private static int BASE_SPAWN_MAX_HERO = 5;
+        
         private static int BASE_SPAWN_MIN_DAY = 5;
-        private static int BASE_SPAWN_DC = 16;
+        private static int BASE_SPAWN_DC = 17;
         private static int BASE_CHECK_ROLL = 20;
         private static int BASE_SPAWN_PITY = 5;
 

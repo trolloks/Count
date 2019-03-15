@@ -113,7 +113,7 @@ namespace Count.Controllers
 
             // Roll for adventurer spawn
             // - MAX 3/village
-            // - MUST ROLL MORE THAN 16
+            // - MUST ROLL MORE THAN 17
             // - IF SUCCEEDS CAN ROLL AGAIN -- NOT IMPLEMENTED
             // - only able to spawn after day 5 
             // - have 'pity' counter -- NOT IMPLEMENTED
