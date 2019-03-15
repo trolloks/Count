@@ -18,8 +18,8 @@ namespace Count.Controllers
         /// <summary>
         /// Hunger logic
         /// </summary>
-        public static int HUNGER_WARNING_THRESHOLD = 5;
-        public static int HUNGER_STARVING_THRESHOLD = 10;
+        public static int HUNGER_WARNING_THRESHOLD = 7;
+        public static int HUNGER_STARVING_THRESHOLD = 14;
 
         public VampireLordController(Models.Game game)
         {
@@ -75,8 +75,8 @@ namespace Count.Controllers
 
                 // Kill Villager
                 village.KillVillager();
-                // Get Soul
-                IncreaseSouls(1);
+                // Get Blood
+                IncreaseBlood(3);
             }
 
             _firstFeed = false;
@@ -135,11 +135,11 @@ namespace Count.Controllers
         }
 
         /// <summary>
-        /// Current Souls
+        /// Current Blood
         /// </summary>
-        public int Souls
+        public int Blood
         {
-            get { return _vampireLord.Souls; }
+            get { return _vampireLord.Blood; }
         }
 
         #endregion
@@ -162,14 +162,14 @@ namespace Count.Controllers
             _vampireLord.Hitpoints = 0;
         }
 
-        public void SpendSouls(int i)
+        public void SpendBlood(int i)
         {
-            _vampireLord.Souls -= i;
+            _vampireLord.Blood -= i;
         }
 
-        public void IncreaseSouls(int i)
+        public void IncreaseBlood(int i)
         {
-            _vampireLord.Souls += i;
+            _vampireLord.Blood += i;
         }
 
         /// <summary>

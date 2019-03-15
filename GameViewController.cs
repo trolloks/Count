@@ -64,8 +64,8 @@ namespace Count
             Console.WriteLine("You are a vampire lord.");
             Console.WriteLine($"- You must FEED on a villager every {VampireLordController.HUNGER_STARVING_THRESHOLD} days.");
             Console.WriteLine($"- Villages can be found by exploring the map");
-            Console.WriteLine($"- FEEDING rewards you with SOULS.");
-            Console.WriteLine($"- SOULS are required for discovering new unholy buildings that spawn new followers");
+            Console.WriteLine($"- FEEDING rewards you with BLOOD.");
+            Console.WriteLine($"- BLOOD is required for discovering new unholy buildings that spawn new followers");
             Console.WriteLine("");
             Console.WriteLine($"***You WIN if you create {ZOMBIE_WIN_COUNT} Zombies***");
             Console.WriteLine("");
@@ -270,7 +270,7 @@ namespace Count
                 var nextResearchItemName = hasNextResearchItem ? string.Join(",", _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Value.ToList().Select(i => i.Name)) : "N/A";
                 var nextResearchItemLevel = hasNextResearchItem ? (_castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Key - _castle.ResearchPoints) : int.MaxValue;
                 Console.WriteLine($"Next Unlock: {nextResearchItemName}");
-                Console.WriteLine($"Souls Required: {nextResearchItemLevel}");
+                Console.WriteLine($"Blood Required: {nextResearchItemLevel}");
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("");
                 PrintStats();
@@ -283,9 +283,9 @@ namespace Count
                 int researchIndex = 0;
                 foreach (var researchItem in _game.KnownResearch)
                 {
-                    Console.WriteLine($"{++researchIndex}. Build {researchItem.Name} (1 Action, {researchItem.Souls} Soul/s)");
+                    Console.WriteLine($"{++researchIndex}. Build {researchItem.Name} (1 Action, {researchItem.Blood} Blood)");
                 }
-                Console.WriteLine($"R. Research ancient texts (1 Action, {nextResearchItemLevel} Soul/s)");
+                Console.WriteLine($"R. Research ancient texts (1 Action, {nextResearchItemLevel} Blood)");
                 Console.WriteLine($"- Unearth new knowledge to teach you about unholy buildings.");
                 Console.WriteLine("");
                 /*Console.WriteLine("2. Convert Villager into follower (1 Action)");
@@ -302,7 +302,7 @@ namespace Count
                     if (buildOption < _game.KnownResearch.Count + 1 && buildOption > 0)
                     {
                         var researchItem = _game.KnownResearch[buildOption - 1];
-                        if (_vampire.Souls >= researchItem.Souls)
+                        if (_vampire.Blood >= researchItem.Blood)
                         {
                             var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation(_game.KnownLocations);
                             if (newLocation != null)
@@ -315,7 +315,7 @@ namespace Count
                                     _game.OwnedBuildings.Add(currentRegion.AddLocationObject(newResearchedLocationObject as StructureController));
 
                                     _vampire.TryExert(1);
-                                    _vampire.SpendSouls(researchItem.Souls);
+                                    _vampire.SpendBlood(researchItem.Blood);
                                     finishedEnterCastle = true;
 
                                     Console.WriteLine("");
@@ -341,7 +341,7 @@ namespace Count
                         }
                         else
                         {
-                            Console.WriteLine("You dont have enough souls to build this, feed on villagers to increase your souls.");
+                            Console.WriteLine("You dont have enough blood to build this, feed on villagers to increase your blood.");
                             Console.WriteLine("");
                             Console.WriteLine("Press ENTER to continue");
                             Console.ReadLine();
@@ -354,19 +354,9 @@ namespace Count
                         case "R":
                         case "r":
                             // research
-                            if (_vampire.Souls < nextResearchItemLevel)
+                            if (_vampire.Blood < nextResearchItemLevel)
                             {
-                                Console.WriteLine("You dont have enough souls to research this, feed on villagers to increase your souls.");
-                                Console.WriteLine("");
-                                Console.WriteLine("Press ENTER to continue");
-                                Console.ReadLine();
-                                break;
-                            }
-
-                            var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation(_game.KnownLocations);
-                            if (newLocation == null)
-                            {
-                                Console.WriteLine("There is no space for this item, discover more empty spaces to research this");
+                                Console.WriteLine("You dont have enough blood to research this, feed on villagers to increase your blood.");
                                 Console.WriteLine("");
                                 Console.WriteLine("Press ENTER to continue");
                                 Console.ReadLine();
@@ -382,9 +372,9 @@ namespace Count
                                 break;
                             }
 
-                            var soulsToSpend = nextResearchItemLevel;
-                            var researchItems = _castle.Research(_vampire.Souls, nextResearchItemLevel);
-                            _vampire.SpendSouls(soulsToSpend);
+                            var bloodToSpend = nextResearchItemLevel;
+                            var researchItems = _castle.Research(_vampire.Blood, nextResearchItemLevel);
+                            _vampire.SpendBlood(bloodToSpend);
 
                             Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following lost knowledge: ");
                             foreach (var researchItem in researchItems)
@@ -800,7 +790,8 @@ namespace Count
             Console.WriteLine($"GOAL: {(_game.OwnedBuildings.Count > 0 ? (totalZombies) : 0)}/{ZOMBIE_WIN_COUNT} ZOMBIES");
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
             Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
-            Console.WriteLine($"SOULS: {_vampire.Souls}");
+            Console.WriteLine($"BLOOD: {_vampire.Blood}");
+            Console.WriteLine($"EXPLORED VILLAGES: {_game.KnownVillages.Count}");
             Console.WriteLine($"FOLLOWERS: {totalZombies + totalVampires}");
             if (_castle.Followers.Count > 0)
                 Console.WriteLine($"- VAMPIRES: {totalVampires}");

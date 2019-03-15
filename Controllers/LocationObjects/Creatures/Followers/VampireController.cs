@@ -43,8 +43,8 @@ namespace Count.Controllers
                 status = FeedStatus.FED;
                 // Kill Villager
                 village.KillVillager();
-                // Get Soul
-                vampireLord.IncreaseSouls(1);
+                // Get Blood
+                vampireLord.IncreaseBlood(1);
             }
 
             return status;

@@ -11,7 +11,7 @@ namespace Count.Controllers
         public Hero Hero { get { return _hero; } }
         
         private static int BASE_SPAWN_MIN_DAY = 5;
-        private static int BASE_SPAWN_DC = 17;
+        private static int BASE_SPAWN_DC = 18;
         private static int BASE_CHECK_ROLL = 20;
         private static int BASE_SPAWN_PITY = 5;
 
@@ -33,6 +33,7 @@ namespace Count.Controllers
             var convertCheck = (roll >= BASE_SPAWN_DC && game.World.Day >= BASE_SPAWN_MIN_DAY) || force;
             if (convertCheck)
             {
+                
                 if (heroType == typeof(Fighter))
                     return new FighterController(worldLocation, regionLocation) as HeroController;
             }
@@ -67,11 +68,13 @@ namespace Count.Controllers
                                 i--;
                                 Console.Write($"{_hero.Name} kills a Zombie");
                                 if (_hero.Hitpoints > 0)
+                                {
                                     Console.WriteLine($", and survives with {_hero.Hitpoints} hit points");
+                                    continue;
+                                }
                                 else
                                     Console.WriteLine(".");
                             }
-                            continue;
                         }
 
                         Console.WriteLine($"{_hero.Name} dies valiantly. You are safe against this hero.");
@@ -104,12 +107,15 @@ namespace Count.Controllers
                                 i--;
                                 Console.Write($"{_hero.Name} kills a Vampire");
                                 if (_hero.Hitpoints > 0)
+                                {
                                     Console.WriteLine($", and survives with {_hero.Hitpoints} hit points");
+                                    continue;
+                                }
                                 else
                                     Console.WriteLine(".");
                             }
-                            continue;
-                        }
+                           
+                        } 
 
                         Console.WriteLine($"{_hero.Name} dies valiantly. You are safe against this hero.");
                         return false;

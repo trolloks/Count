@@ -14,7 +14,7 @@ namespace Count.Controllers
         // Research
         public readonly Dictionary<int, ResearchItem []> ResearchOptions = new Dictionary<int, ResearchItem []>()
         {
-            { 5 , new ResearchItem [] { new ResearchItem{ Name = "Graveyard", Unlocks = typeof(GraveyardController), Souls = 5 } } }
+            { 10 , new ResearchItem [] { new ResearchItem{ Name = "Graveyard", Unlocks = typeof(GraveyardController), Blood = 5 } } }
         };
 
         public CastleController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
@@ -29,11 +29,11 @@ namespace Count.Controllers
         }
 
         #region "Actions"
-        public ResearchItem[] Research(int soulsCurrent, int soulMax)
+        public ResearchItem[] Research(int bloodCurrent, int bloodMax)
         {
-            if (ResearchOptions.ContainsKey(_castle.ResearchPoints + Math.Min(soulsCurrent, soulMax)))
+            if (ResearchOptions.ContainsKey(_castle.ResearchPoints + Math.Min(bloodCurrent, bloodMax)))
             {
-                _castle.ResearchPoints += Math.Min(soulsCurrent, soulMax);
+                _castle.ResearchPoints += Math.Min(bloodCurrent, bloodMax);
                 var researchItems = ResearchOptions[_castle.ResearchPoints];
                 foreach (var researchItem in researchItems)
                     _castle.UnlockedResearch.Add(researchItem);
@@ -58,7 +58,7 @@ namespace Count.Controllers
 
         /// <summary>
         /// Vampires do the following:
-        /// -   They go to a random known village and try to feed. If they succeed you gain some of the souls
+        /// -   They go to a random known village and try to feed. If they succeed you gain some of the blood
         /// </summary>
         /// <param name="game"></param>
         /// <returns></returns>
@@ -73,7 +73,7 @@ namespace Count.Controllers
                     var vampireController = followerController as VampireController;
                     var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
                     vampireController.MoveToLocation(village.WorldLocation, village.RegionLocation); // Go to random village
-                    var feedstatus = vampireController.Feed(game.World, game.VampireLord); // vampires feed and give you souls
+                    var feedstatus = vampireController.Feed(game.World, game.VampireLord); // vampires feed and give you blood
                     switch (feedstatus)
                     {
                         case Enums.FeedStatus.FED:
@@ -86,7 +86,7 @@ namespace Count.Controllers
 
                 if (fed > 0)
                 {
-                    Console.WriteLine($"{fed} Vampire/s Fed Successfully! Granting you {fed} extra souls!");
+                    Console.WriteLine($"{fed} Vampire/s Fed Successfully! Granting you {fed} extra blood!");
                     somethingHappened = true;
                 } 
             }

@@ -15,9 +15,9 @@
         /// </summary>
         public int Hitpoints { get; set; }
         /// <summary>
-        /// Vampire's total souls
+        /// Vampire's total blood
         /// </summary>
-        public int Souls { get; set; }
+        public int Blood { get; set; }
         /// <summary>
         /// Last day the vampire was fed
         /// </summary>

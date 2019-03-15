@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Count.Models;
 using Count.Utils;
 
@@ -9,7 +10,7 @@ namespace Count.Controllers
     {
         private Village _village { get { return _object as Village; } }
 
-        private const int FIGHTER_MAX = 3;
+        private const int FIGHTER_MAX = 2;
 
         // temp (For names)
         int villagerCounter = 1;
@@ -96,7 +97,10 @@ namespace Count.Controllers
             for (int i = 0; i < heroCount; i++)
             {
                 var hero = _heroes[i];
-                hero.MoveToLocation(_object.WorldLocation, _object.RegionLocation);
+
+                Location location = game.KnownLocations.OrderBy(j => Randomizer.Instance.Random.Next()).FirstOrDefault();
+                hero.MoveToLocation(_object.WorldLocation, location);
+
                 var lives = hero.Adventure(game);
                 if (!lives)
                 {

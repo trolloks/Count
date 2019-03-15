@@ -14,7 +14,7 @@ namespace Count.Controllers
                 Name = $"Hero-{Guid.NewGuid().ToString()}", // temp
                 Hitpoints = 3,
                 Damage = 3,
-                DefenceRating = 15,
+                DefenceRating = 12,
                 WorldLocation = worldLocation,
                 RegionLocation = regionLocation
             };

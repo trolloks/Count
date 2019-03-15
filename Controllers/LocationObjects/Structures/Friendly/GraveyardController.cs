@@ -53,7 +53,7 @@ namespace Count.Controllers
             foreach (var follower in Followers)
             {
                 Location location = game.KnownLocations.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
-                (follower as ZombieController).MoveToLocation(_object.WorldLocation, location);
+                follower.MoveToLocation(_object.WorldLocation, location);
 
                 // moved to village!
                 if (game.KnownVillages.Any(i => i.WorldLocation == follower.WorldLocation && i.RegionLocation == follower.RegionLocation))
