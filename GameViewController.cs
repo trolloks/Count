@@ -226,13 +226,13 @@ namespace Count
                 Console.WriteLine("During the the night the following happened:");
                 bool somethingHappened = false;
                 // Upkeep
-                somethingHappened = somethingHappened || _castle.Upkeep(_game);
+                somethingHappened = _castle.Upkeep(_game) || somethingHappened;
                 foreach (var locationObject in _game.OwnedBuildings)
                 {
                     if (locationObject.GetType() == typeof(GraveyardController))
                     {
                         var graveyard = locationObject as GraveyardController;
-                        somethingHappened = somethingHappened || graveyard.Upkeep(_game);
+                        somethingHappened = graveyard.Upkeep(_game) || somethingHappened;
                     }
                 }
 
@@ -308,20 +308,7 @@ namespace Count
                                     Console.WriteLine($"- A {researchItem.Name} appears on the map");
                                     var currentRegion = _world.GetRegion(_vampire.WorldLocation);
                                     var newResearchedLocationObject = researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
-
-                                    // Reflection magic
-                                    // AddLocationObject()
-                                    var addLocationObjectMethod = currentRegion.GetType().GetMethod("AddLocationObject");
-                                    var invokable = addLocationObjectMethod.MakeGenericMethod(new Type[] { newResearchedLocationObject.GetType(), newResearchedLocationObject.GetType().GetProperty("Object").GetValue(newResearchedLocationObject, null)?.GetType() });
-                                    invokable.Invoke(currentRegion, new object[] { newResearchedLocationObject });
-
-                                    // Reflection magic # 2
-                                    var convertToStructureController = newResearchedLocationObject.GetType().GetMethod("Convert");
-                                    var structureControllerObject = convertToStructureController.Invoke(newResearchedLocationObject, null);
-
-                                    // Reflection magic # 3
-                                    var addToOwnedBuildings = _game.OwnedBuildings.GetType().GetMethod("Add");
-                                    addToOwnedBuildings.Invoke(_game.OwnedBuildings, new object[] { structureControllerObject });
+                                    _game.OwnedBuildings.Add(currentRegion.AddLocationObject(newResearchedLocationObject as StructureController));
 
                                     _vampire.TryExert(1);
                                     _vampire.SpendSouls(researchItem.Souls);
@@ -403,20 +390,7 @@ namespace Count
                                 Console.WriteLine($"- A {researchItem.Name} appears on the map");
                                 var currentRegion = _world.GetRegion(_vampire.WorldLocation);
                                 var newResearchedLocationObject = researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
-                                
-                                // Reflection magic
-                                // AddLocationObject()
-                                var addLocationObjectMethod = currentRegion.GetType().GetMethod("AddLocationObject");
-                                var invokable = addLocationObjectMethod.MakeGenericMethod(new Type[] { newResearchedLocationObject.GetType(), newResearchedLocationObject.GetType().GetProperty("Object").GetValue(newResearchedLocationObject, null)?.GetType() });
-                                invokable.Invoke(currentRegion, new object[] { newResearchedLocationObject });
-
-                                // Reflection magic # 2
-                                var convertToStructureController = newResearchedLocationObject.GetType().GetMethod("Convert");
-                                var structureControllerObject = convertToStructureController.Invoke(newResearchedLocationObject, null);
-
-                                // Reflection magic # 3
-                                var addToOwnedBuildings = _game.OwnedBuildings.GetType().GetMethod("Add");
-                                addToOwnedBuildings.Invoke(_game.OwnedBuildings, new object[] { structureControllerObject });
+                                _game.OwnedBuildings.Add(currentRegion.AddLocationObject(newResearchedLocationObject as StructureController));
                             }
 
                             _vampire.TryExert(1);
