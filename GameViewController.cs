@@ -129,7 +129,11 @@ namespace Count
                 // Stat Report
                 PrintStats();
                 Console.WriteLine("");
-                var somethingHappened = _world.Upkeep(_game);
+                bool somethingHappened = false;
+                foreach (var village in _game.KnownVillages)
+                {
+                    somethingHappened = village.Upkeep(_game) || somethingHappened;
+                }
                 if (!somethingHappened)
                 {
                     Console.WriteLine("The day passes quietly. You have no threats yet...");
@@ -382,15 +386,11 @@ namespace Count
                             var researchItems = _castle.Research(_vampire.Souls, nextResearchItemLevel);
                             _vampire.SpendSouls(soulsToSpend);
 
-                            Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following: ");
+                            Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following lost knowledge: ");
                             foreach (var researchItem in researchItems)
                             {
-
                                 _game.KnownResearch.Add(researchItem);
-                                Console.WriteLine($"- A {researchItem.Name} appears on the map");
-                                var currentRegion = _world.GetRegion(_vampire.WorldLocation);
-                                var newResearchedLocationObject = researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
-                                _game.OwnedBuildings.Add(currentRegion.AddLocationObject(newResearchedLocationObject as StructureController));
+                                Console.WriteLine($"- {researchItem.Name}!");
                             }
 
                             _vampire.TryExert(1);
@@ -401,26 +401,6 @@ namespace Count
                             Console.ReadLine();
 
                             break;
-                        /*case "2":
-                            // try to convert
-                            var followerConvertedType = _vampire.TryConvertFollower();
-                            if (followerConvertedType != null)
-                            {
-
-                                if (followerConvertedType == typeof(Zombie))
-                                    Console.WriteLine("You have converted a villager into a zombie. This follower would give his life for you.");
-                                if (followerConvertedType == typeof(Cultist))
-                                    Console.WriteLine("You have converted a villager into a cultist. This follower will change the thoughts of the villagers.");
-                                if (followerConvertedType == typeof(Vampire))
-                                    Console.WriteLine("You have converted a villager into a lesser vampire. This follower will spread your evil.");
-                            }
-                            else
-                                Console.WriteLine("You fail your attempt to convert a villager. The village grows more suspicious.");
-                            village.IncreaseSuspicion();
-                            // Exert after an action
-                            _vampire.Exert(1);
-                            finishedEnterVillage = true;
-                            break;*/
                         case "Q":
                         case "q":
                             finishedEnterCastle = true;
@@ -809,75 +789,7 @@ namespace Count
                 }
             }
         }
-
-        /*
-        private void ChooseVillage()
-        {
-            var finishedChooseVillage = false;
-            while (!finishedChooseVillage && _vampire.ActionPoints > 0)
-            {
-                Console.Clear();
-                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
-                Console.WriteLine("");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("Currently you know about the following villages in the area:");
-                var index = 0;
-                foreach (var village in _world.GetCurrentRegion().Villages)
-                {
-                    Console.WriteLine($"{++index}. {village.Name}{(village.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? " (Alerted)":"")}");
-                }
-
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("");
-                PrintStats();
-                Console.WriteLine("");
-                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
-                Console.WriteLine("");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("Actions: ");
-                Console.WriteLine("");
-                Console.WriteLine("1-x. Enter Village");
-                // Only show another village option if all previous villages suspicion is above 80%
-                if (!_world.GetCurrentRegion().Villages.Any(i => i.Suspicion < VillageController.SUSPICION_WARNING_THRESHOLD))
-                    Console.WriteLine("s. Search for another village (1 Action)");
-                Console.WriteLine("q. Go back to previous menu");
-                Console.WriteLine("");
-                Console.Write(": ");
-
-                var option = Console.ReadLine();
-                Console.Clear();
-                int intOption = -1;
-                var couldParse = int.TryParse(option, out intOption);
-                if (couldParse && intOption > 0 && (intOption - 1) < _world.GetCurrentRegion().Villages.Count)
-                {
-                    _world.GetCurrentRegion().SetCurrentVillage(_world.GetCurrentRegion().Villages[intOption - 1]); // minus one for index;
-                    finishedChooseVillage = true;
-
-                    Console.WriteLine($"...Now entering {_world.GetCurrentRegion().GetCurrentVillage().Name}...");
-                    Console.WriteLine("");
-                    Console.WriteLine("Press ENTER to continue");
-                    Console.ReadLine();
-                    finishedChooseVillage = true;
-                }
-                else if (option == "s" && (!_world.GetCurrentRegion().Villages.Any(i => i.Suspicion < VillageController.SUSPICION_WARNING_THRESHOLD)))
-                {
-                    var newVillage =_world.GetCurrentRegion().AddVillage();
-                    Console.WriteLine($"By searching you find another village -> {newVillage.Name}");
-                    _world.GetCurrentRegion().SetCurrentVillage(newVillage);
-
-                    // Exert after an action
-                    _vampire.Exert(1);
-                    finishedChooseVillage = true;
-                }
-                else if (option == "q")
-                {
-                    finishedChooseVillage = true;
-                }
-            }
-
-        }
-
-    */
+      
         #endregion
 
         private void PrintStats()

@@ -8,6 +8,7 @@ namespace Count.Controllers
     public abstract class HeroController : CreatureController
     {
         protected Hero _hero { get { return _object as Hero; } }
+        public Hero Hero { get { return _hero; } }
 
         private static int BASE_SPAWN_MAX_HERO = 5;
         private static int BASE_SPAWN_MIN_DAY = 5;
@@ -40,7 +41,7 @@ namespace Count.Controllers
             return null;
         }
 
-        public virtual bool Hero(Models.Game game)
+        public virtual bool Adventure(Models.Game game)
         {
             var locationObject = game.World.GetRegion(_object.WorldLocation).GetLocationObjectAtLocation(_object.RegionLocation);
             var ownedGraveyardStructures = game.OwnedBuildings.Where(i => i.GetType() == typeof(GraveyardController));

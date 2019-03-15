@@ -56,6 +56,12 @@ namespace Count.Controllers
             return follower;
         }
 
+        /// <summary>
+        /// Vampires do the following:
+        /// -   They go to a random known village and try to feed. If they succeed you gain some of the souls
+        /// </summary>
+        /// <param name="game"></param>
+        /// <returns></returns>
         public override bool Upkeep(Models.Game game)
         {
             bool somethingHappened = false;

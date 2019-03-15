@@ -1,4 +1,6 @@
-﻿using Count.Models;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Count.Models;
 
 namespace Count.Controllers
 {
@@ -6,6 +8,15 @@ namespace Count.Controllers
     {
         public EnemyLocationController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         { }
+
+        protected List<HeroController> _heroes = new List<HeroController>();
+
+        public ReadOnlyCollection<HeroController> Heroes { get { return _heroes.AsReadOnly(); } }
+
+        public void KillHero(HeroController hero)
+        {
+            _heroes.Remove(hero);
+        }
     }
 }
 

@@ -11,11 +11,6 @@ namespace Count.Controllers
 
         protected List<FollowerController> _followers = new List<FollowerController>();
 
-        /// <summary>
-        /// Abstract upkeep method
-        /// </summary>
-        public abstract bool Upkeep(Game game);
-
         public ReadOnlyCollection<FollowerController> Followers { get { return _followers.AsReadOnly(); } }
 
         public void KillFollower(FollowerController follower)

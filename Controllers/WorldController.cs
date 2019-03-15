@@ -86,52 +86,6 @@ namespace Count.Controllers
 
         private int _pityCounter = 0;
 
-        public bool Upkeep(Models.Game game)
-        {
-            var somethingHappened = false;
-            var heroCount = _heroes.Count;
-            for (int i = 0; i < heroCount; i++)
-            {
-                var hero = _heroes[i];
-                Location location = game.KnownLocations.OrderBy(j => Randomizer.Instance.Random.Next()).FirstOrDefault();
-                hero.MoveToLocation(hero.WorldLocation, location);
-                var lives = hero.Hero(game);
-                if (!lives)
-                {
-                    _heroes.Remove(hero);
-                    heroCount--;
-                }
-                else
-                {
-                    Console.WriteLine($"{hero.Name} is still at large.");
-                }
-
-                somethingHappened = true;
-            }
-
-            // Roll for adventurer spawn
-            // - MAX 5 -- NOT IMPLEMENTED
-            // - MUST ROLL MORE THAN 16
-            // - IF SUCCEEDS CAN ROLL AGAIN -- NOT IMPLEMENTED
-            // - only able to spawn after day 5 
-            // - have 'pity' counter -- NOT IMPLEMENTED
-
-            var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
-            if (village != null)
-            {
-                var hero = HeroController.TryCreateHero(typeof(Fighter), game, village.WorldLocation, village.RegionLocation, false);
-                if (hero != null)
-                {
-                    _heroes.Add(hero);
-
-                    Console.WriteLine($"{hero.Name} rises from {village.Name} to challenge your power");
-                    somethingHappened = true;
-                }
-            }
-
-            return somethingHappened;
-        }
-
         /// <summary>
         /// Try to find the vampire 
         /// </summary>

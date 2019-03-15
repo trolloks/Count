@@ -9,6 +9,8 @@ namespace Count.Controllers
     {
         private Village _village { get { return _object as Village; } }
 
+        private const int FIGHTER_MAX = 3;
+
         // temp (For names)
         int villagerCounter = 1;
 
@@ -85,6 +87,51 @@ namespace Count.Controllers
         public void DecreaseSuspicion()
         {
             _village.Suspicion = Math.Max(0, _village.Suspicion - (Randomizer.Instance.Roll(5, 5) / 100f)); // Can't get less suspicious than 0 
+        }
+
+        public override bool Upkeep(Game game)
+        {
+            var somethingHappened = false;
+            var heroCount = _heroes.Count;
+            for (int i = 0; i < heroCount; i++)
+            {
+                var hero = _heroes[i];
+                hero.MoveToLocation(_object.WorldLocation, _object.RegionLocation);
+                var lives = hero.Adventure(game);
+                if (!lives)
+                {
+                    _heroes.Remove(hero);
+                    heroCount--;
+                }
+                else
+                {
+                    Console.WriteLine($"{hero.Name} is still at large.");
+                }
+
+                somethingHappened = true;
+            }
+
+            // Roll for adventurer spawn
+            // - MAX 3/village
+            // - MUST ROLL MORE THAN 16
+            // - IF SUCCEEDS CAN ROLL AGAIN -- NOT IMPLEMENTED
+            // - only able to spawn after day 5 
+            // - have 'pity' counter -- NOT IMPLEMENTED
+
+            if (_heroes.Count < FIGHTER_MAX)
+            {
+                var newHero = HeroController.TryCreateHero(typeof(Fighter), game, _object.WorldLocation, _object.RegionLocation, false);
+                if (newHero != null)
+                {
+                    _heroes.Add(newHero);
+
+                    Console.WriteLine($"{newHero.Name} rises from {_village.Name} to challenge your power");
+                    somethingHappened = true;
+                }
+            }
+            
+
+            return somethingHappened;
         }
     }
 }

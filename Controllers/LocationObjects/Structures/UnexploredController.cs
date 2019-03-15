@@ -20,5 +20,11 @@ namespace Count.Controllers
             game.KnownLocations.Add(RegionLocation);
             return locationObject;
         }
+
+        public override bool Upkeep(Game game)
+        {
+            // nothing interesting
+            return false;
+        }
     }
 }

@@ -20,9 +20,9 @@ namespace Count.Controllers
             };
         }
 
-        public override bool Hero(Game game)
+        public override bool Adventure(Game game)
         {
-            return base.Hero(game);
+            return base.Adventure(game);
         }
     }
 }

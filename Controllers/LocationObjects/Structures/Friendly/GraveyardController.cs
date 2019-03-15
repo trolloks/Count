@@ -22,6 +22,14 @@ namespace Count.Controllers
             };
         }
 
+
+        /// <summary>
+        /// Zombies do the following:
+        /// -   They shamble to known locations and settle there for the night and protect the location from any would-be heroes
+        /// -   Kill villagers if they end up in village (TO BE ADDED)
+        /// </summary>
+        /// <param name="game"></param>
+        /// <returns></returns>
         public override bool Upkeep(Models.Game game)
         {
             bool somethingHappened = false;
@@ -46,6 +54,35 @@ namespace Count.Controllers
             {
                 Location location = game.KnownLocations.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
                 (follower as ZombieController).MoveToLocation(_object.WorldLocation, location);
+
+                // moved to village!
+                if (game.KnownVillages.Any(i => i.WorldLocation == follower.WorldLocation && i.RegionLocation == follower.RegionLocation))
+                {
+                    var village = game.KnownVillages.FirstOrDefault(i => i.WorldLocation == follower.WorldLocation && i.RegionLocation == follower.RegionLocation) as VillageController; 
+                    Console.WriteLine($"A Zombie starts to attack {village.Name}");
+                    while (village.Heroes.Count > 0 && follower.Hitpoints > 0)
+                    {
+                        Console.WriteLine($"{village.Heroes[0].Name} steps forward to defend {village.Name}");
+                        CreatureController.Fight(follower.Follower, village.Heroes[0].Hero);
+                        if (village.Heroes[0].Hitpoints <= 0)
+                        {
+                            village.KillHero(village.Heroes[0]);
+                            Console.WriteLine($"{village.Heroes[0].Name} dies valiantly!");
+                        }
+                            
+                    }
+
+                    if (follower.Hitpoints > 0)
+                    {
+                        // If zombie still around kill villagers equal to a max of its damage
+                        var killCount = Randomizer.Instance.Roll(1, follower.Damage);
+                        Console.WriteLine($"The Zombie kills a {killCount} villagers");
+                        for(int i = 0; i < killCount; i++)
+                        {
+                            village.KillVillager();
+                        }
+                    }
+                }
             }
 
             return somethingHappened;
