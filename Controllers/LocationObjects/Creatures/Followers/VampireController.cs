@@ -13,7 +13,7 @@ namespace Count.Controllers
 
         public VampireController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
-            _object = new Vampire() { WorldLocation = worldLocation, RegionLocation = regionLocation, Attack = 3, Hitpoints = 3 };
+            _object = new Vampire() { WorldLocation = worldLocation, RegionLocation = regionLocation, Damage = 3, Hitpoints = 3, DefenceRating = 12};
         }
 
         /// <summary>

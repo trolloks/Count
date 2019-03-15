@@ -2,8 +2,9 @@
 {
     public class Creature : LocationObject
     {
-        public int Attack { get; set; }
+        public int Damage { get; set; }
         public int Hitpoints { get; set; }
         public string Name { get; set; }
+        public int DefenceRating { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Count.Models;
+using Count.Utils;
 
 namespace Count.Controllers
 {
@@ -8,7 +9,7 @@ namespace Count.Controllers
 
         public virtual string Name { get { return _creature.Name; } }
         public virtual int Hitpoints { get { return _creature.Hitpoints; } }
-        public virtual int Attack { get { return _creature.Attack; } }
+        public virtual int Damage { get { return _creature.Damage; } }
 
         protected CreatureController(Location worldLocation, Location regionLocation): base(worldLocation, regionLocation) {}
 
@@ -27,9 +28,9 @@ namespace Count.Controllers
             while (thisCreature.Hitpoints > 0 && otherCreature.Hitpoints > 0)
             {
                 // damage other creature first
-                Damage(otherCreature, thisCreature.Attack);
+                Attack(otherCreature, thisCreature.Damage);
                 // other creatures turn now
-                Damage(thisCreature, otherCreature.Attack);
+                Attack(thisCreature, otherCreature.Damage);
             }
 
             if (thisCreature.Hitpoints <= 0 && otherCreature.Hitpoints > 0)
@@ -38,13 +39,14 @@ namespace Count.Controllers
                 return thisCreature;
             else
                 return null;
-
         }
 
 
-        public static void Damage(Creature creature, int damage)
+        public static void Attack(Creature creature, int damage)
         {
-            creature.Hitpoints -= damage;
+            var rollForAttack = Randomizer.Instance.Roll(1, 20);
+            if (rollForAttack >= creature.DefenceRating)
+                creature.Hitpoints -= damage;
         }
     }
 }
