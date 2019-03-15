@@ -7,7 +7,7 @@ namespace Count.Controllers
     {
         public ZombieController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
-            _object = new Zombie() { WorldLocation = worldLocation, RegionLocation = regionLocation, Damage = 1 };
+            _object = new Zombie() { WorldLocation = worldLocation, RegionLocation = regionLocation, Attack = 1, Hitpoints = 1 };
         }
     }
 }

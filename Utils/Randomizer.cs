@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Count.Utils
 {
@@ -34,7 +31,7 @@ namespace Count.Utils
         public int Roll(int iterations, int range)
         {
             int roll = 0;
-            for(int i = 0; i < iterations; i++)
+            for (int i = 0; i < iterations; i++)
             {
                 roll += (_random.Next(range) + 1);
             }
