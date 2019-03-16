@@ -10,31 +10,9 @@ namespace Count
     /// <summary>
     /// TODO: 
     /// 
-    /// 1. Break up world into segments
-    /// 2. Add concept of distance.
-    /// 3. X Amount of villages into section(region?), with possible special locations
-    /// 4. Concept of mana and spells
-    /// 5. Progression -> Castle upgrades etc?
-    /// 6. Generate village/villager/region names
-    /// 
-    /// 4** Create stats for villagers. Each stat corresponds to the type of follower that could be created by feeding. 
-    /// ie. Strong villager could become strong follower. Smart villager, smart follower.etc.
-    /// 
-    /// NEW PLAN: 
-    /// Feed to get blood points. Spend blood points on buildings. that generate followers. villages revolt can destroy buildings
-    /// Vampire followers should do anything you do automatically
-    /// POI should not all be revealed
-    /// 
-    /// Zombies could be created either by building a graveyard or researching a raise zombie spell?
-    /// 
-    /// VILLAGERS = RESOURCES
-    /// WINCON = PER LEVEL
-    /// 
-    /// NEW NEW PLAN :
-    /// 
-    /// Create MUCH bigger map! Much bigger amount of zombies to win. Can create multiple graveyards. maybe increase price. graveyards only on known locations
-    /// 
-    /// Vampires should also defend you. but just in castle
+    /// 1. Make map much smaller for now.
+    /// 2. Remove suspicion -> work with population size
+    /// 3. More direct control over minions? 
     /// 
     /// </summary>
     public class GameViewController
@@ -47,7 +25,7 @@ namespace Count
         private CastleController _castle;
 
         public static bool IS_DEV = false;
-        public static int ZOMBIE_WIN_COUNT = 25;
+        public static int ZOMBIE_WIN_COUNT = 80;
 
         public void Start()
         {
@@ -418,14 +396,7 @@ namespace Count
                 else
                     currentLocationObject = new UnexploredController(_vampire.WorldLocation, _vampire.RegionLocation);
 
-                if (currentLocationObject.GetType() == typeof(VillageController))
-                {
-                    var currentVillage = currentLocationObject as VillageController;
-                    Console.WriteLine(currentVillage.Name + (currentVillage.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : ""));
-                }
-                else
-                    Console.WriteLine(currentLocationObject.Name);
-
+                Console.WriteLine(currentLocationObject.Name);
                 Console.WriteLine("");
                 Console.WriteLine("Map:");
 
@@ -440,9 +411,6 @@ namespace Count
                 foreach (var pointOfInterest in pointsOfInterest)
                 {
                     Console.Write($"{++index}. {pointOfInterest.Name}");
-                    if (pointOfInterest.GetType() == typeof(VillageController))
-                        Console.Write($"{((pointOfInterest as VillageController).Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD ? "(Alerted)" : "")}");
-
                     Console.WriteLine("");
                 }
 
@@ -482,20 +450,9 @@ namespace Count
                     if (currentLocationObject.GetType() == typeof(VillageController))
                     {
                         var village = currentLocationObject as VillageController;
-                        if (village.Suspicion >= VillageController.SUSPICION_WARNING_THRESHOLD)
-                        {
-                            Console.Clear();
-                            Console.WriteLine("The village has been alerted to you presence. It might be better to seek a different village");
-                            Console.WriteLine("");
-                            Console.WriteLine("Press ENTER to continue");
-                            Console.ReadLine();
-                        }
-                        else
-                        {
-                            EnterVillage(village);
-                            if (!_game.KnownVillages.Contains(village))
-                                _game.KnownVillages.Add(village);
-                        }
+                        EnterVillage(village);
+                        if (!_game.KnownVillages.Contains(village))
+                            _game.KnownVillages.Add(village);
                     }
                     else if (currentLocationObject.GetType() == typeof(CastleController))
                         finishedEnterRegion = true;
@@ -600,8 +557,6 @@ namespace Count
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("");
                 PrintStats();
-                if (IS_DEV)
-                    Console.WriteLine($"(DEV) VILLAGE SUSPICION: {village.Suspicion}");
                 Console.WriteLine("");
                 Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
                 Console.WriteLine("");
@@ -631,22 +586,16 @@ namespace Count
                             switch (feedStatus)
                             {
                                 case FeedStatus.FED:
-                                    Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now\nThe village grows more suspicious.");
+                                    Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now");
                                     break;
                                 case FeedStatus.CONVERTED:
-                                    Console.WriteLine("You feed a villager successfully. You hunger recedes. ...BUT you have created another like yourself. For now he will serve you.\nThe village grows more suspicious.");
+                                    Console.WriteLine("You feed a villager successfully. You hunger recedes. ...BUT you have created another like yourself. For now he will serve you.");
                                     break;
                                 case FeedStatus.FAILED:
-                                    Console.WriteLine("You fail your attempt to feed on a villager. The village grows more suspicious.");
+                                    Console.WriteLine("You fail your attempt to feed on a villager.");
                                     break;
                             }
 
-
-                            village.IncreaseSuspicion();
-                            /*foreach (var othervillage in _game.KnownVillages.Where(i => !i.Equals(village)))
-                            {
-                                othervillage.DecreaseSuspicion();
-                            }*/
                             finishedEnterVillage = true;
                         }
                         else

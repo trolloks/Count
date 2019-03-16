@@ -8,7 +8,7 @@ namespace Count.Controllers
 {
     public class VampireController : FollowerController
     {
-        private const int BASE_FEED_DC = 5;
+        private const int BASE_FEED_DC = 8;
         private const int BASE_CHECK_ROLL = 20;
 
         public VampireController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
@@ -30,19 +30,15 @@ namespace Count.Controllers
 
             var feedCheck = true;
             var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-            if (GameViewController.IS_DEV)
-            {
-                Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
-                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion))}");
-            }
-
-            feedCheck = feedRoll >= (BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion));
+            feedCheck = feedRoll >= BASE_FEED_DC;
 
             if (feedCheck)
             {
                 status = FeedStatus.FED;
                 // Kill Villager
-                village.KillVillager();
+                var hasVillagers = village.TryKillVillager();
+                if (!hasVillagers)
+                    return FeedStatus.FAILED;
                 // Get Blood
                 vampireLord.IncreaseBlood(1);
             }

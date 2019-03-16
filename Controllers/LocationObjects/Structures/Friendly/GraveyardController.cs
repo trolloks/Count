@@ -56,32 +56,37 @@ namespace Count.Controllers
                 follower.MoveToLocation(_object.WorldLocation, location);
 
                 // moved to village!
-                if (game.KnownVillages.Any(i => i.WorldLocation == follower.WorldLocation && i.RegionLocation == follower.RegionLocation))
+                if (game.KnownVillages.Any(i => LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation) && LocationUtil.CompareLocations(i.RegionLocation, follower.RegionLocation)))
                 {
-                    var village = game.KnownVillages.FirstOrDefault(i => i.WorldLocation == follower.WorldLocation && i.RegionLocation == follower.RegionLocation) as VillageController; 
-                    Console.WriteLine($"A Zombie starts to attack {village.Name}");
-                    while (village.Heroes.Count > 0 && follower.Hitpoints > 0)
+                    var village = game.KnownVillages.FirstOrDefault(i => LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation) && LocationUtil.CompareLocations(i.RegionLocation, follower.RegionLocation)) as VillageController; 
+                    if (village.Size > 0)
                     {
-                        Console.WriteLine($"{village.Heroes[0].Name} steps forward to defend {village.Name}");
-                        CreatureController.Fight(follower.Follower, village.Heroes[0].Hero);
-                        if (village.Heroes[0].Hitpoints <= 0)
+                        Console.WriteLine($"A Zombie starts to attack {village.Name}");
+                        while (village.Heroes.Count > 0 && follower.Hitpoints > 0)
                         {
-                            village.KillHero(village.Heroes[0]);
-                            Console.WriteLine($"{village.Heroes[0].Name} dies valiantly!");
-                        }
-                            
-                    }
+                            Console.WriteLine($"{village.Heroes[0].Name} steps forward to defend {village.Name}");
+                            CreatureController.Fight(follower.Follower, village.Heroes[0].Hero);
+                            if (village.Heroes[0].Hitpoints <= 0)
+                            {
+                                var hero = village.Heroes[0];
+                                village.KillHero(hero);
+                                Console.WriteLine($"{hero.Name} dies valiantly!");
+                            }
 
-                    if (follower.Hitpoints > 0)
-                    {
-                        // If zombie still around kill villagers equal to a max of its damage
-                        var killCount = Randomizer.Instance.Roll(1, follower.Damage);
-                        Console.WriteLine($"The Zombie kills a {killCount} villagers");
-                        for(int i = 0; i < killCount; i++)
+                        }
+
+                        if (follower.Hitpoints > 0)
                         {
-                            village.KillVillager();
+                            // If zombie still around kill villagers equal to a max of its damage
+                            var killCount = Randomizer.Instance.Roll(1, follower.Damage);
+                            Console.WriteLine($"The Zombie kills a {killCount} villagers");
+                            for (int i = 0; i < killCount; i++)
+                            {
+                                village.TryKillVillager();
+                            }
                         }
                     }
+                    
                 }
             }
 

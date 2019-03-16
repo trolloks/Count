@@ -7,6 +7,5 @@ namespace Count.Models
     {
         public Guid Id { get; set; }
         public List<Villager> Villagers { get; set; }
-        public float Suspicion { get; set; }
     }
 }

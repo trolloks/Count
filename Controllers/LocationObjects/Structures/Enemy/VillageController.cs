@@ -10,12 +10,10 @@ namespace Count.Controllers
     {
         private Village _village { get { return _object as Village; } }
 
-        private const int FIGHTER_MAX = 2;
+        private const int FIGHTER_MAX = 3;
 
         // temp (For names)
         int villagerCounter = 1;
-
-        public static float SUSPICION_WARNING_THRESHOLD = 1f;
 
         public VillageController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
@@ -26,8 +24,7 @@ namespace Count.Controllers
                 Name = $"Village-{Guid.NewGuid().ToString()}", // temp
                 Villagers = new List<Villager>(),
                 WorldLocation = worldLocation,
-                RegionLocation = regionLocation,
-                Suspicion = 0
+                RegionLocation = regionLocation
             };
 
             var numVillagers = Randomizer.Instance.Roll(40, 2);
@@ -49,9 +46,15 @@ namespace Count.Controllers
             villagerCounter++;
         }
 
-        public void KillVillager()
+        public bool TryKillVillager()
         {
-            KillVillager(RandomVillager());
+            if (Size > 0)
+            {
+                KillVillager(RandomVillager());
+                return true;
+            }
+
+            return false;
         }
 
         private void KillVillager(Villager villager)
@@ -70,24 +73,9 @@ namespace Count.Controllers
             get { return _village.Villagers.Count; }
         }
 
-        public float Suspicion
-        {
-            get { return _village.Suspicion; }
-        }
-
         public override string Name
         {
-            get { return _village.Name; }
-        }
-
-        public void IncreaseSuspicion()
-        {
-            _village.Suspicion = Math.Min(1, _village.Suspicion + (Randomizer.Instance.Roll(15, 5) / 100f)); // Can't get more suspicious than 1
-        }
-
-        public void DecreaseSuspicion()
-        {
-            _village.Suspicion = Math.Max(0, _village.Suspicion - (Randomizer.Instance.Roll(5, 5) / 100f)); // Can't get less suspicious than 0 
+            get { return Size > 0 ? _village.Name : "Empty Village"; }
         }
 
         public override bool Upkeep(Game game)
@@ -122,12 +110,13 @@ namespace Count.Controllers
             // - only able to spawn after day 5 
             // - have 'pity' counter -- NOT IMPLEMENTED
 
-            if (_heroes.Count < FIGHTER_MAX)
+            if (_heroes.Count < FIGHTER_MAX && Size > 0)
             {
                 var newHero = HeroController.TryCreateHero(typeof(Fighter), game, _object.WorldLocation, _object.RegionLocation, false);
                 if (newHero != null)
                 {
                     _heroes.Add(newHero);
+                    TryKillVillager(); // reduce villager size
 
                     Console.WriteLine($"{newHero.Name} rises from {_village.Name} to challenge your power");
                     somethingHappened = true;

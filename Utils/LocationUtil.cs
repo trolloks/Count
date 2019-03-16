@@ -23,6 +23,11 @@ namespace Count.Utils
             output += " }";
             return output;
         }
+
+        public static bool CompareLocations(Location location1, Location location2)
+        {
+            return location1.X == location2.X && location1.Y == location2.Y;
+        }
     }
 
 }

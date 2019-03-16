@@ -7,7 +7,7 @@ namespace Count.Controllers
 {
     public class VampireLordController
     {
-        private const int BASE_FEED_DC = 5;
+        private const int BASE_FEED_DC = 8;
         private const int BASE_CHECK_ROLL = 20;
 
         private Models.Game _game;
@@ -55,26 +55,25 @@ namespace Count.Controllers
 
             var feedCheck = true;
             var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-            if (GameViewController.IS_DEV)
-            {
-                Console.WriteLine($"(DEV) FEED CHECK: {feedRoll}");
-                Console.WriteLine($"(DEV) FEED DC CHECK: {(BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion))}");
-            }
-
-            feedCheck = _firstFeed || feedRoll >= (BASE_FEED_DC + Math.Round((BASE_CHECK_ROLL - BASE_FEED_DC) * village.Suspicion));
+            feedCheck = _firstFeed || feedRoll >= BASE_FEED_DC;
 
             if (feedCheck)
             {
                 status = FeedStatus.FED;
+
+                // Kill Villager
+                var hasVillagers = village.TryKillVillager();
+                if (!hasVillagers)
+                    return FeedStatus.FAILED;
+
                 // Effects on you
                 _vampireLord.LastFed = _game.World.Day;
+
                 // Could convert into a vampire
                 var follower = _game.Castle.CreateVampire(_firstFeed);
                 if (follower != null)
                     status = FeedStatus.CONVERTED;
 
-                // Kill Villager
-                village.KillVillager();
                 // Get Blood
                 IncreaseBlood(3);
             }
