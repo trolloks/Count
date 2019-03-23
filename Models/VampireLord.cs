@@ -19,9 +19,9 @@
         /// </summary>
         public int Blood { get; set; }
         /// <summary>
-        /// Last day the vampire was fed
+        /// Vampire's total corpses
         /// </summary>
-        public long LastFed { get; set; }
+        public int Corpses { get; set; }
         /// <summary>
         /// Vampire's location
         /// </summary>

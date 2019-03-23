@@ -10,7 +10,9 @@ namespace Count.Controllers
     {
         private Village _village { get { return _object as Village; } }
 
+        protected static int _globalVillageCount;
         private const int FIGHTER_MAX = 3;
+        private int _pendingCorpses;
 
         // temp (For names)
         int villagerCounter = 1;
@@ -21,7 +23,7 @@ namespace Count.Controllers
             _object = new Village()
             {
                 Id = Guid.NewGuid(),
-                Name = $"Village-{Guid.NewGuid().ToString()}", // temp
+                Name = $"Village-{++_globalVillageCount}", // temp
                 Villagers = new List<Villager>(),
                 WorldLocation = worldLocation,
                 RegionLocation = regionLocation
@@ -60,6 +62,7 @@ namespace Count.Controllers
         private void KillVillager(Villager villager)
         {
             _village.Villagers.Remove(villager);
+            _pendingCorpses++;
         }
 
         private Villager RandomVillager()
@@ -75,7 +78,7 @@ namespace Count.Controllers
 
         public override string Name
         {
-            get { return Size > 0 ? _village.Name : "Empty Village"; }
+            get { return Size > 0 ? _village.Name : $"{_village.Name} (Empty)"; }
         }
 
         public override bool Upkeep(Game game)
@@ -95,9 +98,14 @@ namespace Count.Controllers
                     _heroes.Remove(hero);
                     heroCount--;
                 }
-                else
+                else if (!game.VampireLord.IsDead)
                 {
                     Console.WriteLine($"{hero.Name} is still at large.");
+                }
+                else
+                {
+                    // You dead!
+                    return true;
                 }
 
                 somethingHappened = true;
@@ -122,7 +130,11 @@ namespace Count.Controllers
                     somethingHappened = true;
                 }
             }
-            
+
+            // Move corpses into global pool
+            game.VampireLord.IncreaseCorpses(_pendingCorpses);
+            // Reset corpse count
+            _pendingCorpses = 0;
 
             return somethingHappened;
         }

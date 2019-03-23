@@ -18,8 +18,7 @@ namespace Count.Controllers
         /// <summary>
         /// Hunger logic
         /// </summary>
-        public static int HUNGER_WARNING_THRESHOLD = 7;
-        public static int HUNGER_STARVING_THRESHOLD = 14;
+        public static int BLOOD_WARNING_THRESHOLD = 5;
 
         public VampireLordController(Models.Game game)
         {
@@ -30,7 +29,7 @@ namespace Count.Controllers
             {
                 Hitpoints = 20,
                 ActionPointsMax = 1,
-                LastFed = _game.World.Day,
+                Blood = 5,
                 WorldLocation = _game.StartingWorldLocation,
                 RegionLocation = _game.StartingRegionLocation
             };
@@ -66,9 +65,6 @@ namespace Count.Controllers
                 if (!hasVillagers)
                     return FeedStatus.FAILED;
 
-                // Effects on you
-                _vampireLord.LastFed = _game.World.Day;
-
                 // Could convert into a vampire
                 var follower = _game.Castle.CreateVampire(_firstFeed);
                 if (follower != null)
@@ -81,7 +77,7 @@ namespace Count.Controllers
             _firstFeed = false;
             return status;
         }
-
+        
         #endregion
 
         #region "Day Actions"
@@ -141,17 +137,17 @@ namespace Count.Controllers
             get { return _vampireLord.Blood; }
         }
 
+        /// <summary>
+        /// Current Corpses
+        /// </summary>
+        public int Corpses
+        {
+            get { return _vampireLord.Corpses; }
+        }
+
         #endregion
 
         #region "General Actions"
-
-        /// <summary>
-        /// The level of your hunger
-        /// </summary>
-        public long DetermineHungerLevel()
-        {
-            return _game.World.Day - _vampireLord.LastFed;
-        }
 
         /// <summary>
         /// Kills you definitely
@@ -170,6 +166,25 @@ namespace Count.Controllers
         {
             _vampireLord.Blood += i;
         }
+
+        public void SpendCorpses(int i)
+        {
+            _vampireLord.Corpses -= i;
+        }
+
+        public void IncreaseCorpses(int i)
+        {
+            _vampireLord.Corpses += i;
+        }
+
+        /// <summary>
+        /// Pay X Amount of blood because of blood curse
+        /// </summary>
+        public void PayBlood()
+        {
+            _vampireLord.Blood = Math.Max(0, Blood - 1);
+        }
+
 
         /// <summary>
         /// Damages you

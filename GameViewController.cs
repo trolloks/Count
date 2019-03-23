@@ -14,6 +14,14 @@ namespace Count
     /// 2. Remove suspicion -> work with population size
     /// 3. More direct control over minions? 
     /// 
+    /// TODO: new plan
+    /// instead of buildings. new resource corpses for zombies. mega corpses for heros. to make special creatures. fighter -> death knight?
+    /// neutral factions?
+    /// 
+    /// TODO: should use status for village empty
+    /// 
+    /// MAYBE: add blood as hunger timer instead. so your resource is your hunger
+    /// 
     /// </summary>
     public class GameViewController
     {
@@ -25,7 +33,7 @@ namespace Count
         private CastleController _castle;
 
         public static bool IS_DEV = false;
-        public static int ZOMBIE_WIN_COUNT = 80;
+        public static int BLOOD_WIN_COUNT = 100;
 
         public void Start()
         {
@@ -40,12 +48,12 @@ namespace Count
             Console.WriteLine("THE COUNT");
             Console.WriteLine("----------------------------------------------------------------------------");
             Console.WriteLine("You are a vampire lord.");
-            Console.WriteLine($"- You must FEED on a villager every {VampireLordController.HUNGER_STARVING_THRESHOLD} days.");
+            Console.WriteLine($"- You must FEED on a villager to receive BLOOD.");
             Console.WriteLine($"- Villages can be found by exploring the map");
-            Console.WriteLine($"- FEEDING rewards you with BLOOD.");
             Console.WriteLine($"- BLOOD is required for discovering new unholy buildings that spawn new followers");
+            Console.WriteLine($"- You need BLOOD to survive. The vampire's curse will steal blood from you at the end of every night. If you run out you will start to take damage.");
             Console.WriteLine("");
-            Console.WriteLine($"***You WIN if you create {ZOMBIE_WIN_COUNT} Zombies***");
+            Console.WriteLine($"***You WIN if you harvested {BLOOD_WIN_COUNT} Blood***");
             Console.WriteLine("");
             Console.WriteLine("Press ENTER to continue");
             Console.ReadLine();
@@ -88,6 +96,8 @@ namespace Count
 
                 // End the day
                 _world.FinishDay();
+                // Pay the blood curse
+                _vampire.PayBlood(); 
             }
         }
 
@@ -153,11 +163,11 @@ namespace Count
             if (!_vampire.IsDead)
             {
                 var infoText = string.Empty;
-                if (_vampire.DetermineHungerLevel() >= VampireLordController.HUNGER_WARNING_THRESHOLD)
-                    infoText += $"\nWarning! You NEED to feed once every {VampireLordController.HUNGER_STARVING_THRESHOLD} days!";
-                if (_vampire.DetermineHungerLevel() >= VampireLordController.HUNGER_STARVING_THRESHOLD)
+                if (_vampire.Blood <= VampireLordController.BLOOD_WARNING_THRESHOLD && _vampire.Blood > 0)
+                    infoText += $"\nWarning! You NEED find more blood soon!\nTry leaving the castle, to find a villager to feed on.";
+                if (_vampire.Blood <= 0)
                 {
-                    infoText += "\nYou are STARVING. You start taking damage, because you are not feeding!";
+                    infoText += "\nYou are STARVING. You start taking damage, because you don't have blood!\nLeave the castle, and find a villager to feed on as soon as possible.";
                     _vampire.Damage(1);
                     if (_vampire.IsDead)
                         return false;
@@ -169,7 +179,8 @@ namespace Count
                     Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
                     Console.WriteLine("----------------------------------------------------------------------------");
                     Console.WriteLine($"Welcome to {_castle.Name}");
-                    Console.WriteLine(infoText);
+                    if (!string.IsNullOrWhiteSpace(infoText))
+                        Console.WriteLine(infoText);
                     Console.WriteLine("----------------------------------------------------------------------------");
                     Console.WriteLine("");
 
@@ -187,6 +198,7 @@ namespace Count
                     // Actions
                     Console.WriteLine("1. Leave Castle");
                     Console.WriteLine("2. Unlock new unholy buildings");
+                    Console.WriteLine("3. Stay the night");
 
                     Console.WriteLine("");
                     Console.Write(": ");
@@ -200,6 +212,9 @@ namespace Count
                             break;
                         case "2":
                             Research();
+                            break;
+                        case "3":
+                            _vampire.TryExert(1);
                             break;
                     }
                 }
@@ -218,17 +233,13 @@ namespace Count
                     }
                 }
 
-                if (!somethingHappened)
-                {
-                    Console.WriteLine("Nothing interesting.");
-                }
-
+                Console.WriteLine("The vampire's curse claims it's price in blood. (You lose 1 blood)");
                 Console.WriteLine("");
                 Console.WriteLine("Press ENTER to continue");
                 Console.ReadLine();
 
                 // Basic Win Condition - Will change **DEPRECATED
-                if (_game.OwnedBuildings?.Where(i => i.GetType() == typeof(GraveyardController))?.Sum(j => (j as GraveyardController). Followers.Count) >= ZOMBIE_WIN_COUNT)
+                if (_vampire.Blood >= BLOOD_WIN_COUNT)
                     _isGameOver = true;
             }
             return false;
@@ -242,13 +253,16 @@ namespace Count
                 Console.Clear();
                 Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
                 Console.WriteLine("");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine($"The library of {_castle.Name} offers: ");
                 var hasNextResearchItem = _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).Any();
-                var nextResearchItemName = hasNextResearchItem ? string.Join(",", _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Value.ToList().Select(i => i.Name)) : "N/A";
-                var nextResearchItemLevel = hasNextResearchItem ? (_castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Key - _castle.ResearchPoints) : int.MaxValue;
-                Console.WriteLine($"Next Unlock: {nextResearchItemName}");
-                Console.WriteLine($"Blood Required: {nextResearchItemLevel}");
+                var nextResearchItemName = hasNextResearchItem ? string.Join(",", _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Value.ToList().Select(i => i.Name)) : null;
+                var nextResearchItemLevel = hasNextResearchItem ? (int?)(_castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Key - _castle.ResearchPoints) : null;
+                if (hasNextResearchItem)
+                {
+                    Console.WriteLine("----------------------------------------------------------------------------");
+                    Console.WriteLine($"The library of {_castle.Name} offers: ");
+                    Console.WriteLine($"Next Unlock: {nextResearchItemName}");
+                    Console.WriteLine($"Blood Required: {nextResearchItemLevel}");
+                }
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("");
                 PrintStats();
@@ -262,12 +276,15 @@ namespace Count
                 foreach (var researchItem in _game.KnownResearch)
                 {
                     Console.WriteLine($"{++researchIndex}. Build {researchItem.Name} (1 Action, {researchItem.Blood} Blood)");
+                    Console.WriteLine($"- {researchItem.Description}");
                 }
-                Console.WriteLine($"R. Research ancient texts (1 Action, {nextResearchItemLevel} Blood)");
-                Console.WriteLine($"- Unearth new knowledge to teach you about unholy buildings.");
+                if (hasNextResearchItem)
+                {
+                    Console.WriteLine($"R. Research ancient texts (1 Action, {nextResearchItemLevel} Blood)");
+                    Console.WriteLine($"- Unearth new knowledge to teach you about unholy buildings.");
+                    
+                }
                 Console.WriteLine("");
-                /*Console.WriteLine("2. Convert Villager into follower (1 Action)");
-                Console.WriteLine("\t- Followers help you further your schemes. They would even give their lives to protect you against the villagers.");*/
                 Console.WriteLine("Q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -331,43 +348,45 @@ namespace Count
                     {
                         case "R":
                         case "r":
-                            // research
-                            if (_vampire.Blood < nextResearchItemLevel)
+                            if (hasNextResearchItem)
                             {
-                                Console.WriteLine("You dont have enough blood to research this, feed on villagers to increase your blood.");
+                                // research
+                                if (_vampire.Blood < nextResearchItemLevel)
+                                {
+                                    Console.WriteLine("You dont have enough blood to research this, feed on villagers to increase your blood.");
+                                    Console.WriteLine("");
+                                    Console.WriteLine("Press ENTER to continue");
+                                    Console.ReadLine();
+                                    break;
+                                }
+
+                                if (_vampire.ActionPoints < 1)
+                                {
+                                    Console.WriteLine("You dont have enough action points to research this.");
+                                    Console.WriteLine("");
+                                    Console.WriteLine("Press ENTER to continue");
+                                    Console.ReadLine();
+                                    break;
+                                }
+
+                                var bloodToSpend = nextResearchItemLevel.Value;
+                                var researchItems = _castle.Research(_vampire.Blood, nextResearchItemLevel.Value);
+                                _vampire.SpendBlood(bloodToSpend);
+
+                                Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following lost knowledge: ");
+                                foreach (var researchItem in researchItems)
+                                {
+                                    _game.KnownResearch.Add(researchItem);
+                                    Console.WriteLine($"- {researchItem.Name}!");
+                                }
+
+                                _vampire.TryExert(1);
+                                finishedEnterCastle = true;
+
                                 Console.WriteLine("");
                                 Console.WriteLine("Press ENTER to continue");
                                 Console.ReadLine();
-                                break;
                             }
-
-                            if (_vampire.ActionPoints < 1)
-                            {
-                                Console.WriteLine("You dont have enough action points to research this.");
-                                Console.WriteLine("");
-                                Console.WriteLine("Press ENTER to continue");
-                                Console.ReadLine();
-                                break;
-                            }
-
-                            var bloodToSpend = nextResearchItemLevel;
-                            var researchItems = _castle.Research(_vampire.Blood, nextResearchItemLevel);
-                            _vampire.SpendBlood(bloodToSpend);
-
-                            Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following lost knowledge: ");
-                            foreach (var researchItem in researchItems)
-                            {
-                                _game.KnownResearch.Add(researchItem);
-                                Console.WriteLine($"- {researchItem.Name}!");
-                            }
-
-                            _vampire.TryExert(1);
-                            finishedEnterCastle = true;
-
-                            Console.WriteLine("");
-                            Console.WriteLine("Press ENTER to continue");
-                            Console.ReadLine();
-
                             break;
                         case "Q":
                         case "q":
@@ -428,8 +447,6 @@ namespace Count
                 // Actions
                 Console.WriteLine($"{1}-{pointsOfInterest.Count}. Go to point of interest");
                 Console.WriteLine($"E. Enter current location");
-                //if (currentLocationObject.GetType() == typeof(VillageController))
-                //Console.WriteLine($"C. Send Cultist to \"convince\" village (1 Action)");
 
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -440,9 +457,12 @@ namespace Count
                 int poiOption = -1;
                 if (int.TryParse(option, out poiOption))
                 {
-                    var pointOfInterest = pointsOfInterest[poiOption - 1];
-                    if (pointOfInterest != null)
-                        _vampire.MoveLocation(pointsOfInterest[poiOption - 1].WorldLocation, pointsOfInterest[poiOption - 1].RegionLocation);
+                    if ((poiOption - 1) < pointsOfInterest.Count && (poiOption - 1) >= 0)
+                    {
+                        var pointOfInterest = pointsOfInterest[poiOption - 1];
+                        if (pointOfInterest != null)
+                            _vampire.MoveLocation(pointsOfInterest[poiOption - 1].WorldLocation, pointsOfInterest[poiOption - 1].RegionLocation);
+                    }
                 }
                 else if (option == "E" || option == "e")
                 {
@@ -461,27 +481,6 @@ namespace Count
                     else
                         EnterLocationObject(currentLocationObject);
                 }
-                /*else if (option == "C")
-                {
-                    if (currentLocationObject.GetType() == typeof(VillageController))
-                    {
-                        var village = currentLocationObject as VillageController;
-                        var hasCultist = _vampire.Followers.Any(i => i.Follower.GetType() == typeof(Cultist));
-                        if (hasCultist)
-                        {
-                            village.DecreaseSuspicion();
-                            _vampire.Exert(1);
-                        }
-                        else
-                        {
-                            Console.Clear();
-                            Console.WriteLine("You don't have any cultists");
-                            Console.WriteLine("");
-                            Console.WriteLine("Press ENTER to continue");
-                            Console.ReadLine();
-                        }
-                    }
-                }*/
                 else if (option == "Q" || option == "q")
                 {
                     finishedEnterRegion = true;
@@ -564,11 +563,13 @@ namespace Count
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
 
-                Console.WriteLine("1. Feed! (1 Action)");
-                Console.WriteLine($"- Satisfy your hunger. If you don't feed once every {VampireLordController.HUNGER_STARVING_THRESHOLD} days you will start taking damage.");
-                Console.WriteLine("");
-                /*Console.WriteLine("2. Convert Villager into follower (1 Action)");
-                Console.WriteLine("\t- Followers help you further your schemes. They would even give their lives to protect you against the villagers.");*/
+                if (village.Size > 0)
+                {
+                    Console.WriteLine("1. Feed! (1 Action)");
+                    Console.WriteLine($"- Satisfy your hunger. If you succeed you will receive BLOOD. (You might create a vampire in the process)");
+                    Console.WriteLine("");
+                }
+
                 Console.WriteLine("Q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -578,55 +579,41 @@ namespace Count
                 switch (option)
                 {
                     case "1":
-                        // Exert after an action
-                        if (_vampire.TryExert(1))
+                        if (village.Size > 0)
                         {
-                            // try to feed
-                            var feedStatus = _vampire.Feed();
-                            switch (feedStatus)
+                            // Exert after an action
+                            if (_vampire.TryExert(1))
                             {
-                                case FeedStatus.FED:
-                                    Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now");
-                                    break;
-                                case FeedStatus.CONVERTED:
-                                    Console.WriteLine("You feed a villager successfully. You hunger recedes. ...BUT you have created another like yourself. For now he will serve you.");
-                                    break;
-                                case FeedStatus.FAILED:
-                                    Console.WriteLine("You fail your attempt to feed on a villager.");
-                                    break;
-                            }
+                                // try to feed
+                                var feedStatus = _vampire.Feed();
+                                switch (feedStatus)
+                                {
+                                    case FeedStatus.FED:
+                                        Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now");
+                                        break;
+                                    case FeedStatus.CONVERTED:
+                                        Console.WriteLine("You feed a villager successfully. You hunger recedes. ...BUT you have created another like yourself. For now he will serve you.");
+                                        break;
+                                    case FeedStatus.FAILED:
+                                        Console.WriteLine("You fail your attempt to feed on a villager.");
+                                        break;
+                                }
 
-                            finishedEnterVillage = true;
+                                finishedEnterVillage = true;
+                            }
+                            else
+                            {
+                                Console.WriteLine("You dont have enough action points to feed.");
+                            }
                         }
                         else
                         {
-                            Console.WriteLine("You dont have enough action points to feed.");
+                            // nothing
                         }
-
                         Console.WriteLine("");
                         Console.WriteLine("Press ENTER to continue");
                         Console.ReadLine();
                         break;
-                    /*case "2":
-                        // try to convert
-                        var followerConvertedType = _vampire.TryConvertFollower();
-                        if (followerConvertedType != null)
-                        {
-
-                            if (followerConvertedType == typeof(Zombie))
-                                Console.WriteLine("You have converted a villager into a zombie. This follower would give his life for you.");
-                            if (followerConvertedType == typeof(Cultist))
-                                Console.WriteLine("You have converted a villager into a cultist. This follower will change the thoughts of the villagers.");
-                            if (followerConvertedType == typeof(Vampire))
-                                Console.WriteLine("You have converted a villager into a lesser vampire. This follower will spread your evil.");
-                        }
-                        else
-                            Console.WriteLine("You fail your attempt to convert a villager. The village grows more suspicious.");
-                        village.IncreaseSuspicion();
-                        // Exert after an action
-                        _vampire.Exert(1);
-                        finishedEnterVillage = true;
-                        break;*/
                     case "Q":
                     case "q":
                         finishedEnterVillage = true;
@@ -736,10 +723,10 @@ namespace Count
             var totalZombies = _game.OwnedBuildings?.Where(i => i.GetType() == typeof(GraveyardController))?.Sum(j => (j as GraveyardController).Followers.Count);
             var totalVampires = _castle.Followers.Count;
 
-            Console.WriteLine($"GOAL: {(_game.OwnedBuildings.Count > 0 ? (totalZombies) : 0)}/{ZOMBIE_WIN_COUNT} ZOMBIES");
+            Console.WriteLine($"GOAL: {_vampire.Blood}/{BLOOD_WIN_COUNT} BLOOD");
             Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
-            Console.WriteLine($"HUNGER LEVEL: {_vampire.DetermineHungerLevel()}");
-            Console.WriteLine($"BLOOD: {_vampire.Blood}");
+            Console.WriteLine($"BLOOD: {_vampire.Blood} (Resource used to feed your hunger as well as buy buildings/research)");
+            Console.WriteLine($"CORPSES: {_vampire.Corpses} (Resource used to create zombies from graveyards)");
             Console.WriteLine($"EXPLORED VILLAGES: {_game.KnownVillages.Count}");
             Console.WriteLine($"FOLLOWERS: {totalZombies + totalVampires}");
             if (_castle.Followers.Count > 0)
@@ -754,7 +741,7 @@ namespace Count
             Console.WriteLine("----------------------------------------------------------------------------");
             Console.WriteLine("GAME OVER");
             Console.WriteLine("----------------------------------------------------------------------------");
-            Console.WriteLine($"Congratulations! You have been successfully created {ZOMBIE_WIN_COUNT} Zombies.");
+            Console.WriteLine($"Congratulations! You have been successfully harvested {BLOOD_WIN_COUNT} Blood.");
             Console.WriteLine("");
         }
 

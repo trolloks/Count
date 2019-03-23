@@ -15,7 +15,7 @@ namespace Count.Controllers
             _object = new Graveyard()
             {
                 Name = "Zombie Graveyard",
-                Description = $"The graveyard is void of all life, but this doesn't mean there is none to serve you. Zombies will rise from these graves every night." +
+                Description = $"The graveyard is void of all life, but this doesn't mean there is none to serve you. Zombies will rise from these graves every night as long as you have CORPSES." +
                 $"\n Can support {ZOMBIE_MAX} Zombies",
                 WorldLocation = worldLocation,
                 RegionLocation = regionLocation
@@ -37,14 +37,16 @@ namespace Count.Controllers
             if (game.KnownLocations.Any(i => i.X == _object.RegionLocation.X && i.Y == _object.RegionLocation.Y))
             {
                 // Only if you havent reached max capacity
-                if (_followers.Count < ZOMBIE_MAX)
+                if (_followers.Count < ZOMBIE_MAX && game.VampireLord.Corpses > 0)
                 {
                     var follower = FollowerController.TryCreateFollower(typeof(Zombie), _object.WorldLocation, _object.RegionLocation, true);
                     if (follower != null)
                     {
                         _followers.Add(follower);
-                        Console.WriteLine("A Zombie rises from the graveyard");
+                        Console.WriteLine("A Zombie rises from a corpse in the graveyard");
                         somethingHappened = true;
+                        // use corpse to create zombie
+                        game.VampireLord.SpendCorpses(1);
                     }
                 }
             }
