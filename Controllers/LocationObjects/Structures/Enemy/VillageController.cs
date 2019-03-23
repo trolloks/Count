@@ -100,7 +100,7 @@ namespace Count.Controllers
                 }
                 else if (!game.VampireLord.IsDead)
                 {
-                    Console.WriteLine($"{hero.Name} is still at large.");
+                    Console.WriteLine($"{hero.Name} is still alive!");
                 }
                 else
                 {

@@ -18,6 +18,10 @@ namespace Count.Controllers
         {
             StructureController locationObject = game.World.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
             game.KnownLocations.Add(RegionLocation);
+            if (locationObject != null && locationObject.GetType().IsSubclassOf(typeof(FriendlyLocationController)))
+            {
+                game.OwnedBuildings.Add(locationObject);
+            }
             return locationObject;
         }
 

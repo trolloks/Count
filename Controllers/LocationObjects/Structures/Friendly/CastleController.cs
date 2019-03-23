@@ -14,7 +14,7 @@ namespace Count.Controllers
         // Research
         public readonly Dictionary<int, ResearchItem []> ResearchOptions = new Dictionary<int, ResearchItem []>()
         {
-            { 10 , new ResearchItem [] { new ResearchItem{ Name = "Graveyard", Description = "Corpses from dead humans rise here to become zombies.", Unlocks = typeof(GraveyardController), Blood = 5 } } }
+            { 10 , new ResearchItem [] { new ResearchItem{ Name = "Raise Zombie", Description = "Corpses from dead humans will rise as zombies at discovered graveyards.", Unlocks = typeof(GraveyardController) } } }
         };
 
         public CastleController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)

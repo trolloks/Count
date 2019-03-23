@@ -46,7 +46,7 @@ namespace Count.Controllers
                         }
                     }
 
-                    // Initialize Villages
+                    // Initialize Villages (Max villages plus a bit, but below cap)
                     int villages = MAX_VILLAGES_BASE + Randomizer.Instance.Roll(1, MAX_VILLAGES_CAP - MAX_VILLAGES_BASE);
                     for (int i = 0; i < villages; i++)
                     {
@@ -54,6 +54,16 @@ namespace Count.Controllers
                         var village = new VillageController(_region.Location, villageLocation);
                         LocationObjects[villageLocation.X, villageLocation.Y] = village;
                     }
+
+                    // Initialize Graveyards
+                    int graveyards = villages / 2;
+                    for (int i = 0; i < graveyards; i++)
+                    {
+                        var graveyardLocation = GetUnusedRegionLocation(locations);
+                        var graveyard = new GraveyardController(_region.Location, graveyardLocation);
+                        LocationObjects[graveyardLocation.X, graveyardLocation.Y] = graveyard;
+                    }
+
                 }
             }
         }

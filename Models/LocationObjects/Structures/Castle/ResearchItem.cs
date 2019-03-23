@@ -6,7 +6,6 @@ namespace Count.Models
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        public int Blood { get; set; }
         public Type Unlocks { get; set; }
     }
 }

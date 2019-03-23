@@ -8,15 +8,13 @@ namespace Count.Controllers
 {
     public class GraveyardController : FriendlyLocationController
     {
-        private const int ZOMBIE_MAX = 5;
 
         public GraveyardController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
         {
             _object = new Graveyard()
             {
-                Name = "Zombie Graveyard",
-                Description = $"The graveyard is void of all life, but this doesn't mean there is none to serve you. Zombies will rise from these graves every night as long as you have CORPSES." +
-                $"\n Can support {ZOMBIE_MAX} Zombies",
+                Name = "Graveyard",
+                Description = $"Filled with numerous graves of villagers. Somehow this could be used to your advantage",
                 WorldLocation = worldLocation,
                 RegionLocation = regionLocation
             };
@@ -34,20 +32,33 @@ namespace Count.Controllers
         {
             bool somethingHappened = false;
             // create new zombie!
+            // only if location is known
             if (game.KnownLocations.Any(i => i.X == _object.RegionLocation.X && i.Y == _object.RegionLocation.Y))
             {
-                // Only if you havent reached max capacity
-                if (_followers.Count < ZOMBIE_MAX && game.VampireLord.Corpses > 0)
+                // only if "raise zombie" has been researched
+                if (game.KnownResearch.Any(i => i.Unlocks == GetType()))
                 {
-                    var follower = FollowerController.TryCreateFollower(typeof(Zombie), _object.WorldLocation, _object.RegionLocation, true);
-                    if (follower != null)
+                    if (game.VampireLord.Corpses > 0)
                     {
-                        _followers.Add(follower);
-                        Console.WriteLine("A Zombie rises from a corpse in the graveyard");
-                        somethingHappened = true;
-                        // use corpse to create zombie
-                        game.VampireLord.SpendCorpses(1);
+                        int corpsesToUse = Math.Min(10, game.VampireLord.Corpses); // 10 is max zombies that can be risen at one time
+                        for (int i = 0; i < corpsesToUse; i++)
+                        {
+                            var follower = FollowerController.TryCreateFollower(typeof(Zombie), _object.WorldLocation, _object.RegionLocation, true);
+                            if (follower != null)
+                            {
+                                _followers.Add(follower);
+                                
+                                // use corpse to create zombie
+                                game.VampireLord.SpendCorpses(1);
+                            }
+                        }
+                        Console.WriteLine($"You raise {corpsesToUse} new zombie/s from a corpse/s in the graveyard");
                     }
+                    else
+                    {
+                        Console.WriteLine($"You did not have enough corpses to create another.");
+                    }
+                    somethingHappened = true;
                 }
             }
 
@@ -81,7 +92,7 @@ namespace Count.Controllers
                         {
                             // If zombie still around kill villagers equal to a max of its damage
                             var killCount = Randomizer.Instance.Roll(1, follower.Damage);
-                            Console.WriteLine($"The Zombie kills a {killCount} villagers");
+                            Console.WriteLine($"The Zombie kills {killCount} villager/s");
                             for (int i = 0; i < killCount; i++)
                             {
                                 village.TryKillVillager();

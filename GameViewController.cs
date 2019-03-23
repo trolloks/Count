@@ -17,10 +17,9 @@ namespace Count
     /// TODO: new plan
     /// instead of buildings. new resource corpses for zombies. mega corpses for heros. to make special creatures. fighter -> death knight?
     /// neutral factions?
+    /// graveyards should not be built should be seeded and found
     /// 
     /// TODO: should use status for village empty
-    /// 
-    /// MAYBE: add blood as hunger timer instead. so your resource is your hunger
     /// 
     /// </summary>
     public class GameViewController
@@ -197,7 +196,7 @@ namespace Count
 
                     // Actions
                     Console.WriteLine("1. Leave Castle");
-                    Console.WriteLine("2. Unlock new unholy buildings");
+                    Console.WriteLine("2. Research new abilities");
                     Console.WriteLine("3. Stay the night");
 
                     Console.WriteLine("");
@@ -272,17 +271,10 @@ namespace Count
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
-                int researchIndex = 0;
-                foreach (var researchItem in _game.KnownResearch)
-                {
-                    Console.WriteLine($"{++researchIndex}. Build {researchItem.Name} (1 Action, {researchItem.Blood} Blood)");
-                    Console.WriteLine($"- {researchItem.Description}");
-                }
                 if (hasNextResearchItem)
                 {
                     Console.WriteLine($"R. Research ancient texts (1 Action, {nextResearchItemLevel} Blood)");
-                    Console.WriteLine($"- Unearth new knowledge to teach you about unholy buildings.");
-                    
+                    Console.WriteLine($"- Unearth new knowledge to teach you about unholy abilities."); 
                 }
                 Console.WriteLine("");
                 Console.WriteLine("Q. Go back to previous menu");
@@ -291,109 +283,56 @@ namespace Count
 
                 var option = Console.ReadLine();
                 Console.Clear();
-                int buildOption = -1;
-                if (int.TryParse(option, out buildOption))
+                switch (option)
                 {
-                    if (buildOption < _game.KnownResearch.Count + 1 && buildOption > 0)
-                    {
-                        var researchItem = _game.KnownResearch[buildOption - 1];
-                        if (_vampire.Blood >= researchItem.Blood)
+                    case "R":
+                    case "r":
+                        if (hasNextResearchItem)
                         {
-                            var newLocation = _world.GetRegion(_vampire.WorldLocation).GetUnusedRegionLocation(_game.KnownLocations);
-                            if (newLocation != null)
+                            // research
+                            if (_vampire.Blood < nextResearchItemLevel)
                             {
-                                if (_vampire.ActionPoints >= 1)
-                                {
-                                    Console.WriteLine($"- A {researchItem.Name} appears on the map");
-                                    var currentRegion = _world.GetRegion(_vampire.WorldLocation);
-                                    var newResearchedLocationObject = researchItem.Unlocks.GetConstructor(new Type[] { typeof(Location), typeof(Location) }).Invoke(new object[] { _vampire.WorldLocation, newLocation });
-                                    _game.OwnedBuildings.Add(currentRegion.AddLocationObject(newResearchedLocationObject as StructureController));
-
-                                    _vampire.TryExert(1);
-                                    _vampire.SpendBlood(researchItem.Blood);
-                                    finishedEnterCastle = true;
-
-                                    Console.WriteLine("");
-                                    Console.WriteLine("Press ENTER to continue");
-                                    Console.ReadLine();
-                                }
-                                else
-                                {
-                                    Console.WriteLine("You dont have enough action points to research this.");
-                                    Console.WriteLine("");
-                                    Console.WriteLine("Press ENTER to continue");
-                                    Console.ReadLine();
-                                }
-
-                            }
-                            else
-                            {
-                                Console.WriteLine("There is no space for this item, discover more empty spaces to build this");
+                                Console.WriteLine("You dont have enough blood to research this, feed on villagers to increase your blood.");
                                 Console.WriteLine("");
                                 Console.WriteLine("Press ENTER to continue");
                                 Console.ReadLine();
+                                break;
                             }
-                        }
-                        else
-                        {
-                            Console.WriteLine("You dont have enough blood to build this, feed on villagers to increase your blood.");
+
+                            if (_vampire.ActionPoints < 1)
+                            {
+                                Console.WriteLine("You dont have enough action points to research this.");
+                                Console.WriteLine("");
+                                Console.WriteLine("Press ENTER to continue");
+                                Console.ReadLine();
+                                break;
+                            }
+
+                            var bloodToSpend = nextResearchItemLevel.Value;
+                            var researchItems = _castle.Research(_vampire.Blood, nextResearchItemLevel.Value);
+                            _vampire.SpendBlood(bloodToSpend);
+
+                            Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following lost knowledge: ");
+                            foreach (var researchItem in researchItems)
+                            {
+                                _game.KnownResearch.Add(researchItem);
+                                Console.WriteLine($"- {researchItem.Name}!");
+                            }
+
+                            _vampire.TryExert(1);
+                            finishedEnterCastle = true;
+
                             Console.WriteLine("");
                             Console.WriteLine("Press ENTER to continue");
                             Console.ReadLine();
                         }
-                    }
+                        break;
+                    case "Q":
+                    case "q":
+                        finishedEnterCastle = true;
+                        break;
+
                 }
-                else
-                    switch (option)
-                    {
-                        case "R":
-                        case "r":
-                            if (hasNextResearchItem)
-                            {
-                                // research
-                                if (_vampire.Blood < nextResearchItemLevel)
-                                {
-                                    Console.WriteLine("You dont have enough blood to research this, feed on villagers to increase your blood.");
-                                    Console.WriteLine("");
-                                    Console.WriteLine("Press ENTER to continue");
-                                    Console.ReadLine();
-                                    break;
-                                }
-
-                                if (_vampire.ActionPoints < 1)
-                                {
-                                    Console.WriteLine("You dont have enough action points to research this.");
-                                    Console.WriteLine("");
-                                    Console.WriteLine("Press ENTER to continue");
-                                    Console.ReadLine();
-                                    break;
-                                }
-
-                                var bloodToSpend = nextResearchItemLevel.Value;
-                                var researchItems = _castle.Research(_vampire.Blood, nextResearchItemLevel.Value);
-                                _vampire.SpendBlood(bloodToSpend);
-
-                                Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following lost knowledge: ");
-                                foreach (var researchItem in researchItems)
-                                {
-                                    _game.KnownResearch.Add(researchItem);
-                                    Console.WriteLine($"- {researchItem.Name}!");
-                                }
-
-                                _vampire.TryExert(1);
-                                finishedEnterCastle = true;
-
-                                Console.WriteLine("");
-                                Console.WriteLine("Press ENTER to continue");
-                                Console.ReadLine();
-                            }
-                            break;
-                        case "Q":
-                        case "q":
-                            finishedEnterCastle = true;
-                            break;
-
-                    }
             }
         }
 
