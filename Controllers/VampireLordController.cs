@@ -10,7 +10,7 @@ namespace Count.Controllers
         private const int BASE_FEED_DC = 8;
         private const int BASE_CHECK_ROLL = 20;
 
-        private Models.Game _game;
+        private Game _game;
         private VampireLord _vampireLord { get; set; }
 
         private bool _firstFeed = true;
@@ -20,7 +20,7 @@ namespace Count.Controllers
         /// </summary>
         public static int BLOOD_WARNING_THRESHOLD = 5;
 
-        public VampireLordController(Models.Game game)
+        public VampireLordController(Game game)
         {
             _game = game;
 
@@ -29,9 +29,8 @@ namespace Count.Controllers
             {
                 Hitpoints = 20,
                 ActionPointsMax = 1,
-                Blood = 5,
-                WorldLocation = _game.StartingWorldLocation,
-                RegionLocation = _game.StartingRegionLocation
+                Blood = 3,
+                WorldLocation = _game.StartingWorldLocation
             };
           
             // Start first night after a sleep
@@ -46,7 +45,7 @@ namespace Count.Controllers
         public FeedStatus? Feed()
         {
             var status = FeedStatus.FAILED;
-            var locationObject = _game.World.GetRegion(WorldLocation).GetLocationObjectAtLocation(RegionLocation);
+            var locationObject = _game.World.GetLocationObjectAtLocation(WorldLocation);
             if (locationObject == null || locationObject.GetType() != typeof(VillageController))
                 return null;
 
@@ -87,7 +86,6 @@ namespace Count.Controllers
         public void Sleep()
         {
             _vampireLord.WorldLocation = _game.Castle.WorldLocation;
-            _vampireLord.RegionLocation = _game.Castle.RegionLocation;
             _vampireLord.ActionPoints = _vampireLord.ActionPointsMax;
         }
         #endregion
@@ -114,11 +112,6 @@ namespace Count.Controllers
         public Location WorldLocation
         {
             get { return _vampireLord.WorldLocation; }
-        }
-
-        public Location RegionLocation
-        {
-            get { return _vampireLord.RegionLocation; }
         }
 
         /// <summary>
@@ -209,10 +202,9 @@ namespace Count.Controllers
             return false;
         }
 
-        public void MoveLocation(Location worldLocation, Location regionLocation)
+        public void MoveLocation(Location worldLocation)
         {
             _vampireLord.WorldLocation = worldLocation;
-            _vampireLord.RegionLocation = regionLocation;
         }
 
         #endregion

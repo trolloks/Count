@@ -14,7 +14,7 @@ namespace Count.Controllers
         /// </summary>
         public abstract bool Upkeep(Game game);
 
-        public StructureController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
+        public StructureController(Location worldLocation) : base(worldLocation)
         {}
     }
 }

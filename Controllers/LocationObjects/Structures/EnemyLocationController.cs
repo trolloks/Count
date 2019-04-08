@@ -6,7 +6,7 @@ namespace Count.Controllers
 {
     public abstract class EnemyLocationController : StructureController
     {
-        public EnemyLocationController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
+        public EnemyLocationController(Location worldLocation) : base(worldLocation)
         { }
 
         protected List<HeroController> _heroes = new List<HeroController>();

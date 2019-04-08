@@ -14,17 +14,16 @@ namespace Count.Controllers
         // Research
         public readonly Dictionary<int, ResearchItem []> ResearchOptions = new Dictionary<int, ResearchItem []>()
         {
-            { 10 , new ResearchItem [] { new ResearchItem{ Name = "Raise Zombie", Description = "Corpses from dead humans will rise as zombies at discovered graveyards.", Unlocks = typeof(GraveyardController) } } }
+            { 10 , new ResearchItem [] { new ResearchItem{ Name = "Raise Dead", Description = "Corpses from dead humans will rise as zombies at discovered graveyards.", Unlocks = typeof(GraveyardController) } } }
         };
 
-        public CastleController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
+        public CastleController(Location worldLocation) : base(worldLocation)
         {
             _object = new Castle()
             {
                 Name = "Castle Varrak",
                 ResearchPoints = 0,
-                WorldLocation = worldLocation,
-                RegionLocation = regionLocation
+                WorldLocation = worldLocation
             };
         }
 
@@ -50,7 +49,7 @@ namespace Count.Controllers
 
         public VampireController CreateVampire(bool force)
         {
-            var follower = (VampireController)FollowerController.TryCreateFollower(typeof(Vampire), _object.WorldLocation, _object.RegionLocation, force);
+            var follower = (VampireController)FollowerController.TryCreateFollower(typeof(Vampire), _object.WorldLocation, force);
             if (follower != null)
                 _followers.Add(follower);
             return follower;
@@ -65,14 +64,14 @@ namespace Count.Controllers
         public override bool Upkeep(Models.Game game)
         {
             bool somethingHappened = false;
-            if (game.KnownVillages.Any())
+            if (game.World.LocationObjects.Any(i => i.GetType() == typeof(VillageController)))
             {
                 int fed = 0;
                 foreach (var followerController in _followers)
                 {
                     var vampireController = followerController as VampireController;
-                    var village = game.KnownVillages.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
-                    vampireController.MoveToLocation(village.WorldLocation, village.RegionLocation); // Go to random village
+                    var village = game.World.LocationObjects.Where(i => i.GetType() == typeof(VillageController)).OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
+                    vampireController.MoveToLocation(village.WorldLocation); // Go to random village
                     var feedstatus = vampireController.Feed(game.World, game.VampireLord); // vampires feed and give you blood
                     switch (feedstatus)
                     {
@@ -81,7 +80,7 @@ namespace Count.Controllers
                             break;
                     }
                     // Move vampire back to castle
-                    vampireController.MoveToLocation(_object.WorldLocation, _object.RegionLocation); 
+                    vampireController.MoveToLocation(_object.WorldLocation); 
                 }
 
                 if (fed > 0)

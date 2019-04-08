@@ -11,9 +11,9 @@ namespace Count.Controllers
         private const int BASE_FEED_DC = 8;
         private const int BASE_CHECK_ROLL = 20;
 
-        public VampireController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
+        public VampireController(Location worldLocation) : base(worldLocation)
         {
-            _object = new Vampire() { WorldLocation = worldLocation, RegionLocation = regionLocation, Damage = 3, Hitpoints = 3, DefenceRating = 12};
+            _object = new Vampire() { WorldLocation = worldLocation, Damage = 3, Hitpoints = 3, DefenceRating = 12};
         }
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace Count.Controllers
         public FeedStatus? Feed(WorldController worldController, VampireLordController vampireLord)
         {
             var status = FeedStatus.FAILED;
-            var locationObject = worldController.GetRegion(_object.WorldLocation).GetLocationObjectAtLocation(_object.RegionLocation);
+            var locationObject = worldController.GetLocationObjectAtLocation(_object.WorldLocation);
             if (locationObject == null || locationObject.GetType() != typeof(VillageController))
                 return null;
 

@@ -15,13 +15,13 @@ namespace Count.Controllers
         private static int BASE_CHECK_ROLL = 20;
         private static int BASE_SPAWN_PITY = 5;
 
-        protected HeroController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation) { }
+        protected HeroController(Location worldLocation) : base(worldLocation) { }
 
 
         /// <summary>
         ///  Checks if you succeed on creating a follower
         /// </summary>
-        public static HeroController TryCreateHero(Type heroType, Game game, Location worldLocation, Location regionLocation, bool force)
+        public static HeroController TryCreateHero(Type heroType, Game game, Location worldLocation, bool force)
         {
             // Roll for adventurer spawn
             // - MAX 5
@@ -35,7 +35,7 @@ namespace Count.Controllers
             {
                 
                 if (heroType == typeof(Fighter))
-                    return new FighterController(worldLocation, regionLocation) as HeroController;
+                    return new FighterController(worldLocation) as HeroController;
             }
 
             return null;
@@ -43,7 +43,7 @@ namespace Count.Controllers
 
         public virtual bool Adventure(Models.Game game)
         {
-            var locationObject = game.World.GetRegion(_object.WorldLocation).GetLocationObjectAtLocation(_object.RegionLocation);
+            var locationObject = game.World.GetLocationObjectAtLocation(_object.WorldLocation);
             var ownedGraveyardStructures = game.OwnedBuildings.Where(i => i.GetType() == typeof(GraveyardController));
             foreach (var structure in ownedGraveyardStructures)
             {
@@ -54,8 +54,7 @@ namespace Count.Controllers
                     var follower = graveyard.Followers[i];
                     var followerModel = follower.Follower;
                     // If this follower is at same spot as hero.
-                    if (_object.RegionLocation.X == followerModel.RegionLocation.X && _object.RegionLocation.Y == followerModel.RegionLocation.Y
-                        && _object.WorldLocation.X == followerModel.WorldLocation.X && _object.WorldLocation.Y == followerModel.WorldLocation.Y)
+                    if (_object.WorldLocation.X == followerModel.WorldLocation.X && _object.WorldLocation.Y == followerModel.WorldLocation.Y)
                     {
                         // hero not dead yet
                         if (_hero.Hitpoints > 0)
@@ -93,8 +92,7 @@ namespace Count.Controllers
                     var follower = castle.Followers[i];
                     var followerModel = follower.Follower;
                     // If this follower is at same spot as hero.
-                    if (_object.RegionLocation.X == followerModel.RegionLocation.X && _object.RegionLocation.Y == followerModel.RegionLocation.Y
-                        && _object.WorldLocation.X == followerModel.WorldLocation.X && _object.WorldLocation.Y == followerModel.WorldLocation.Y)
+                    if (_object.WorldLocation.X == followerModel.WorldLocation.X && _object.WorldLocation.Y == followerModel.WorldLocation.Y)
                     {
                         // hero not dead yet
                         if (_hero.Hitpoints > 0)

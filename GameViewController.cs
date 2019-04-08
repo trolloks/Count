@@ -21,18 +21,29 @@ namespace Count
     /// 
     /// TODO: should use status for village empty
     /// 
+    /// NOTES: 
+    /// Villages should NOT suspect you are a vampire in the beginning
+    /// 
+    /// Actions for vampire lord :
+    /// devise plot
+    /// research
+    /// fortify-> protecting you during the day
+    /// summon creature
     /// </summary>
     public class GameViewController
     {
         bool _isGameOver = false;
 
-        internal Models.Game _game;
+        internal Game _game;
         private VampireLordController _vampire;
         private WorldController _world;
         private CastleController _castle;
 
         public static bool IS_DEV = false;
         public static int BLOOD_WIN_COUNT = 100;
+
+        public bool IS_FIRST = true;
+        public int TUTORIAL_LEVEL = 1;
 
         public void Start()
         {
@@ -46,13 +57,13 @@ namespace Count
             Console.WriteLine("----------------------------------------------------------------------------");
             Console.WriteLine("THE COUNT");
             Console.WriteLine("----------------------------------------------------------------------------");
-            Console.WriteLine("You are a vampire lord.");
+            /*Console.WriteLine("You are a vampire lord.");
             Console.WriteLine($"- You must FEED on a villager to receive BLOOD.");
             Console.WriteLine($"- Villages can be found by exploring the map");
             Console.WriteLine($"- BLOOD is required for discovering new unholy buildings that spawn new followers");
             Console.WriteLine($"- You need BLOOD to survive. The vampire's curse will steal blood from you at the end of every night. If you run out you will start to take damage.");
             Console.WriteLine("");
-            Console.WriteLine($"***You WIN if you harvested {BLOOD_WIN_COUNT} Blood***");
+            Console.WriteLine($"***You WIN if you harvested {BLOOD_WIN_COUNT} Blood***");*/
             Console.WriteLine("");
             Console.WriteLine("Press ENTER to continue");
             Console.ReadLine();
@@ -62,15 +73,10 @@ namespace Count
 
             // Get starting World location
             _game.StartingWorldLocation = _game.World.GetUnusedWorldLocation();
-            // Generate starting Region
-            var startingRegion = _game.World.AddRegionAtLocation(_game.StartingWorldLocation);
-            // Get starting Region location
-            _game.StartingRegionLocation = startingRegion.GetUnusedRegionLocation();
             // Create castle
-            _game.Castle = _castle = startingRegion.AddLocationObject(new CastleController(_game.StartingWorldLocation, _game.StartingRegionLocation)) as CastleController;
-            // Create vampire
+            _game.Castle = _castle = _world.AddLocationObject(new CastleController(_game.StartingWorldLocation)) as CastleController;
+            // Create vampire lord
             _game.VampireLord = _vampire = new VampireLordController(_game);
-            _game.KnownLocations.Add(_game.StartingRegionLocation);
         }
 
         private void Loop()
@@ -117,7 +123,7 @@ namespace Count
                 PrintStats();
                 Console.WriteLine("");
                 bool somethingHappened = false;
-                foreach (var village in _game.KnownVillages)
+                foreach (var village in _world.LocationObjects.Where(i => i.GetType() == typeof(VillageController)))
                 {
                     somethingHappened = village.Upkeep(_game) || somethingHappened;
                 }
@@ -161,63 +167,15 @@ namespace Count
         {
             if (!_vampire.IsDead)
             {
-                var infoText = string.Empty;
-                if (_vampire.Blood <= VampireLordController.BLOOD_WARNING_THRESHOLD && _vampire.Blood > 0)
-                    infoText += $"\nWarning! You NEED find more blood soon!\nTry leaving the castle, to find a villager to feed on.";
-                if (_vampire.Blood <= 0)
-                {
-                    infoText += "\nYou are STARVING. You start taking damage, because you don't have blood!\nLeave the castle, and find a villager to feed on as soon as possible.";
-                    _vampire.Damage(1);
-                    if (_vampire.IsDead)
-                        return false;
-                }
+                Console.Clear();
+                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
+                Console.WriteLine("");
+                Console.WriteLine("Press ENTER to continue");
+                Console.ReadLine();
 
-                while (_vampire.ActionPoints > 0)
-                {
-                    Console.Clear();
-                    Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
-                    Console.WriteLine("----------------------------------------------------------------------------");
-                    Console.WriteLine($"Welcome to {_castle.Name}");
-                    if (!string.IsNullOrWhiteSpace(infoText))
-                        Console.WriteLine(infoText);
-                    Console.WriteLine("----------------------------------------------------------------------------");
-                    Console.WriteLine("");
+                EnterCastle();
 
-                    // Stat Report
-                    PrintStats();
-                    Console.WriteLine("");
-
-                    Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
-
-                    Console.WriteLine("");
-                    Console.WriteLine("----------------------------------------------------------------------------");
-                    Console.WriteLine("Actions: ");
-                    Console.WriteLine("");
-
-                    // Actions
-                    Console.WriteLine("1. Leave Castle");
-                    Console.WriteLine("2. Research new abilities");
-                    Console.WriteLine("3. Stay the night");
-
-                    Console.WriteLine("");
-                    Console.Write(": ");
-
-                    var option = Console.ReadLine();
-                    Console.Clear();
-                    switch (option)
-                    {
-                        case "1":
-                            EnterRegion();
-                            break;
-                        case "2":
-                            Research();
-                            break;
-                        case "3":
-                            _vampire.TryExert(1);
-                            break;
-                    }
-                }
-
+                // After activities
                 Console.Clear();
                 Console.WriteLine("During the the night the following happened:");
                 bool somethingHappened = false;
@@ -244,40 +202,131 @@ namespace Count
             return false;
         }
 
+        private void EnterCastle()
+        {
+            var infoText = string.Empty;
+            /*if (_vampire.Blood <= VampireLordController.BLOOD_WARNING_THRESHOLD && _vampire.Blood > 0)
+                infoText += $"\nWarning! You NEED find more blood soon!\nTry leaving the castle, to find a villager to feed on.";
+            if (_vampire.Blood <= 0)
+            {
+                infoText += "\nYou are STARVING. You start taking damage, because you don't have blood!\nLeave the castle, and find a villager to feed on as soon as possible.";
+                _vampire.Damage(1);
+                if (_vampire.IsDead)
+                    return;
+            }*/
+
+            if (IS_FIRST)
+            {
+                Console.Clear();
+                PrintLocationObjectHeader(_castle, new string[] { });
+                Console.WriteLine("You awaken.");
+                Console.WriteLine("");
+                Console.WriteLine("Press ENTER to continue");
+                Console.ReadLine();
+
+                Console.Clear();
+                PrintLocationObjectHeader(_castle, new string[] { });
+                Console.WriteLine("You awaken. You collected some blood last night.");
+                Console.WriteLine("");
+                Console.WriteLine("Press ENTER to continue");
+                Console.ReadLine();
+
+                Console.Clear();
+                PrintStats(TUTORIAL_LEVEL);
+                PrintLocationObjectHeader(_castle, new string[] { });
+                Console.WriteLine("You awaken. You collected some blood last night.");
+                Console.WriteLine("");
+                Console.WriteLine("Press ENTER to continue");
+                Console.ReadLine();
+
+                Console.Clear();
+                PrintStats(TUTORIAL_LEVEL);
+                PrintLocationObjectHeader(_castle, new string[] { });
+                Console.WriteLine("Tonight, the ancient Tome of Blood Magic might yield some new undiscovered knowledge.");
+                Console.WriteLine("");
+                Console.WriteLine("Press ENTER to continue");
+                Console.ReadLine();
+            }
+
+            var finishedEnterCastle = false;
+            while (!finishedEnterCastle && _vampire.ActionPoints > 0)
+            {
+                Console.Clear();
+                PrintStats(TUTORIAL_LEVEL);
+                PrintLocationObjectHeader(_castle, new string[] {});
+                Console.WriteLine("Actions: ");
+                Console.WriteLine("");
+                
+                // Actions
+                if (_game.KnownResearch.Count > 0)
+                {
+                    // Can't leave castle before you researched something
+                    Console.WriteLine($"L. Leave Castle");
+                }
+                
+                Console.WriteLine($"R. Enter the library");
+                //Console.WriteLine("I. Show your current information");
+
+                Console.WriteLine("");
+                Console.Write(": ");
+
+                var option = Console.ReadLine();
+                Console.Clear();
+                switch (option)
+                {
+                    case "l":
+                    case "L":
+                        if (_game.KnownResearch.Count > 0)
+                        {
+                            // Can't leave castle before you researched something
+                            EnterWorld();
+                        }
+                        break;
+                    case "r":
+                    case "R":
+                        Research();
+                        break;
+                    /*case "i":
+                    case "I":
+                        PrintStats();
+                        Console.WriteLine("");
+                        Console.WriteLine("Press ENTER to continue");
+                        Console.ReadLine();
+                        break;*/
+                }
+            }
+        }
+
         private void Research()
         {
             var finishedEnterCastle = false;
             while (!finishedEnterCastle && _vampire.ActionPoints > 0)
             {
                 Console.Clear();
-                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
-                Console.WriteLine("");
+                PrintStats(TUTORIAL_LEVEL);
+                Console.WriteLine($"Current Location: {_castle.Name}'s Library");
+
                 var hasNextResearchItem = _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).Any();
                 var nextResearchItemName = hasNextResearchItem ? string.Join(",", _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Value.ToList().Select(i => i.Name)) : null;
                 var nextResearchItemLevel = hasNextResearchItem ? (int?)(_castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Key - _castle.ResearchPoints) : null;
-                if (hasNextResearchItem)
+                if (!IS_FIRST)
                 {
-                    Console.WriteLine("----------------------------------------------------------------------------");
-                    Console.WriteLine($"The library of {_castle.Name} offers: ");
-                    Console.WriteLine($"Next Unlock: {nextResearchItemName}");
-                    Console.WriteLine($"Blood Required: {nextResearchItemLevel}");
+                    if (hasNextResearchItem)
+                    {
+                        Console.WriteLine("----------------------------------------------------------------------------");
+                        Console.WriteLine($"Next Spell: {nextResearchItemName}");
+                        Console.WriteLine($"Blood Required: {nextResearchItemLevel}");
+                    }
                 }
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("");
-                PrintStats();
-                Console.WriteLine("");
-                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
-                Console.WriteLine("");
+                    
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
                 if (hasNextResearchItem)
                 {
-                    Console.WriteLine($"R. Research ancient texts (1 Action, {nextResearchItemLevel} Blood)");
-                    Console.WriteLine($"- Unearth new knowledge to teach you about unholy abilities."); 
+                    Console.WriteLine($"R. Read Tome of Blood Magic");
                 }
-                Console.WriteLine("");
-                Console.WriteLine("Q. Go back to previous menu");
+                //Console.WriteLine("Q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
 
@@ -299,27 +348,39 @@ namespace Count
                                 break;
                             }
 
-                            if (_vampire.ActionPoints < 1)
-                            {
-                                Console.WriteLine("You dont have enough action points to research this.");
-                                Console.WriteLine("");
-                                Console.WriteLine("Press ENTER to continue");
-                                Console.ReadLine();
-                                break;
-                            }
-
                             var bloodToSpend = nextResearchItemLevel.Value;
                             var researchItems = _castle.Research(_vampire.Blood, nextResearchItemLevel.Value);
                             _vampire.SpendBlood(bloodToSpend);
 
-                            Console.WriteLine("You spend the night reading through old tomes, trying to discern anything of value. You discover the following lost knowledge: ");
+                            if (IS_FIRST)
+                            {
+                                Console.Clear();
+                                Console.WriteLine("The pages are empty...");
+                                Console.WriteLine("");
+                                Console.WriteLine("Press ENTER to continue");
+                                Console.ReadLine();
+
+                                Console.Clear();
+                                Console.WriteLine("As you notice ");
+                                Console.WriteLine("");
+                                Console.WriteLine("Press ENTER to continue");
+                                Console.ReadLine();
+
+                                Console.Clear();
+                                Console.WriteLine("You find that the book is filled with spells.\nSomehow you can make out the words on the first page.");
+                                Console.WriteLine("");
+                                Console.WriteLine("Press ENTER to continue");
+                                Console.ReadLine();
+                            }
+
+                            Console.Clear();
+                            Console.WriteLine("You uncover a new spell : ");
                             foreach (var researchItem in researchItems)
                             {
                                 _game.KnownResearch.Add(researchItem);
                                 Console.WriteLine($"- {researchItem.Name}!");
                             }
 
-                            _vampire.TryExert(1);
                             finishedEnterCastle = true;
 
                             Console.WriteLine("");
@@ -336,24 +397,17 @@ namespace Count
             }
         }
 
-        private void EnterRegion()
+        private void EnterWorld()
         {
-            var finishedEnterRegion = false;
-            while (!finishedEnterRegion && _vampire.ActionPoints > 0)
+            var finishedEnterWorld = false;
+            while (!finishedEnterWorld && _vampire.ActionPoints > 0)
             {
                 Console.Clear();
+                Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
-                Console.WriteLine("");
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("Current Location: (X)");
-                var region = _world.GetRegion(_vampire.WorldLocation);
-                StructureController currentLocationObject = null;
-                // Only check if known
-                if (_game.KnownLocations.Any(p => p.X == _vampire.RegionLocation.X && p.Y == _vampire.RegionLocation.Y))
-                    currentLocationObject = region.GetLocationObjectAtLocation(_vampire.RegionLocation);
-                else
-                    currentLocationObject = new UnexploredController(_vampire.WorldLocation, _vampire.RegionLocation);
-
+                StructureController currentLocationObject = _world.GetLocationObjectAtLocation(_vampire.WorldLocation);
                 Console.WriteLine(currentLocationObject.Name);
                 Console.WriteLine("");
                 Console.WriteLine("Map:");
@@ -361,7 +415,7 @@ namespace Count
                 var pointsOfInterest = new List<StructureController>();
 
                 // Draw Map
-                DrawMap(region, pointsOfInterest);
+                DrawMap(pointsOfInterest);
 
                 Console.WriteLine("");
                 Console.WriteLine("Points of interest:");
@@ -373,11 +427,7 @@ namespace Count
                 }
 
                 Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("");
-                PrintStats();
-                Console.WriteLine("");
                 Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
-                Console.WriteLine("");
                 Console.WriteLine("----------------------------------------------------------------------------");
 
                 Console.WriteLine("Actions: ");
@@ -385,7 +435,7 @@ namespace Count
 
                 // Actions
                 Console.WriteLine($"{1}-{pointsOfInterest.Count}. Go to point of interest");
-                Console.WriteLine($"E. Enter current location");
+                Console.WriteLine($"E. Fly to location");
 
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -400,7 +450,7 @@ namespace Count
                     {
                         var pointOfInterest = pointsOfInterest[poiOption - 1];
                         if (pointOfInterest != null)
-                            _vampire.MoveLocation(pointsOfInterest[poiOption - 1].WorldLocation, pointsOfInterest[poiOption - 1].RegionLocation);
+                            _vampire.MoveLocation(pointsOfInterest[poiOption - 1].WorldLocation);
                     }
                 }
                 else if (option == "E" || option == "e")
@@ -410,43 +460,39 @@ namespace Count
                     {
                         var village = currentLocationObject as VillageController;
                         EnterVillage(village);
-                        if (!_game.KnownVillages.Contains(village))
-                            _game.KnownVillages.Add(village);
                     }
                     else if (currentLocationObject.GetType() == typeof(CastleController))
-                        finishedEnterRegion = true;
-                    else if (currentLocationObject.GetType() == typeof(UnexploredController))
-                        EnterUnexploredArea(currentLocationObject as UnexploredController);
+                        finishedEnterWorld = true;
                     else
                         EnterLocationObject(currentLocationObject);
                 }
                 else if (option == "Q" || option == "q")
                 {
-                    finishedEnterRegion = true;
+                    finishedEnterWorld = true;
                 }
             }
         }
 
-        private void DrawMap(RegionController region, List<StructureController> pointsOfInterest)
+        private void DrawMap(List<StructureController> pointsOfInterest)
         {
             int minY = int.MaxValue;
             int maxY = int.MinValue;
             int poi = 1;
-            for (int i = 0; i < region.LocationObjects.GetLength(0); i++)
+            for (int i = 0; i < _world.LocationMap.GetLength(0); i++)
             {
                 bool rowDrawn = false;
-                for (int j = 0; j < region.LocationObjects.GetLength(1); j++)
+                for (int j = 0; j < _world.LocationMap.GetLength(1); j++)
                 {
                     var currentLocation = new Location(i, j);
-                    if (_vampire.RegionLocation.X == i && _vampire.RegionLocation.Y == j)
+                    if (_vampire.WorldLocation.X == i && _vampire.WorldLocation.Y == j)
                     {
                         Console.Write("(X)");
                         rowDrawn = true;
                         continue;
                     }
-                    else if (_game.KnownLocations.Any(p => p.X == i && p.Y == j))
+                    else if (_world.Locations.Any(p => p.X == i && p.Y == j))
                     {
-                        var locationObject = region.GetLocationObjectAtLocation(currentLocation);
+                        var locationObject = _world.GetLocationObjectAtLocation(currentLocation);
                         if (locationObject == null)
                         {
                             Console.Write("-");
@@ -454,26 +500,12 @@ namespace Count
                         else
                         {
                             pointsOfInterest.Add(locationObject);
-                            Console.Write($"({poi++}:L)");
+                            Console.Write($"({poi++})");
                         }
                         minY = Math.Min(minY, j);
                         maxY = Math.Max(maxY, j);
                         rowDrawn = true;
                     }
-                    else if (_game.KnownLocations.Any(p => ((p.X <= i + 1) && (p.X >= i - 1)) && ((p.Y <= j + 1) && (p.Y >= j - 1))))
-                    {
-                        pointsOfInterest.Add(new UnexploredController(_vampire.WorldLocation, currentLocation));
-                        Console.Write($"({poi++})");
-                        minY = Math.Min(minY, j);
-                        maxY = Math.Max(maxY, j);
-                        rowDrawn = true;
-                    }
-                    // WIP
-                    /*else if (j > minY && j < maxY)
-                    {
-                        Console.Write("?");
-                    }*/
-
                 }
 
                 if (rowDrawn)
@@ -487,18 +519,7 @@ namespace Count
             while (!finishedEnterVillage && _vampire.ActionPoints > 0)
             {
                 Console.Clear();
-                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
-                Console.WriteLine("");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine($"Welcome to {village.Name}");
-                Console.WriteLine($"Population: {village.Size}");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("");
-                PrintStats();
-                Console.WriteLine("");
-                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
-                Console.WriteLine("");
-                Console.WriteLine("----------------------------------------------------------------------------");
+                PrintLocationObjectHeader(village, new string[] { $"Population: {village.Size}" });
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
 
@@ -562,24 +583,17 @@ namespace Count
             }
         }
 
+        /// <summary>
+        /// Fallback area
+        /// </summary>
+        /// <param name="locationObject">Unknown Location Object</param>
         private void EnterLocationObject(StructureController locationObject)
         {
             var finishedEnterVillage = false;
             while (!finishedEnterVillage && _vampire.ActionPoints > 0)
             {
                 Console.Clear();
-                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
-                Console.WriteLine("");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine($"{locationObject.Name}");
-                Console.WriteLine($"{locationObject.Description}");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("");
-                PrintStats();
-                Console.WriteLine("");
-                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
-                Console.WriteLine("");
-                Console.WriteLine("----------------------------------------------------------------------------");
+                PrintLocationObjectHeader(locationObject, new string[0]);
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
 
@@ -599,79 +613,59 @@ namespace Count
             }
         }
 
-        private void EnterUnexploredArea(UnexploredController unexploredArea)
-        {
-            var finishedEnterUnexploredArea = false;
-            while (!finishedEnterUnexploredArea && _vampire.ActionPoints > 0)
-            {
-                Console.Clear();
-                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
-                Console.WriteLine("");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine($"{unexploredArea.Name}");
-                Console.WriteLine($"{unexploredArea.Description}");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("");
-                PrintStats();
-                Console.WriteLine("");
-                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
-                Console.WriteLine("");
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine("Actions: ");
-                Console.WriteLine("");
-
-                Console.WriteLine("1. Explore the area (1 Action)");
-                Console.WriteLine("Q. Go back to previous menu");
-                Console.WriteLine("");
-                Console.Write(": ");
-
-                var option = Console.ReadLine();
-                Console.Clear();
-                switch (option)
-                {
-                    case "1":
-                        if (_vampire.TryExert(1))
-                        {
-                            var locationObject = unexploredArea.Explore(_game);
-                            if (locationObject != null)
-                            {
-                                Console.WriteLine($"You found a {locationObject.Name}");
-                            }
-                            else
-                                Console.WriteLine("You found nothing.");
-
-                            finishedEnterUnexploredArea = true;
-                        }
-
-                        Console.WriteLine("");
-                        Console.WriteLine("Press ENTER to continue");
-                        Console.ReadLine();
-                        break;
-                    case "Q":
-                    case "q":
-                        finishedEnterUnexploredArea = true;
-                        break;
-                }
-            }
-        }
-      
         #endregion
 
-        private void PrintStats()
+        #region "ViewHelpers"
+
+        private void PrintLocationObjectHeader(StructureController locationObject, string[] additionInfo, bool isNight = true)
+        {
+            // Stat Report
+            //PrintStats();
+            if (locationObject != null)
+            {
+                Console.WriteLine($"Current Location: {locationObject.Name}");
+                if (!string.IsNullOrWhiteSpace(locationObject.Description))
+                    Console.WriteLine($"{locationObject.Description}");
+                foreach (var info in additionInfo)
+                {
+                    Console.WriteLine(info);
+                }
+            }
+            Console.WriteLine("----------------------------------------------------------------------------");
+            /*Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
+            Console.WriteLine("----------------------------------------------------------------------------");*/
+        }
+
+        private void PrintStats(int tutorialStep = int.MaxValue)
         {
             var totalZombies = _game.OwnedBuildings?.Where(i => i.GetType() == typeof(GraveyardController))?.Sum(j => (j as GraveyardController).Followers.Count);
             var totalVampires = _castle.Followers.Count;
 
-            Console.WriteLine($"GOAL: {_vampire.Blood}/{BLOOD_WIN_COUNT} BLOOD");
-            Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
-            Console.WriteLine($"BLOOD: {_vampire.Blood} (Resource used to feed your hunger as well as buy buildings/research)");
-            Console.WriteLine($"CORPSES: {_vampire.Corpses} (Resource used to create zombies from graveyards)");
-            Console.WriteLine($"EXPLORED VILLAGES: {_game.KnownVillages.Count}");
-            Console.WriteLine($"FOLLOWERS: {totalZombies + totalVampires}");
-            if (_castle.Followers.Count > 0)
-                Console.WriteLine($"- VAMPIRES: {totalVampires}");
-            if (totalZombies > 0)
-                Console.WriteLine($"- ZOMBIES: {totalZombies}");
+            if (tutorialStep >= 2)
+            {
+                Console.WriteLine($"GOAL: {_vampire.Blood}/{BLOOD_WIN_COUNT} BLOOD");
+            }
+
+            if (tutorialStep >= 2)
+            {
+                Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
+            }
+
+            if (tutorialStep >= 1)
+            {
+                Console.WriteLine($"BLOOD: {_vampire.Blood}");
+            }
+
+            if (tutorialStep >= 2)
+            {
+                Console.WriteLine($"CORPSES: {_vampire.Corpses} (Resource used to create zombies from graveyards)");
+                Console.WriteLine($"FOLLOWERS: {totalZombies + totalVampires}");
+                if (_castle.Followers.Count > 0)
+                    Console.WriteLine($"- VAMPIRES: {totalVampires}");
+                if (totalZombies > 0)
+                    Console.WriteLine($"- ZOMBIES: {totalZombies}");
+            }
+            
         }
 
         private void Win()
@@ -693,5 +687,7 @@ namespace Count
             Console.WriteLine("You have died! Please try again.");
             Console.WriteLine("");
         }
+
+        #endregion
     }
 }

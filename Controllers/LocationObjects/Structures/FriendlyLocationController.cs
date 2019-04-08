@@ -6,7 +6,7 @@ namespace Count.Controllers
 {
     public abstract class FriendlyLocationController : StructureController
     {
-        public FriendlyLocationController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
+        public FriendlyLocationController(Location worldLocation) : base(worldLocation)
         {}
 
         protected List<FollowerController> _followers = new List<FollowerController>();

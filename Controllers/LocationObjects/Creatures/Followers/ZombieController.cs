@@ -5,9 +5,9 @@ namespace Count.Controllers
 {
     public class ZombieController : FollowerController
     {
-        public ZombieController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
+        public ZombieController(Location worldLocation) : base(worldLocation)
         {
-            _object = new Zombie() { WorldLocation = worldLocation, RegionLocation = regionLocation, Damage = 1, Hitpoints = 1, DefenceRating = 7 };
+            _object = new Zombie() { WorldLocation = worldLocation, Damage = 1, Hitpoints = 1, DefenceRating = 7 };
         }
     }
 }

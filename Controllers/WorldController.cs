@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Count.Controllers.LocationObjects.Structures.Neutral;
 using Count.Models;
 using Count.Utils;
 
@@ -8,61 +8,139 @@ namespace Count.Controllers
 {
     public class WorldController
     {
-        private const int WORLD_SIZE = 10;
-        private World World { get; set; }
-        private List<HeroController> _heroes;
+        private const int WORLD_SIZE = 3; // cant be smaller than inner region // 64 is pretty big
 
-        private readonly RegionController[,] _regions;
+        private World _world { get; set; }
+        private StructureController[,] _locationObjects = new StructureController[WORLD_SIZE, WORLD_SIZE];
 
         public WorldController()
         {
-            World = new World();
-            World.Size = WORLD_SIZE; //WORLD_SIZExWORLD_SIZE
-            World.Day = 1;
+            _world = new World();
+            _world.Size = WORLD_SIZE; //WORLD_SIZExWORLD_SIZE
+            _world.Day = 1;
 
-            _regions = new RegionController[WORLD_SIZE, WORLD_SIZE];
-            _heroes = new List<HeroController>();
+            GenerateWorld();
         }
 
-        public int Size
+        private void GenerateWorld()
         {
-            get { return World.Size; }
-        }
+            int totalSize = (WORLD_SIZE * WORLD_SIZE) - 1; // -1 for castle
 
-        public RegionController GetRegion(Location location)
-        {
-            return _regions[location.X, location.Y];
-        }
-
-        public RegionController AddRegionAtLocation(Location location)
-        {
-            if (GetRegion(location) == null)
+            // Initialize Villages (Max villages plus a bit, but below cap)
+            int villages = 1;
+            for (int i = 0; i < villages; i++)
             {
-                var region = new RegionController(location);
-                _regions[location.X, location.Y] = region;
-                return region;
+                var villageLocation = GetUnusedWorldLocation();
+                var village = new VillageController(villageLocation);
+                _locationObjects[villageLocation.X, villageLocation.Y] = village;
             }
-            return null;
+            totalSize = totalSize - villages;
+
+            // Initialize Graveyards
+            int graveyards = 1;
+            for (int i = 0; i < graveyards; i++)
+            {
+                var graveyardLocation = GetUnusedWorldLocation();
+                var graveyard = new GraveyardController(graveyardLocation);
+                _locationObjects[graveyardLocation.X, graveyardLocation.Y] = graveyard;
+            }
+            totalSize = totalSize - graveyards;
+
+            // Initialize Forests
+            int forests = totalSize;
+            for (int i = 0; i < forests; i++)
+            {
+                var forestLocation = GetUnusedWorldLocation();
+                var forest = new ForestController(forestLocation);
+                _locationObjects[forestLocation.X, forestLocation.Y] = forest;
+            }
         }
 
         public Location GetUnusedWorldLocation()
         {
-            var locationsShuffled = new List<Location>();
-            for (int i = 0; i < _regions.GetLength(0); i++)
+            return GetUnusedWorldLocation(null);
+        }
+
+        public Location GetUnusedWorldLocation(List<Location> locations)
+        {
+            List<Location> locationsShuffled = null;
+            if (locations != null)
             {
-                for (int j = 0; j < _regions.GetLength(1); j++)
+                Location[] copiedList = new Location[locations.Count];
+                locations.CopyTo(copiedList);
+                locationsShuffled = copiedList.ToList();
+            }
+            else
+            {
+                locationsShuffled = new List<Location>();
+                for (int i = 0; i < _locationObjects.GetLength(0); i++)
                 {
-                    locationsShuffled.Add(new Location(i, j));
+                    for (int j = 0; j < _locationObjects.GetLength(1); j++)
+                    {
+                        locationsShuffled.Add(new Location(i, j));
+                    }
                 }
             }
-            locationsShuffled = locationsShuffled.OrderBy(i => Randomizer.Instance.Random.Next()).ToList();
 
+            locationsShuffled = locationsShuffled.OrderBy(i => Randomizer.Instance.Random.Next()).ToList();
             foreach (var location in locationsShuffled)
             {
-                if (GetRegion(location) == null)
+                if (GetLocationObjectAtLocation(location) == null)
                     return location;
             }
             return null;
+        }
+
+        public StructureController GetLocationObjectAtLocation(Location location)
+        {
+            return _locationObjects[location.X, location.Y];
+        }
+
+        public StructureController AddLocationObject(StructureController locationObject)
+        {
+            if (GetLocationObjectAtLocation(locationObject.WorldLocation) == null)
+            {
+                _locationObjects[locationObject.WorldLocation.X, locationObject.WorldLocation.Y] = locationObject;
+                return locationObject;
+            }
+            return null;
+        }
+
+        public List<Location> Locations
+        {
+            get
+            {
+                var locations = new List<Location>();
+                foreach (var locationObject in _locationObjects)
+                {
+                    locations.Add(locationObject.WorldLocation);
+                }
+                return locations;
+            }
+        }
+
+        public StructureController[,] LocationMap
+        {
+            get { return _locationObjects; }
+        }
+
+        public List<StructureController> LocationObjects
+        {
+            get
+            {
+                var locationObjects = new List<StructureController>();
+                foreach (var locationObject in _locationObjects)
+                {
+                    locationObjects.Add(locationObject);
+                }
+                return locationObjects;
+            }
+        }
+
+
+        public int Size
+        {
+            get { return _world.Size; }
         }
 
         /// <summary>
@@ -70,7 +148,7 @@ namespace Count.Controllers
         /// </summary>
         public int Day
         {
-            get { return World.Day; }
+            get { return _world.Day; }
         }
 
         /// <summary>
@@ -78,47 +156,7 @@ namespace Count.Controllers
         /// </summary>
         public void FinishDay()
         {
-            World.Day++;
+            _world.Day++;
         }
-
-        private const int BASE_SPAWN_MAX_HERO = 5;
-        private const int BASE_SPAWN_PITY = 5;
-
-        private int _pityCounter = 0;
-
-        /// <summary>
-        /// Try to find the vampire 
-        /// </summary>
-        /// <param name="vampireLocation">The "unknown" location of the vampired being searched</param>
-        /// <returns>True, if vampire location is found</returns>
-       /* public bool Search(Location vampireLocation)
-        {
-            var searchLocation = GenerateWorldLocation();
-            while (World.VampireLocationsSearched.Any(i => i.X == vampireLocation.X && i.Y == vampireLocation.Y))
-                searchLocation = GenerateWorldLocation();
-
-            if (Game.IS_DEV)
-            {
-                Console.WriteLine($"(DEV) HIDING AT: {vampireLocation.X}:{vampireLocation.Y}");
-                if (IsVampireLocationFound)
-                    Console.WriteLine($"(DEV) WORLD FOUND:  {searchLocation.X}:{searchLocation.Y}");
-                else
-                {
-                    Console.WriteLine($"(DEV) WORLD PREVIOUSLY SEARCHED:  {LocationUtil.ToStringFromLocations(World.VampireLocationsSearched)}");
-                    Console.WriteLine($"(DEV) WORLD SEARCHED:  {searchLocation.X}:{searchLocation.Y}");
-                }
-            }
-
-            if ((vampireLocation.X == searchLocation.X && vampireLocation.Y == searchLocation.Y) || IsVampireLocationFound)
-            {
-                World.IsVampireLocationFound = true;
-                return true;
-            }
-
-            // Search better each round
-            World.VampireLocationsSearched.Add(searchLocation);
-            return false;
-        }
-        */
     }
 }

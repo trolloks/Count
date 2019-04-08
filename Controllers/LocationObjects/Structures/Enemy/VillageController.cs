@@ -17,7 +17,7 @@ namespace Count.Controllers
         // temp (For names)
         int villagerCounter = 1;
 
-        public VillageController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
+        public VillageController(Location worldLocation) : base(worldLocation)
         {
             // Create village
             _object = new Village()
@@ -25,8 +25,7 @@ namespace Count.Controllers
                 Id = Guid.NewGuid(),
                 Name = $"Village-{++_globalVillageCount}", // temp
                 Villagers = new List<Villager>(),
-                WorldLocation = worldLocation,
-                RegionLocation = regionLocation
+                WorldLocation = worldLocation
             };
 
             var numVillagers = Randomizer.Instance.Roll(40, 2);
@@ -89,8 +88,8 @@ namespace Count.Controllers
             {
                 var hero = _heroes[i];
 
-                Location location = game.KnownLocations.OrderBy(j => Randomizer.Instance.Random.Next()).FirstOrDefault();
-                hero.MoveToLocation(_object.WorldLocation, location);
+                Location location = game.World.Locations.OrderBy(j => Randomizer.Instance.Random.Next()).FirstOrDefault();
+                hero.MoveToLocation(location);
 
                 var lives = hero.Adventure(game);
                 if (!lives)
@@ -120,7 +119,7 @@ namespace Count.Controllers
 
             if (_heroes.Count < FIGHTER_MAX && Size > 0)
             {
-                var newHero = HeroController.TryCreateHero(typeof(Fighter), game, _object.WorldLocation, _object.RegionLocation, false);
+                var newHero = HeroController.TryCreateHero(typeof(Fighter), game, _object.WorldLocation, false);
                 if (newHero != null)
                 {
                     _heroes.Add(newHero);

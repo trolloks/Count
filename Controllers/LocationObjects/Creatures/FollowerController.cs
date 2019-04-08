@@ -12,12 +12,12 @@ namespace Count.Controllers
         private const int BASE_CONVERT_DC = 5;
         private const int BASE_CHECK_ROLL = 20;
 
-        protected FollowerController(Location worldLocation, Location regionLocation): base(worldLocation, regionLocation) { }
+        protected FollowerController(Location worldLocation): base(worldLocation) { }
 
         /// <summary>
         ///  Checks if you succeed on creating a follower
         /// </summary>
-        public static FollowerController TryCreateFollower(Type followerType, Location worldLocation, Location regionLocation, bool force)
+        public static FollowerController TryCreateFollower(Type followerType, Location worldLocation, bool force)
         {
             var convertCheck = true;
             var convertRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
@@ -32,9 +32,9 @@ namespace Count.Controllers
             if (convertCheck)
             {
                 if (followerType == typeof(Zombie))
-                    return new ZombieController(worldLocation, regionLocation) as FollowerController;
+                    return new ZombieController(worldLocation) as FollowerController;
                 if (followerType == typeof(Vampire))
-                    return new VampireController(worldLocation, regionLocation) as FollowerController;
+                    return new VampireController(worldLocation) as FollowerController;
             }
 
             return null;

@@ -18,13 +18,12 @@ namespace Count.Models
         /// </summary>
         public WorldController World { get; set; }
 
-        public List<Location> KnownLocations { get; set; } = new List<Location>();
-        public List<VillageController> KnownVillages { get; set; } = new List<VillageController>();
+        //public List<Location> KnownLocations { get; set; } = new List<Location>();
+        //public List<VillageController> KnownVillages { get; set; } = new List<VillageController>();
         public List<StructureController> OwnedBuildings { get; set; } = new List<StructureController>();
         public List<ResearchItem> KnownResearch { get; set; } = new List<ResearchItem>();
 
         public Location StartingWorldLocation { get; set; }
-        public Location StartingRegionLocation { get; set; }
 
     }
 }

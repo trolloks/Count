@@ -9,14 +9,13 @@ namespace Count.Controllers
     public class GraveyardController : FriendlyLocationController
     {
 
-        public GraveyardController(Location worldLocation, Location regionLocation) : base(worldLocation, regionLocation)
+        public GraveyardController(Location worldLocation) : base(worldLocation)
         {
             _object = new Graveyard()
             {
                 Name = "Graveyard",
                 Description = $"Filled with numerous graves of villagers. Somehow this could be used to your advantage",
-                WorldLocation = worldLocation,
-                RegionLocation = regionLocation
+                WorldLocation = worldLocation
             };
         }
 
@@ -33,7 +32,7 @@ namespace Count.Controllers
             bool somethingHappened = false;
             // create new zombie!
             // only if location is known
-            if (game.KnownLocations.Any(i => i.X == _object.RegionLocation.X && i.Y == _object.RegionLocation.Y))
+            if (game.World.Locations.Any(i => i.X == _object.WorldLocation.X && i.Y == _object.WorldLocation.Y))
             {
                 // only if "raise zombie" has been researched
                 if (game.KnownResearch.Any(i => i.Unlocks == GetType()))
@@ -43,7 +42,7 @@ namespace Count.Controllers
                         int corpsesToUse = Math.Min(10, game.VampireLord.Corpses); // 10 is max zombies that can be risen at one time
                         for (int i = 0; i < corpsesToUse; i++)
                         {
-                            var follower = FollowerController.TryCreateFollower(typeof(Zombie), _object.WorldLocation, _object.RegionLocation, true);
+                            var follower = FollowerController.TryCreateFollower(typeof(Zombie), _object.WorldLocation, true);
                             if (follower != null)
                             {
                                 _followers.Add(follower);
@@ -65,13 +64,13 @@ namespace Count.Controllers
             // move zombies
             foreach (var follower in Followers)
             {
-                Location location = game.KnownLocations.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
-                follower.MoveToLocation(_object.WorldLocation, location);
+                Location location = game.World.Locations.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
+                follower.MoveToLocation(location);
 
                 // moved to village!
-                if (game.KnownVillages.Any(i => LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation) && LocationUtil.CompareLocations(i.RegionLocation, follower.RegionLocation)))
+                if (game.World.LocationObjects.Where(i => i.GetType() == typeof(VillageController)).Any(i => LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation) && LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation)))
                 {
-                    var village = game.KnownVillages.FirstOrDefault(i => LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation) && LocationUtil.CompareLocations(i.RegionLocation, follower.RegionLocation)) as VillageController; 
+                    var village = game.World.LocationObjects.Where(i => i.GetType() == typeof(VillageController)).FirstOrDefault(i => LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation) && LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation)) as VillageController; 
                     if (village.Size > 0)
                     {
                         Console.WriteLine($"A Zombie starts to attack {village.Name}");

@@ -11,12 +11,11 @@ namespace Count.Controllers
         public virtual int Hitpoints { get { return _creature.Hitpoints; } }
         public virtual int Damage { get { return _creature.Damage; } }
 
-        protected CreatureController(Location worldLocation, Location regionLocation): base(worldLocation, regionLocation) {}
+        protected CreatureController(Location worldLocation): base(worldLocation) {}
 
-        public void MoveToLocation(Location worldLocation, Location regionLocation)
+        public void MoveToLocation(Location worldLocation)
         {
             _object.WorldLocation = worldLocation;
-            _object.RegionLocation = regionLocation;
         }
 
         /// <summary>
