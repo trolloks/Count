@@ -287,8 +287,6 @@ namespace Count
                         if (IS_FIRST)
                         {
                             Console.Clear();
-                            PrintStats(TUTORIAL_LEVEL);
-                            PrintLocationObjectHeader(_castle, new string[] { });
                             Console.WriteLine("You enter the library.");
                             Console.WriteLine("");
                             Console.WriteLine("Press ENTER to continue");
