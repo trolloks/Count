@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using Count.Models;
+﻿using Count.Models;
 
 namespace Count.Controllers
 {

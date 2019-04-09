@@ -56,7 +56,6 @@
     <Compile Include="Controllers\LocationObjects\Structures\EnemyLocationController.cs" />
     <Compile Include="Controllers\LocationObjects\Structures\Neutral\ForestController.cs" />
     <Compile Include="Controllers\LocationObjects\Structures\Friendly\GraveyardController.cs" />
-    <Compile Include="Controllers\PlotController.cs" />
     <Compile Include="Controllers\VampireLordController.cs" />
     <Compile Include="Controllers\LocationObjects\Creatures\FollowerController.cs" />
     <Compile Include="Controllers\LocationObjects\Structures\Friendly\CastleController.cs" />
@@ -78,7 +77,7 @@
     <Compile Include="Models\LocationObjects\Structures\Friendly\Castle\ResearchItem.cs" />
     <Compile Include="Models\LocationObjects\Structures\Friendly\Graveyard.cs" />
     <Compile Include="Models\LocationObjects\Structures\Neutral\Forest.cs" />
-    <Compile Include="Models\Plot.cs" />
+    <Compile Include="Models\Scheme.cs" />
     <Compile Include="Models\VampireLord.cs" />
     <Compile Include="Models\LocationObjects\Structures\Friendly\Castle\Castle.cs" />
     <Compile Include="Models\Region.cs" />

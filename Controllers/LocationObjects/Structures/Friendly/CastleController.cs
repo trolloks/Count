@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Count.Models;
+using Count.Models.Followers;
 
 namespace Count.Controllers
 {
@@ -11,7 +12,8 @@ namespace Count.Controllers
         // Research
         public readonly Dictionary<int, ResearchItem[]> ResearchOptions = new Dictionary<int, ResearchItem[]>()
         {
-            { 10 , new ResearchItem [] { new ResearchItem{ Name = "Raise Dead", Description = "Corpses from dead humans will rise as zombies at discovered graveyards.", Unlocks = typeof(GraveyardController) } } }
+            { 0 , new ResearchItem [] { new ResearchItem{ Name = "Zombie", Unlocks = typeof(Zombie) } } },
+            { 10 , new ResearchItem [] { new ResearchItem{ Name = "Vampire", Unlocks = typeof(Vampire) } } }
         };
 
         public CastleController(Location worldLocation) : base(worldLocation)

@@ -4,6 +4,7 @@ using System.Linq;
 using Count.Controllers;
 using Count.Enums;
 using Count.Models;
+using Count.Models.Followers;
 
 namespace Count
 {
@@ -74,6 +75,8 @@ namespace Count
             _game.Castle = _castle = _world.AddLocationObject(new CastleController(_game.StartingWorldLocation)) as CastleController;
             // Create vampire lord
             _game.VampireLord = _vampire = new VampireLordController(_game);
+            // Learn all basic research
+            _game.KnownResearch.AddRange(_castle.ResearchOptions[0]);
         }
 
         private void Loop()
@@ -83,7 +86,7 @@ namespace Count
                 // Phases
                 while (Day()) ;
                 while (Night()) ;
-                
+
 
                 if (_vampire.IsDead)
                 {
@@ -127,7 +130,7 @@ namespace Count
                         Console.WriteLine($"{hero.Name} rises at {village.Name}");
                         _game.Heroes.Add(hero);
                         somethinghappened = true;
-                    } 
+                    }
                 }
 
                 if (!somethinghappened)
@@ -201,9 +204,8 @@ namespace Count
                     case "1":
                         EnterWorld();
                         break;
-                    case "r":
-                    case "R":
-                        //Research();
+                    case "2":
+                        Schemes();
                         break;
                     default:
                         Console.WriteLine("Not available yet.");
@@ -211,26 +213,35 @@ namespace Count
                         Console.WriteLine("Press ENTER to continue");
                         Console.ReadLine();
                         break;
-                    /*case "i":
-                    case "I":
-                        PrintStats();
-                        Console.WriteLine("");
-                        Console.WriteLine("Press ENTER to continue");
-                        Console.ReadLine();
-                        break;*/
+                        /*case "i":
+                        case "I":
+                            PrintStats();
+                            Console.WriteLine("");
+                            Console.WriteLine("Press ENTER to continue");
+                            Console.ReadLine();
+                            break;*/
                 }
             }
         }
 
-        private void Research()
+        private void Schemes()
         {
             var finishedEnterCastle = false;
             while (!finishedEnterCastle && _vampire.ActionPoints > 0)
             {
                 Console.Clear();
-                Console.WriteLine($"Current Location: {_castle.Name}'s Library");
+                // Stat Report
+                PrintStats();
+                Console.WriteLine("");
+                // Current Location
+                // ----------------------------------------------------
+                Console.WriteLine($"Current Location: {_castle.Name}");
+                if (!string.IsNullOrWhiteSpace(_castle.Description))
+                    Console.WriteLine($"{_castle.Description}");
+                // ----------------------------------------------------
 
-                var hasNextResearchItem = _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).Any();
+
+                /*var hasNextResearchItem = _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).Any();
                 var nextResearchItemName = hasNextResearchItem ? string.Join(",", _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Value.ToList().Select(i => i.Name)) : null;
                 var nextResearchItemLevel = hasNextResearchItem ? (int?)(_castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Key - _castle.ResearchPoints) : null;
                 if (hasNextResearchItem)
@@ -240,14 +251,16 @@ namespace Count
                     Console.WriteLine($"Blood Required: {nextResearchItemLevel}");
                 }
 
-                Console.WriteLine("----------------------------------------------------------------------------");
+                Console.WriteLine("----------------------------------------------------------------------------");*/
+                Console.WriteLine("");
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
-                if (hasNextResearchItem)
+                Console.WriteLine("1. Hatch new scheme");
+                /*if (hasNextResearchItem)
                 {
-                    Console.WriteLine($"R. Read Tome of Blood Magic");
-                }
-                //Console.WriteLine("Q. Go back to previous menu");
+                    Console.WriteLine($"2. Read Tome of Blood Magic");
+                }*/
+                Console.WriteLine("Q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
 
@@ -255,7 +268,7 @@ namespace Count
                 Console.Clear();
                 switch (option)
                 {
-                    case "R":
+                    /*case "R":
                     case "r":
                         if (hasNextResearchItem)
                         {
@@ -287,12 +300,92 @@ namespace Count
                             Console.WriteLine("Press ENTER to continue");
                             Console.ReadLine();
                         }
+                        break;*/
+                    case "1":
+                        NewScheme();
                         break;
                     case "Q":
                     case "q":
                         finishedEnterCastle = true;
                         break;
 
+                }
+            }
+        }
+
+        private void NewScheme()
+        {
+            var schemeCreatures = new List<FollowerController>();
+            var finishedEnterCastle = false;
+            while (!finishedEnterCastle && _vampire.ActionPoints > 0)
+            {
+                Console.Clear();
+                // Stat Report
+                PrintStats();
+                Console.WriteLine("");
+                // Current Location
+                // ----------------------------------------------------
+                Console.WriteLine($"Current Location: {_castle.Name}");
+                if (!string.IsNullOrWhiteSpace(_castle.Description))
+                    Console.WriteLine($"{_castle.Description}");
+                // ----------------------------------------------------
+
+                Console.WriteLine("");
+                Console.WriteLine("Scheme: ");
+                Console.WriteLine("Creatures: ");
+                if (!schemeCreatures.Any())
+                    Console.WriteLine($"No creatures yet");
+                foreach (var creature in schemeCreatures)
+                {
+                    Console.WriteLine($"{creature.Name}");
+                }
+
+                Console.WriteLine("");
+                Console.WriteLine("Actions: ");
+                Console.WriteLine("");
+                Console.WriteLine("1. Add creature to scheme");
+                Console.WriteLine("Q. Go back to previous menu");
+                Console.WriteLine("");
+                Console.Write(": ");
+
+                var option = Console.ReadLine();
+                Console.Clear();
+                switch (option)
+                {
+                    case "1":
+                        AddCreatureToScheme(schemeCreatures);
+                        break;
+                    case "Q":
+                    case "q":
+                        finishedEnterCastle = true;
+                        break;
+
+                }
+            }
+        }
+        private void AddCreatureToScheme(List<FollowerController> creatureList)
+        {
+            Console.Clear();
+            // Stat Report
+            Console.WriteLine("Available Creatures: ");
+            int intOption = 1;
+            foreach (var research in _game.KnownResearch)
+            {
+                Console.WriteLine($"{intOption++}. {research.Name}");
+            }
+            
+            Console.WriteLine("");
+            Console.Write(": ");
+
+            var option = Console.ReadLine();
+            Console.Clear();
+            if (int.TryParse(option, out intOption))
+            {
+                int intIndex = intOption - 1;
+                if (intIndex >= 0 && intIndex < _game.KnownResearch.Count)
+                {
+                    var research = _game.KnownResearch[intIndex];
+                    creatureList.Add(FollowerController.TryCreateFollower(research.Unlocks, _castle.WorldLocation, true));
                 }
             }
         }
