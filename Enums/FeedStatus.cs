@@ -2,6 +2,6 @@
 {
     public enum FeedStatus
     {
-        FAILED, FED, CONVERTED
+        FAILED, FED, BLOCKED, INVALID
     }
 }

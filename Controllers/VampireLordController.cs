@@ -44,37 +44,37 @@ namespace Count.Controllers
         /// </summary>
         public FeedStatus? Feed()
         {
-            var status = FeedStatus.FAILED;
-            var locationObject = _game.World.GetLocationObjectAtLocation(WorldLocation);
-            if (locationObject == null || locationObject.GetType() != typeof(VillageController))
-                return null;
-
-            var village = locationObject as VillageController;
-
-            var feedCheck = true;
-            var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
-            feedCheck = _firstFeed || feedRoll >= BASE_FEED_DC;
-
-            if (feedCheck)
+            if (CanExert(1))
             {
-                status = FeedStatus.FED;
+                var status = FeedStatus.FAILED;
+                var locationObject = _game.World.GetLocationObjectAtLocation(WorldLocation);
+                if (locationObject == null || locationObject.GetType() != typeof(VillageController))
+                    return null;
 
-                // Kill Villager
-                var hasVillagers = village.TryKillVillager();
-                if (!hasVillagers)
-                    return FeedStatus.FAILED;
+                var village = locationObject as VillageController;
+                foreach (var hero in _game.Heroes)
+                {
+                    if (LocationUtil.CompareLocations(hero.WorldLocation, village.WorldLocation))
+                        return FeedStatus.BLOCKED;
+                }
 
-                // Could convert into a vampire
-                var follower = _game.Castle.CreateVampire(_firstFeed);
-                if (follower != null)
-                    status = FeedStatus.CONVERTED;
+                Exert(1);
+                var feedCheck = true;
+                var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
+                feedCheck = _firstFeed || feedRoll >= BASE_FEED_DC;
 
-                // Get Blood
-                IncreaseBlood(3);
+                if (feedCheck)
+                {
+                    status = FeedStatus.FED;
+                    // Get Blood
+                    IncreaseBlood(3);
+                }
+
+                _firstFeed = false;
+                return status;
             }
 
-            _firstFeed = false;
-            return status;
+            return FeedStatus.INVALID;
         }
         
         #endregion
@@ -192,14 +192,18 @@ namespace Count.Controllers
         /// Exerts your actionpoints
         /// </summary>
         /// <param name="i">amount of exertion</param>
-        public bool TryExert(int i)
+        private bool CanExert(int i)
         {
             if (i <= _vampireLord.ActionPoints)
             {
-                _vampireLord.ActionPoints -= i;
                 return true;
             }
             return false;
+        }
+
+        private void Exert(int i)
+        {
+            _vampireLord.ActionPoints -= i;
         }
 
         public void MoveLocation(Location worldLocation)

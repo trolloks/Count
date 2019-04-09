@@ -81,7 +81,6 @@
     <Compile Include="Models\Plot.cs" />
     <Compile Include="Models\VampireLord.cs" />
     <Compile Include="Models\LocationObjects\Structures\Friendly\Castle\Castle.cs" />
-    <Compile Include="Models\LocationObjects\Creatures\Villager.cs" />
     <Compile Include="Models\Region.cs" />
     <Compile Include="Models\World.cs" />
     <Compile Include="Models\LocationObjects\Structures\Enemy\Village.cs" />

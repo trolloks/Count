@@ -5,6 +5,9 @@ namespace Count.Models
 {
     public class Game
     {
+        public static int HERO_MAX = 1;
+
+
         /// <summary>
         /// You, the vampire lord
         /// </summary>
@@ -17,13 +20,10 @@ namespace Count.Models
         /// The world you interact with
         /// </summary>
         public WorldController World { get; set; }
-
-        //public List<Location> KnownLocations { get; set; } = new List<Location>();
-        //public List<VillageController> KnownVillages { get; set; } = new List<VillageController>();
         public List<StructureController> OwnedBuildings { get; set; } = new List<StructureController>();
         public List<ResearchItem> KnownResearch { get; set; } = new List<ResearchItem>();
+        public List<HeroController> Heroes { get; set; } = new List<HeroController>();
 
         public Location StartingWorldLocation { get; set; }
-
     }
 }

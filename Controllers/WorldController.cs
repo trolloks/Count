@@ -35,25 +35,6 @@ namespace Count.Controllers
                 _locationObjects[villageLocation.X, villageLocation.Y] = village;
             }
             totalSize = totalSize - villages;
-
-            // Initialize Graveyards
-            int graveyards = 1;
-            for (int i = 0; i < graveyards; i++)
-            {
-                var graveyardLocation = GetUnusedWorldLocation();
-                var graveyard = new GraveyardController(graveyardLocation);
-                _locationObjects[graveyardLocation.X, graveyardLocation.Y] = graveyard;
-            }
-            totalSize = totalSize - graveyards;
-
-            // Initialize Forests
-            int forests = totalSize;
-            for (int i = 0; i < forests; i++)
-            {
-                var forestLocation = GetUnusedWorldLocation();
-                var forest = new ForestController(forestLocation);
-                _locationObjects[forestLocation.X, forestLocation.Y] = forest;
-            }
         }
 
         public Location GetUnusedWorldLocation()
@@ -113,7 +94,8 @@ namespace Count.Controllers
                 var locations = new List<Location>();
                 foreach (var locationObject in _locationObjects)
                 {
-                    locations.Add(locationObject.WorldLocation);
+                    if (locationObject != null)
+                        locations.Add(locationObject.WorldLocation);
                 }
                 return locations;
             }
@@ -131,7 +113,8 @@ namespace Count.Controllers
                 var locationObjects = new List<StructureController>();
                 foreach (var locationObject in _locationObjects)
                 {
-                    locationObjects.Add(locationObject);
+                    if (locationObject != null)
+                        locationObjects.Add(locationObject);
                 }
                 return locationObjects;
             }

@@ -8,7 +8,7 @@ namespace Count.Controllers
 {
     public class VampireController : FollowerController
     {
-        private const int BASE_FEED_DC = 8;
+        private const int BASE_FEED_DC = 0;
         private const int BASE_CHECK_ROLL = 20;
 
         public VampireController(Location worldLocation) : base(worldLocation)
@@ -19,14 +19,19 @@ namespace Count.Controllers
         /// <summary>
         ///  Checks if you succeed on feeding on a unsuspecting villager
         /// </summary>
-        public FeedStatus? Feed(WorldController worldController, VampireLordController vampireLord)
+        public FeedStatus? Feed(Game game, VampireLordController vampireLord)
         {
             var status = FeedStatus.FAILED;
-            var locationObject = worldController.GetLocationObjectAtLocation(_object.WorldLocation);
+            var locationObject = game.World.GetLocationObjectAtLocation(_object.WorldLocation);
             if (locationObject == null || locationObject.GetType() != typeof(VillageController))
                 return null;
 
             var village = locationObject as VillageController;
+            foreach (var hero in game.Heroes)
+            {
+                if (LocationUtil.CompareLocations(hero.WorldLocation, village.WorldLocation))
+                    return FeedStatus.BLOCKED;
+            }
 
             var feedCheck = true;
             var feedRoll = Randomizer.Instance.Roll(1, BASE_CHECK_ROLL);
@@ -35,10 +40,6 @@ namespace Count.Controllers
             if (feedCheck)
             {
                 status = FeedStatus.FED;
-                // Kill Villager
-                var hasVillagers = village.TryKillVillager();
-                if (!hasVillagers)
-                    return FeedStatus.FAILED;
                 // Get Blood
                 vampireLord.IncreaseBlood(1);
             }

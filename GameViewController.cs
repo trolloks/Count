@@ -42,9 +42,6 @@ namespace Count
         public static bool IS_DEV = false;
         public static int BLOOD_WIN_COUNT = 100;
 
-        public bool IS_FIRST = true;
-        public int TUTORIAL_LEVEL = 1;
-
         public void Start()
         {
             Init();
@@ -68,7 +65,7 @@ namespace Count
             Console.WriteLine("Press ENTER to continue");
             Console.ReadLine();
 
-            _game = new Models.Game();
+            _game = new Game();
             _game.World = _world = new WorldController();
 
             // Get starting World location
@@ -84,8 +81,9 @@ namespace Count
             while (true)
             {
                 // Phases
-                while (Night()) ;
                 while (Day()) ;
+                while (Night()) ;
+                
 
                 if (_vampire.IsDead)
                 {
@@ -101,8 +99,6 @@ namespace Count
 
                 // End the day
                 _world.FinishDay();
-                // Pay the blood curse
-                _vampire.PayBlood(); 
             }
         }
 
@@ -114,50 +110,39 @@ namespace Count
                 Console.Clear();
                 Console.WriteLine($"~~~ Day {_world.Day} (Day) ~~~");
                 Console.WriteLine("");
+                Console.WriteLine("Press ENTER to continue");
+                Console.ReadLine();
 
-                var infoText = "The sun rises again and you have to rest. Humanity uses this time to hunt you down";
-                Console.WriteLine(infoText);
-                Console.WriteLine("");
-
+                Console.Clear();
                 // Stat Report
                 PrintStats();
                 Console.WriteLine("");
-                bool somethingHappened = false;
+                // TRY CREATE HERO for each village
+                bool somethinghappened = false;
                 foreach (var village in _world.LocationObjects.Where(i => i.GetType() == typeof(VillageController)))
                 {
-                    somethingHappened = village.Upkeep(_game) || somethingHappened;
+                    var hero = HeroController.TryCreateHero(typeof(Fighter), _game, village.WorldLocation);
+                    if (hero != null)
+                    {
+                        Console.WriteLine($"{hero.Name} rises at {village.Name}");
+                        _game.Heroes.Add(hero);
+                        somethinghappened = true;
+                    } 
                 }
-                if (!somethingHappened)
+
+                if (!somethinghappened)
                 {
-                    Console.WriteLine("The day passes quietly. You have no threats yet...");
+                    Console.WriteLine("Nothing happened today.");
                 }
+
                 Console.WriteLine("");
                 Console.WriteLine("Press ENTER to continue");
                 var option = Console.ReadLine();
                 Console.Clear();
                 switch (option)
-                { } // No actions during the day yet. Could be permanent?
+                { } // No actions during the day
 
-                // Villagers try to find vampire
-                /*if (_world.Search(_vampire.Location))
-                {
-                    Console.WriteLine("The villagers have found your hiding place!");
-                    if (_vampire.TryKill()) // True if it succeeds
-                        Console.WriteLine("With no-one to protect you. You get killed by the villagers!");
-                    else
-                        Console.WriteLine("A follower gives his life to save yours. Move your hiding place!");
-                }
-                else
-                {
-                    Console.WriteLine("The villagers failed to find your hiding place.");
-                }*/
-
-                // You sleep during the day
                 _vampire.Sleep();
-
-                /*Console.WriteLine("");
-                Console.WriteLine("Press ENTER to continue");
-                Console.ReadLine();*/
             }
             return false;
         }
@@ -175,26 +160,6 @@ namespace Count
 
                 EnterCastle();
 
-                // After activities
-                Console.Clear();
-                Console.WriteLine("During the the night the following happened:");
-                bool somethingHappened = false;
-                // Upkeep
-                somethingHappened = _castle.Upkeep(_game) || somethingHappened;
-                foreach (var locationObject in _game.OwnedBuildings)
-                {
-                    if (locationObject.GetType() == typeof(GraveyardController))
-                    {
-                        var graveyard = locationObject as GraveyardController;
-                        somethingHappened = graveyard.Upkeep(_game) || somethingHappened;
-                    }
-                }
-
-                Console.WriteLine("The vampire's curse claims it's price in blood. (You lose 1 blood)");
-                Console.WriteLine("");
-                Console.WriteLine("Press ENTER to continue");
-                Console.ReadLine();
-
                 // Basic Win Condition - Will change **DEPRECATED
                 if (_vampire.Blood >= BLOOD_WIN_COUNT)
                     _isGameOver = true;
@@ -204,68 +169,27 @@ namespace Count
 
         private void EnterCastle()
         {
-            var infoText = string.Empty;
-            /*if (_vampire.Blood <= VampireLordController.BLOOD_WARNING_THRESHOLD && _vampire.Blood > 0)
-                infoText += $"\nWarning! You NEED find more blood soon!\nTry leaving the castle, to find a villager to feed on.";
-            if (_vampire.Blood <= 0)
-            {
-                infoText += "\nYou are STARVING. You start taking damage, because you don't have blood!\nLeave the castle, and find a villager to feed on as soon as possible.";
-                _vampire.Damage(1);
-                if (_vampire.IsDead)
-                    return;
-            }*/
-
-            if (IS_FIRST)
-            {
-                Console.Clear();
-                PrintLocationObjectHeader(_castle, new string[] { });
-                Console.WriteLine("You awaken.");
-                Console.WriteLine("");
-                Console.WriteLine("Press ENTER to continue");
-                Console.ReadLine();
-
-                Console.Clear();
-                PrintLocationObjectHeader(_castle, new string[] { });
-                Console.WriteLine("You awaken. You collected some blood last night.");
-                Console.WriteLine("");
-                Console.WriteLine("Press ENTER to continue");
-                Console.ReadLine();
-
-                Console.Clear();
-                PrintStats(TUTORIAL_LEVEL);
-                PrintLocationObjectHeader(_castle, new string[] { });
-                Console.WriteLine("You awaken. You collected some blood last night.");
-                Console.WriteLine("");
-                Console.WriteLine("Press ENTER to continue");
-                Console.ReadLine();
-
-                Console.Clear();
-                PrintStats(TUTORIAL_LEVEL);
-                PrintLocationObjectHeader(_castle, new string[] { });
-                Console.WriteLine("Tonight, the ancient Tome of Blood Magic might yield some new undiscovered knowledge.");
-                Console.WriteLine("");
-                Console.WriteLine("Press ENTER to continue");
-                Console.ReadLine();
-            }
-
             var finishedEnterCastle = false;
             while (!finishedEnterCastle && _vampire.ActionPoints > 0)
             {
                 Console.Clear();
-                PrintStats(TUTORIAL_LEVEL);
-                PrintLocationObjectHeader(_castle, new string[] {});
+                // Stat Report
+                PrintStats();
+                Console.WriteLine("");
+                // Current Location
+                // ----------------------------------------------------
+                Console.WriteLine($"Current Location: {_castle.Name}");
+                if (!string.IsNullOrWhiteSpace(_castle.Description))
+                    Console.WriteLine($"{_castle.Description}");
+                // ----------------------------------------------------
+                Console.WriteLine("");
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
-                
+
                 // Actions
-                if (_game.KnownResearch.Count > 0)
-                {
-                    // Can't leave castle before you researched something
-                    Console.WriteLine($"L. Leave Castle");
-                }
-                
-                Console.WriteLine($"R. Enter the library");
-                //Console.WriteLine("I. Show your current information");
+                Console.WriteLine($"1. Leave Castle");
+                Console.WriteLine($"2. Hatch Schemes");
+                Console.WriteLine($"3. Fortify Castle");
 
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -274,26 +198,18 @@ namespace Count
                 Console.Clear();
                 switch (option)
                 {
-                    case "l":
-                    case "L":
-                        if (_game.KnownResearch.Count > 0)
-                        {
-                            // Can't leave castle before you researched something
-                            EnterWorld();
-                        }
+                    case "1":
+                        EnterWorld();
                         break;
                     case "r":
                     case "R":
-                        if (IS_FIRST)
-                        {
-                            Console.Clear();
-                            Console.WriteLine("You enter the library.");
-                            Console.WriteLine("");
-                            Console.WriteLine("Press ENTER to continue");
-                            Console.ReadLine();
-                        }
-
-                        Research();
+                        //Research();
+                        break;
+                    default:
+                        Console.WriteLine("Not available yet.");
+                        Console.WriteLine("");
+                        Console.WriteLine("Press ENTER to continue");
+                        Console.ReadLine();
                         break;
                     /*case "i":
                     case "I":
@@ -312,22 +228,18 @@ namespace Count
             while (!finishedEnterCastle && _vampire.ActionPoints > 0)
             {
                 Console.Clear();
-                PrintStats(TUTORIAL_LEVEL);
                 Console.WriteLine($"Current Location: {_castle.Name}'s Library");
 
                 var hasNextResearchItem = _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).Any();
                 var nextResearchItemName = hasNextResearchItem ? string.Join(",", _castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Value.ToList().Select(i => i.Name)) : null;
                 var nextResearchItemLevel = hasNextResearchItem ? (int?)(_castle.ResearchOptions.Where(i => i.Key > _castle.ResearchPoints).OrderBy(j => j.Key).FirstOrDefault().Key - _castle.ResearchPoints) : null;
-                if (!IS_FIRST)
+                if (hasNextResearchItem)
                 {
-                    if (hasNextResearchItem)
-                    {
-                        Console.WriteLine("----------------------------------------------------------------------------");
-                        Console.WriteLine($"Next Spell: {nextResearchItemName}");
-                        Console.WriteLine($"Blood Required: {nextResearchItemLevel}");
-                    }
+                    Console.WriteLine("----------------------------------------------------------------------------");
+                    Console.WriteLine($"Next Spell: {nextResearchItemName}");
+                    Console.WriteLine($"Blood Required: {nextResearchItemLevel}");
                 }
-                    
+
                 Console.WriteLine("----------------------------------------------------------------------------");
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
@@ -361,27 +273,6 @@ namespace Count
                             var researchItems = _castle.Research(_vampire.Blood, nextResearchItemLevel.Value);
                             _vampire.SpendBlood(bloodToSpend);
 
-                            if (IS_FIRST)
-                            {
-                                Console.Clear();
-                                Console.WriteLine("The pages are empty...");
-                                Console.WriteLine("");
-                                Console.WriteLine("Press ENTER to continue");
-                                Console.ReadLine();
-
-                                Console.Clear();
-                                Console.WriteLine("As you notice ");
-                                Console.WriteLine("");
-                                Console.WriteLine("Press ENTER to continue");
-                                Console.ReadLine();
-
-                                Console.Clear();
-                                Console.WriteLine("You find that the book is filled with spells.\nSomehow you can make out the words on the first page.");
-                                Console.WriteLine("");
-                                Console.WriteLine("Press ENTER to continue");
-                                Console.ReadLine();
-                            }
-
                             Console.Clear();
                             Console.WriteLine("You uncover a new spell : ");
                             foreach (var researchItem in researchItems)
@@ -411,10 +302,9 @@ namespace Count
             var finishedEnterWorld = false;
             while (!finishedEnterWorld && _vampire.ActionPoints > 0)
             {
-                Console.Clear();
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine($"~~~ Day {_world.Day} (Night) ~~~");
-                Console.WriteLine("----------------------------------------------------------------------------");
+                // Stat Report
+                PrintStats();
+                Console.WriteLine("");
                 Console.WriteLine("Current Location: (X)");
                 StructureController currentLocationObject = _world.GetLocationObjectAtLocation(_vampire.WorldLocation);
                 Console.WriteLine(currentLocationObject.Name);
@@ -435,10 +325,7 @@ namespace Count
                     Console.WriteLine("");
                 }
 
-                Console.WriteLine("----------------------------------------------------------------------------");
-                Console.WriteLine($"***{_vampire.ActionPoints} ACTION{(_vampire.ActionPoints > 1 ? "S" : "")} AVAILABLE****");
-                Console.WriteLine("----------------------------------------------------------------------------");
-
+                Console.WriteLine("");
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
 
@@ -527,18 +414,20 @@ namespace Count
             var finishedEnterVillage = false;
             while (!finishedEnterVillage && _vampire.ActionPoints > 0)
             {
-                Console.Clear();
-                PrintLocationObjectHeader(village, new string[] { $"Population: {village.Size}" });
+                // Stat Report
+                PrintStats();
+                Console.WriteLine("");
+                // Current Location
+                // ----------------------------------------------------
+                Console.WriteLine($"Current Location: {village.Name}");
+                if (!string.IsNullOrWhiteSpace(village.Description))
+                    Console.WriteLine($"{village.Description}");
+                // ----------------------------------------------------
+                Console.WriteLine("");
                 Console.WriteLine("Actions: ");
                 Console.WriteLine("");
 
-                if (village.Size > 0)
-                {
-                    Console.WriteLine("1. Feed! (1 Action)");
-                    Console.WriteLine($"- Satisfy your hunger. If you succeed you will receive BLOOD. (You might create a vampire in the process)");
-                    Console.WriteLine("");
-                }
-
+                Console.WriteLine("1. Feed! (Get more blood)");
                 Console.WriteLine("Q. Go back to previous menu");
                 Console.WriteLine("");
                 Console.Write(": ");
@@ -548,40 +437,29 @@ namespace Count
                 switch (option)
                 {
                     case "1":
-                        if (village.Size > 0)
+                        // try to feed
+                        var feedStatus = _vampire.Feed();
+                        switch (feedStatus)
                         {
-                            // Exert after an action
-                            if (_vampire.TryExert(1))
-                            {
-                                // try to feed
-                                var feedStatus = _vampire.Feed();
-                                switch (feedStatus)
-                                {
-                                    case FeedStatus.FED:
-                                        Console.WriteLine("You feed a villager successfully. You hunger recedes. ...For now");
-                                        break;
-                                    case FeedStatus.CONVERTED:
-                                        Console.WriteLine("You feed a villager successfully. You hunger recedes. ...BUT you have created another like yourself. For now he will serve you.");
-                                        break;
-                                    case FeedStatus.FAILED:
-                                        Console.WriteLine("You fail your attempt to feed on a villager.");
-                                        break;
-                                }
-
-                                finishedEnterVillage = true;
-                            }
-                            else
-                            {
+                            case FeedStatus.INVALID:
                                 Console.WriteLine("You dont have enough action points to feed.");
-                            }
-                        }
-                        else
-                        {
-                            // nothing
+                                break;
+                            case FeedStatus.FED:
+                                Console.WriteLine("You feed successfully.");
+                                finishedEnterVillage = true;
+                                break;
+                            case FeedStatus.BLOCKED:
+                                Console.WriteLine("Can't feed when hero is present in village.");
+                                break;
+                            case FeedStatus.FAILED:
+                                Console.WriteLine("You fail to feed.");
+                                finishedEnterVillage = true;
+                                break;
                         }
                         Console.WriteLine("");
                         Console.WriteLine("Press ENTER to continue");
                         Console.ReadLine();
+                        Console.Clear();
                         break;
                     case "Q":
                     case "q":
@@ -629,7 +507,7 @@ namespace Count
         private void PrintLocationObjectHeader(StructureController locationObject, string[] additionInfo, bool isNight = true)
         {
             // Stat Report
-            //PrintStats();
+            PrintStats();
             if (locationObject != null)
             {
                 Console.WriteLine($"Current Location: {locationObject.Name}");
@@ -645,36 +523,12 @@ namespace Count
             Console.WriteLine("----------------------------------------------------------------------------");*/
         }
 
-        private void PrintStats(int tutorialStep = int.MaxValue)
+        private void PrintStats()
         {
-            var totalZombies = _game.OwnedBuildings?.Where(i => i.GetType() == typeof(GraveyardController))?.Sum(j => (j as GraveyardController).Followers.Count);
-            var totalVampires = _castle.Followers.Count;
-
-            if (tutorialStep >= 2)
-            {
-                Console.WriteLine($"GOAL: {_vampire.Blood}/{BLOOD_WIN_COUNT} BLOOD");
-            }
-
-            if (tutorialStep >= 2)
-            {
-                Console.WriteLine($"HEALTH: {_vampire.Hitpoints}");
-            }
-
-            if (tutorialStep >= 1)
-            {
-                Console.WriteLine($"BLOOD: {_vampire.Blood}");
-            }
-
-            if (tutorialStep >= 2)
-            {
-                Console.WriteLine($"CORPSES: {_vampire.Corpses} (Resource used to create zombies from graveyards)");
-                Console.WriteLine($"FOLLOWERS: {totalZombies + totalVampires}");
-                if (_castle.Followers.Count > 0)
-                    Console.WriteLine($"- VAMPIRES: {totalVampires}");
-                if (totalZombies > 0)
-                    Console.WriteLine($"- ZOMBIES: {totalZombies}");
-            }
-            
+            Console.WriteLine("----------------------------------------------------------------------------");
+            Console.WriteLine($"BLOOD: {_vampire.Blood}/{BLOOD_WIN_COUNT}");
+            Console.WriteLine($"INVESTIGATION: 0/10");
+            Console.WriteLine("----------------------------------------------------------------------------");
         }
 
         private void Win()

@@ -66,40 +66,6 @@ namespace Count.Controllers
             {
                 Location location = game.World.Locations.OrderBy(i => Randomizer.Instance.Random.Next()).FirstOrDefault();
                 follower.MoveToLocation(location);
-
-                // moved to village!
-                if (game.World.LocationObjects.Where(i => i.GetType() == typeof(VillageController)).Any(i => LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation) && LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation)))
-                {
-                    var village = game.World.LocationObjects.Where(i => i.GetType() == typeof(VillageController)).FirstOrDefault(i => LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation) && LocationUtil.CompareLocations(i.WorldLocation, follower.WorldLocation)) as VillageController; 
-                    if (village.Size > 0)
-                    {
-                        Console.WriteLine($"A Zombie starts to attack {village.Name}");
-                        while (village.Heroes.Count > 0 && follower.Hitpoints > 0)
-                        {
-                            Console.WriteLine($"{village.Heroes[0].Name} steps forward to defend {village.Name}");
-                            CreatureController.Fight(follower.Follower, village.Heroes[0].Hero);
-                            if (village.Heroes[0].Hitpoints <= 0)
-                            {
-                                var hero = village.Heroes[0];
-                                village.KillHero(hero);
-                                Console.WriteLine($"{hero.Name} dies valiantly!");
-                            }
-
-                        }
-
-                        if (follower.Hitpoints > 0)
-                        {
-                            // If zombie still around kill villagers equal to a max of its damage
-                            var killCount = Randomizer.Instance.Roll(1, follower.Damage);
-                            Console.WriteLine($"The Zombie kills {killCount} villager/s");
-                            for (int i = 0; i < killCount; i++)
-                            {
-                                village.TryKillVillager();
-                            }
-                        }
-                    }
-                    
-                }
             }
 
             return somethingHappened;
